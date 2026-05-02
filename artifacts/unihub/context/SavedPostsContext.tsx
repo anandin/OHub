@@ -8,15 +8,15 @@ import React, {
 } from "react";
 
 const STORAGE_KEY = "@unihub_saved_posts";
-const UPVOTES_KEY = "@unihub_upvoted_posts";
+const LIKES_KEY = "@unihub_liked_posts";
 
 interface SavedPostsContextValue {
   savedPostIds: string[];
-  upvotedPostIds: string[];
+  likedPostIds: string[];
   isSaved: (id: string) => boolean;
-  isUpvoted: (id: string) => boolean;
+  isLiked: (id: string) => boolean;
   toggleSave: (id: string) => void;
-  toggleUpvote: (id: string) => void;
+  toggleLike: (id: string) => void;
 }
 
 const SavedPostsContext = createContext<SavedPostsContextValue | null>(null);
@@ -27,15 +27,15 @@ export function SavedPostsProvider({
   children: React.ReactNode;
 }) {
   const [savedPostIds, setSavedPostIds] = useState<string[]>([]);
-  const [upvotedPostIds, setUpvotedPostIds] = useState<string[]>([]);
+  const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
 
   useEffect(() => {
     Promise.all([
       AsyncStorage.getItem(STORAGE_KEY),
-      AsyncStorage.getItem(UPVOTES_KEY),
-    ]).then(([saved, upvoted]) => {
+      AsyncStorage.getItem(LIKES_KEY),
+    ]).then(([saved, liked]) => {
       if (saved) setSavedPostIds(JSON.parse(saved));
-      if (upvoted) setUpvotedPostIds(JSON.parse(upvoted));
+      if (liked) setLikedPostIds(JSON.parse(liked));
     });
   }, []);
 
@@ -44,46 +44,40 @@ export function SavedPostsProvider({
     [savedPostIds]
   );
 
-  const isUpvoted = useCallback(
-    (id: string) => upvotedPostIds.includes(id),
-    [upvotedPostIds]
+  const isLiked = useCallback(
+    (id: string) => likedPostIds.includes(id),
+    [likedPostIds]
   );
 
-  const toggleSave = useCallback(
-    (id: string) => {
-      setSavedPostIds((prev) => {
-        const next = prev.includes(id)
-          ? prev.filter((s) => s !== id)
-          : [...prev, id];
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        return next;
-      });
-    },
-    []
-  );
+  const toggleSave = useCallback((id: string) => {
+    setSavedPostIds((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((s) => s !== id)
+        : [...prev, id];
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
-  const toggleUpvote = useCallback(
-    (id: string) => {
-      setUpvotedPostIds((prev) => {
-        const next = prev.includes(id)
-          ? prev.filter((s) => s !== id)
-          : [...prev, id];
-        AsyncStorage.setItem(UPVOTES_KEY, JSON.stringify(next));
-        return next;
-      });
-    },
-    []
-  );
+  const toggleLike = useCallback((id: string) => {
+    setLikedPostIds((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((s) => s !== id)
+        : [...prev, id];
+      AsyncStorage.setItem(LIKES_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
   return (
     <SavedPostsContext.Provider
       value={{
         savedPostIds,
-        upvotedPostIds,
+        likedPostIds,
         isSaved,
-        isUpvoted,
+        isLiked,
         toggleSave,
-        toggleUpvote,
+        toggleLike,
       }}
     >
       {children}

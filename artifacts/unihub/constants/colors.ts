@@ -22,7 +22,7 @@ export default {
     tint: primary,
     tabIconDefault: "#8A9BB0",
     tabIconSelected: primary,
-    upvote: "#FF4500",
+    likeColor: "#FF2D55",
     success: "#00A86B",
     error: "#E53E3E",
     cardBackground: "#FFFFFF",

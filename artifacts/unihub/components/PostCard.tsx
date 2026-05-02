@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React from "react";
 import {
+  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -21,14 +22,14 @@ interface PostCardProps {
 
 export function PostCard({ post, showUniversity = true }: PostCardProps) {
   const uni = getUniversityById(post.universityId);
-  const { isSaved, isUpvoted, toggleSave, toggleUpvote } = useSavedPosts();
+  const { isSaved, isLiked, toggleSave, toggleLike } = useSavedPosts();
   const saved = isSaved(post.id);
-  const upvoted = isUpvoted(post.id);
+  const liked = isLiked(post.id);
   const categoryConfig = CATEGORY_CONFIG[post.category];
 
-  const handleUpvote = () => {
+  const handleLike = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    toggleUpvote(post.id);
+    toggleLike(post.id);
   };
 
   const handleSave = () => {
@@ -40,7 +41,10 @@ export function PostCard({ post, showUniversity = true }: PostCardProps) {
     router.push({ pathname: "/post/[id]", params: { id: post.id } });
   };
 
-  const displayUpvotes = upvoted ? post.upvotes + 1 : post.upvotes;
+  const displayLikes = liked ? post.likes + 1 : post.likes;
+
+  const formatCount = (n: number) =>
+    n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
 
   return (
     <Pressable
@@ -59,9 +63,9 @@ export function PostCard({ post, showUniversity = true }: PostCardProps) {
           <View style={[styles.uniDot, { backgroundColor: uni.color }]} />
           <Text style={styles.uniName}>{uni.shortName}</Text>
           <Text style={styles.dot}>·</Text>
-          <Text style={styles.timeAgo}>{post.timeAgo} ago</Text>
+          <Text style={styles.timeAgo}>{post.timeAgo}</Text>
           <Text style={styles.dot}>·</Text>
-          <Text style={styles.author}>{post.author}</Text>
+          <Text style={styles.author} numberOfLines={1}>{post.author}</Text>
         </View>
       )}
 
@@ -92,36 +96,32 @@ export function PostCard({ post, showUniversity = true }: PostCardProps) {
       )}
 
       <View style={styles.actionsRow}>
+        {/* Like button */}
         <Pressable
-          style={[styles.actionBtn, upvoted && styles.upvoteActive]}
-          onPress={handleUpvote}
+          style={[styles.actionBtn, liked && styles.likeActive]}
+          onPress={handleLike}
           hitSlop={8}
         >
           <Feather
-            name="arrow-up"
+            name="heart"
             size={15}
-            color={upvoted ? Colors.light.upvote : Colors.light.textSecondary}
+            color={liked ? Colors.light.likeColor : Colors.light.textSecondary}
           />
-          <Text style={[styles.actionText, upvoted && styles.upvoteText]}>
-            {displayUpvotes >= 1000
-              ? `${(displayUpvotes / 1000).toFixed(1)}k`
-              : displayUpvotes}
+          <Text style={[styles.actionText, liked && styles.likeText]}>
+            {formatCount(displayLikes)}
           </Text>
         </Pressable>
 
-        <Pressable
-          style={styles.actionBtn}
-          onPress={handlePress}
-          hitSlop={8}
-        >
+        {/* Comment count */}
+        <Pressable style={styles.actionBtn} onPress={handlePress} hitSlop={8}>
           <Feather name="message-square" size={15} color={Colors.light.textSecondary} />
-          <Text style={styles.actionText}>{post.comments}</Text>
+          <Text style={styles.actionText}>{formatCount(post.comments)}</Text>
         </Pressable>
 
         <View style={styles.rightActions}>
           <Pressable onPress={handleSave} hitSlop={8} style={styles.iconBtn}>
             <Feather
-              name={saved ? "bookmark" : "bookmark"}
+              name="bookmark"
               size={16}
               color={saved ? Colors.light.primary : Colors.light.textSecondary}
             />
@@ -257,16 +257,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: Colors.light.backgroundSecondary,
   },
-  upvoteActive: {
-    backgroundColor: Colors.light.upvote + "15",
+  likeActive: {
+    backgroundColor: "#FF2D5515",
   },
   actionText: {
     fontSize: 13,
     fontFamily: "Inter_600SemiBold",
     color: Colors.light.textSecondary,
   },
-  upvoteText: {
-    color: Colors.light.upvote,
+  likeText: {
+    color: Colors.light.likeColor,
   },
   rightActions: {
     marginLeft: "auto",

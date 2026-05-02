@@ -18,36 +18,45 @@ import Colors from "@/constants/colors";
 import { useSubscriptions } from "@/context/SubscriptionsContext";
 import { PostCategory, SAMPLE_POSTS } from "@/data/feed";
 import { ONTARIO_UNIVERSITIES } from "@/data/universities";
+import { useFeedRefresh } from "@/hooks/useFeedRefresh";
+
+type SortBy = "hot" | "new" | "top";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const topInset = Platform.OS === "web" ? 67 : insets.top;
   const { subscribed } = useSubscriptions();
   const [selectedCategory, setSelectedCategory] = useState<PostCategory | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [sortBy, setSortBy] = useState<"hot" | "new" | "top">("hot");
+  const [sortBy, setSortBy] = useState<SortBy>("hot");
 
-  const topInset = Platform.OS === "web" ? 67 : insets.top;
+  const { extraPosts, nextRefreshIn, manualRefresh } = useFeedRefresh();
+
+  const allPosts = useMemo(() => [...extraPosts, ...SAMPLE_POSTS], [extraPosts]);
 
   const filteredPosts = useMemo(() => {
-    let posts = SAMPLE_POSTS.filter(
+    let posts = allPosts.filter(
       (p) => subscribed.length === 0 || subscribed.includes(p.universityId)
     );
     if (selectedCategory) {
       posts = posts.filter((p) => p.category === selectedCategory);
     }
     if (sortBy === "hot") {
-      posts = [...posts].sort((a, b) => b.upvotes - a.upvotes);
+      posts = [...posts].sort((a, b) => b.likes - a.likes);
     } else if (sortBy === "new") {
       posts = [...posts].reverse();
     } else {
-      posts = [...posts].sort((a, b) => b.upvotes + b.comments - (a.upvotes + a.comments));
+      posts = [...posts].sort(
+        (a, b) => b.likes + b.comments - (a.likes + a.comments)
+      );
     }
     return posts;
-  }, [subscribed, selectedCategory, sortBy]);
+  }, [allPosts, subscribed, selectedCategory, sortBy]);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    await manualRefresh();
+    setRefreshing(false);
   };
 
   const subscribedUnis = ONTARIO_UNIVERSITIES.filter((u) =>
@@ -56,8 +65,86 @@ export default function HomeScreen() {
 
   const renderHeader = () => (
     <View>
-      {subscribed.length === 0 ? (
-        <View style={styles.emptySubscriptions}>
+      {subscribed.length > 0 && (
+        <View style={styles.subscribedScroll}>
+          <FlatList
+            horizontal
+            data={subscribedUnis}
+            keyExtractor={(u) => u.id}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.uniPillsRow}
+            renderItem={({ item }) => (
+              <Pressable
+                style={styles.uniPill}
+                onPress={() =>
+                  router.push({ pathname: "/university/[id]", params: { id: item.id } })
+                }
+              >
+                <View style={[styles.uniPillDot, { backgroundColor: item.color }]} />
+                <Text style={styles.uniPillText}>{item.shortName}</Text>
+              </Pressable>
+            )}
+          />
+        </View>
+      )}
+
+      <View style={styles.sortRow}>
+        {(["hot", "new", "top"] as SortBy[]).map((s) => (
+          <Pressable
+            key={s}
+            style={[styles.sortBtn, sortBy === s && styles.sortBtnActive]}
+            onPress={() => setSortBy(s)}
+          >
+            <Feather
+              name={s === "hot" ? "trending-up" : s === "new" ? "clock" : "star"}
+              size={14}
+              color={sortBy === s ? Colors.light.primary : Colors.light.textSecondary}
+            />
+            <Text style={[styles.sortText, sortBy === s && styles.sortTextActive]}>
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </Text>
+          </Pressable>
+        ))}
+
+        {nextRefreshIn.length > 0 && (
+          <View style={styles.refreshBadge}>
+            <Feather name="refresh-cw" size={10} color={Colors.light.textMuted} />
+            <Text style={styles.refreshBadgeText}>in {nextRefreshIn}</Text>
+          </View>
+        )}
+      </View>
+
+      <CategoryFilter
+        selected={selectedCategory}
+        onSelect={setSelectedCategory}
+      />
+
+      {extraPosts.length > 0 && (
+        <View style={styles.newPostsBanner}>
+          <Feather name="zap" size={12} color={Colors.light.primary} />
+          <Text style={styles.newPostsText}>
+            {extraPosts.length} new posts added
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+
+  if (subscribed.length === 0) {
+    return (
+      <View style={[styles.container, { paddingTop: topInset }]}>
+        <View style={styles.topBar}>
+          <View style={styles.logoRow}>
+            <View style={styles.logoBox}>
+              <Text style={styles.logoText}>U</Text>
+            </View>
+            <View>
+              <Text style={styles.appName}>UniHub</Text>
+              <Text style={styles.appSubtitle}>Ontario Universities</Text>
+            </View>
+          </View>
+        </View>
+        <View style={styles.feedEmpty}>
           <Feather name="plus-circle" size={40} color={Colors.light.primary} />
           <Text style={styles.emptyTitle}>Find Your Universities</Text>
           <Text style={styles.emptySubtitle}>
@@ -70,64 +157,9 @@ export default function HomeScreen() {
             <Text style={styles.exploreBtnText}>Browse Universities</Text>
           </Pressable>
         </View>
-      ) : (
-        <View style={styles.subscribedScroll}>
-          <FlatList
-            horizontal
-            data={subscribedUnis}
-            keyExtractor={(u) => u.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.uniPillsRow}
-            renderItem={({ item }) => (
-              <Pressable
-                style={styles.uniPill}
-                onPress={() =>
-                  router.push({
-                    pathname: "/university/[id]",
-                    params: { id: item.id },
-                  })
-                }
-              >
-                <View style={[styles.uniPillDot, { backgroundColor: item.color }]} />
-                <Text style={styles.uniPillText}>{item.shortName}</Text>
-              </Pressable>
-            )}
-          />
-        </View>
-      )}
-
-      <View style={styles.sortRow}>
-        {(["hot", "new", "top"] as const).map((s) => (
-          <Pressable
-            key={s}
-            style={[styles.sortBtn, sortBy === s && styles.sortBtnActive]}
-            onPress={() => setSortBy(s)}
-          >
-            <Feather
-              name={s === "hot" ? "trending-up" : s === "new" ? "clock" : "star"}
-              size={14}
-              color={
-                sortBy === s ? Colors.light.primary : Colors.light.textSecondary
-              }
-            />
-            <Text
-              style={[
-                styles.sortText,
-                sortBy === s && styles.sortTextActive,
-              ]}
-            >
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </Text>
-          </Pressable>
-        ))}
       </View>
-
-      <CategoryFilter
-        selected={selectedCategory}
-        onSelect={setSelectedCategory}
-      />
-    </View>
-  );
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: topInset }]}>
@@ -141,45 +173,39 @@ export default function HomeScreen() {
             <Text style={styles.appSubtitle}>Ontario Universities</Text>
           </View>
         </View>
-        <Pressable
-          style={styles.notifBtn}
-          onPress={() => router.push("/(tabs)/search")}
-        >
+        <Pressable style={styles.notifBtn} onPress={() => router.push("/(tabs)/search")}>
           <Feather name="bell" size={22} color={Colors.light.text} />
         </Pressable>
       </View>
 
-      {subscribed.length === 0 ? (
-        <View style={styles.feedEmpty}>
-          {renderHeader()}
-        </View>
-      ) : (
-        <FlatList
-          data={filteredPosts}
-          keyExtractor={(p) => p.id}
-          renderItem={({ item }) => <PostCard post={item} />}
-          ListHeaderComponent={renderHeader}
-          contentContainerStyle={[styles.listContent, Platform.OS === "web" && { paddingBottom: 34 }]}
-          showsVerticalScrollIndicator={false}
-          scrollEnabled={!!filteredPosts.length}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor={Colors.light.primary}
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.noPostsEmpty}>
-              <Feather name="inbox" size={36} color={Colors.light.textMuted} />
-              <Text style={styles.noPostsText}>No posts match this filter</Text>
-              <Pressable onPress={() => setSelectedCategory(null)}>
-                <Text style={styles.clearFilter}>Clear filter</Text>
-              </Pressable>
-            </View>
-          }
-        />
-      )}
+      <FlatList
+        data={filteredPosts}
+        keyExtractor={(p) => p.id}
+        renderItem={({ item }) => <PostCard post={item} />}
+        ListHeaderComponent={renderHeader}
+        contentContainerStyle={[
+          styles.listContent,
+          Platform.OS === "web" && { paddingBottom: 34 },
+        ]}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={!!filteredPosts.length}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={Colors.light.primary}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.noPostsEmpty}>
+            <Feather name="inbox" size={36} color={Colors.light.textMuted} />
+            <Text style={styles.noPostsText}>No posts match this filter</Text>
+            <Pressable onPress={() => setSelectedCategory(null)}>
+              <Text style={styles.clearFilter}>Clear filter</Text>
+            </Pressable>
+          </View>
+        }
+      />
     </View>
   );
 }
@@ -265,6 +291,8 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingTop: 8,
     paddingBottom: 2,
+    alignItems: "center",
+    flexWrap: "wrap",
   },
   sortBtn: {
     flexDirection: "row",
@@ -290,18 +318,46 @@ const styles = StyleSheet.create({
     color: Colors.light.primary,
     fontFamily: "Inter_600SemiBold",
   },
+  refreshBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginLeft: "auto",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    backgroundColor: Colors.light.backgroundSecondary,
+  },
+  refreshBadgeText: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    color: Colors.light.textMuted,
+  },
+  newPostsBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginHorizontal: 12,
+    marginBottom: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: Colors.light.primaryMuted,
+  },
+  newPostsText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.primary,
+  },
   listContent: {
     paddingTop: 8,
     paddingBottom: 100,
   },
   feedEmpty: {
     flex: 1,
-  },
-  emptySubscriptions: {
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 40,
-    paddingVertical: 60,
     gap: 12,
   },
   emptyTitle: {

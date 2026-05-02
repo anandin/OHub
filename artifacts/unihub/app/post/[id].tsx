@@ -15,16 +15,25 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
 import { useSavedPosts } from "@/context/SavedPostsContext";
-import { CATEGORY_CONFIG, SAMPLE_POSTS } from "@/data/feed";
+import { CATEGORY_CONFIG, Post, SAMPLE_POSTS } from "@/data/feed";
+import { REFRESH_BATCHES } from "@/data/feedRefreshBatches";
 import { getUniversityById } from "@/data/universities";
+
+function findPost(id: string): Post | undefined {
+  const all: Post[] = [
+    ...SAMPLE_POSTS,
+    ...REFRESH_BATCHES.flat(),
+  ];
+  return all.find((p) => p.id === id);
+}
 
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 67 : insets.top;
-  const { isSaved, isUpvoted, toggleSave, toggleUpvote } = useSavedPosts();
+  const { isSaved, isLiked, toggleSave, toggleLike } = useSavedPosts();
 
-  const post = SAMPLE_POSTS.find((p) => p.id === id);
+  const post = findPost(id);
 
   if (!post) {
     return (
@@ -39,13 +48,16 @@ export default function PostDetailScreen() {
 
   const uni = getUniversityById(post.universityId);
   const saved = isSaved(post.id);
-  const upvoted = isUpvoted(post.id);
+  const liked = isLiked(post.id);
   const categoryConfig = CATEGORY_CONFIG[post.category];
-  const displayUpvotes = upvoted ? post.upvotes + 1 : post.upvotes;
+  const displayLikes = liked ? post.likes + 1 : post.likes;
 
-  const handleUpvote = () => {
+  const formatCount = (n: number) =>
+    n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+
+  const handleLike = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    toggleUpvote(post.id);
+    toggleLike(post.id);
   };
 
   const handleSave = () => {
@@ -84,31 +96,17 @@ export default function PostDetailScreen() {
           <Pressable
             style={styles.uniRow}
             onPress={() =>
-              router.push({
-                pathname: "/university/[id]",
-                params: { id: uni.id },
-              })
+              router.push({ pathname: "/university/[id]", params: { id: uni.id } })
             }
           >
-            <View
-              style={[styles.uniDot, { backgroundColor: uni.color }]}
-            />
+            <View style={[styles.uniDot, { backgroundColor: uni.color }]} />
             <Text style={styles.uniName}>{uni.name}</Text>
             <Feather name="chevron-right" size={14} color={Colors.light.textMuted} />
           </Pressable>
         )}
 
-        <View
-          style={[
-            styles.categoryBadge,
-            { backgroundColor: categoryConfig.color + "15" },
-          ]}
-        >
-          <Feather
-            name={categoryConfig.icon as any}
-            size={13}
-            color={categoryConfig.color}
-          />
+        <View style={[styles.categoryBadge, { backgroundColor: categoryConfig.color + "15" }]}>
+          <Feather name={categoryConfig.icon as any} size={13} color={categoryConfig.color} />
           <Text style={[styles.categoryText, { color: categoryConfig.color }]}>
             {categoryConfig.label}
           </Text>
@@ -119,7 +117,7 @@ export default function PostDetailScreen() {
         <View style={styles.metaRow}>
           <Text style={styles.author}>Posted by {post.author}</Text>
           <Text style={styles.dot}>·</Text>
-          <Text style={styles.timeAgo}>{post.timeAgo} ago</Text>
+          <Text style={styles.timeAgo}>{post.timeAgo}</Text>
         </View>
 
         <Text style={styles.body}>{post.body}</Text>
@@ -137,32 +135,24 @@ export default function PostDetailScreen() {
         <View style={styles.divider} />
 
         <View style={styles.actionsRow}>
+          {/* Like button */}
           <Pressable
-            style={[styles.actionBtn, upvoted && styles.upvoteActive]}
-            onPress={handleUpvote}
+            style={[styles.actionBtn, liked && styles.likeActive]}
+            onPress={handleLike}
           >
             <Feather
-              name="arrow-up"
+              name="heart"
               size={18}
-              color={upvoted ? Colors.light.upvote : Colors.light.textSecondary}
+              color={liked ? Colors.light.likeColor : Colors.light.textSecondary}
             />
-            <Text
-              style={[styles.actionText, upvoted && styles.upvoteText]}
-            >
-              {displayUpvotes >= 1000
-                ? `${(displayUpvotes / 1000).toFixed(1)}k`
-                : displayUpvotes}{" "}
-              upvotes
+            <Text style={[styles.actionText, liked && styles.likeText]}>
+              {formatCount(displayLikes)} {displayLikes === 1 ? "like" : "likes"}
             </Text>
           </Pressable>
 
           <View style={styles.commentCount}>
-            <Feather
-              name="message-square"
-              size={18}
-              color={Colors.light.textSecondary}
-            />
-            <Text style={styles.actionText}>{post.comments} comments</Text>
+            <Feather name="message-square" size={18} color={Colors.light.textSecondary} />
+            <Text style={styles.actionText}>{formatCount(post.comments)} comments</Text>
           </View>
         </View>
 
@@ -172,17 +162,11 @@ export default function PostDetailScreen() {
           <Text style={styles.sourceSectionTitle}>Source</Text>
           <Pressable
             style={styles.sourceLink}
-            onPress={() =>
-              post.sourceUrl && Linking.openURL(post.sourceUrl)
-            }
+            onPress={() => post.sourceUrl && Linking.openURL(post.sourceUrl)}
           >
             <Feather name="globe" size={15} color={Colors.light.primary} />
             <Text style={styles.sourceLinkText}>{post.source}</Text>
-            <Feather
-              name="external-link"
-              size={13}
-              color={Colors.light.primary}
-            />
+            <Feather name="external-link" size={13} color={Colors.light.primary} />
           </Pressable>
         </View>
 
@@ -190,10 +174,7 @@ export default function PostDetailScreen() {
           <Pressable
             style={[styles.uniCard, { borderLeftColor: uni.color }]}
             onPress={() =>
-              router.push({
-                pathname: "/university/[id]",
-                params: { id: uni.id },
-              })
+              router.push({ pathname: "/university/[id]", params: { id: uni.id } })
             }
           >
             <View style={styles.uniCardContent}>
@@ -384,16 +365,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: Colors.light.backgroundSecondary,
   },
-  upvoteActive: {
-    backgroundColor: Colors.light.upvote + "12",
+  likeActive: {
+    backgroundColor: "#FF2D5512",
   },
   actionText: {
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
     color: Colors.light.textSecondary,
   },
-  upvoteText: {
-    color: Colors.light.upvote,
+  likeText: {
+    color: Colors.light.likeColor,
   },
   commentCount: {
     flexDirection: "row",
