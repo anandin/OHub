@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   FlatList,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -26,6 +27,11 @@ import {
   getUpcomingDeadlines,
 } from "@/data/deadlines";
 import { SAMPLE_PROGRAMS } from "@/data/programs";
+import {
+  SOURCE_TYPE_CONFIG,
+  getAllFeaturedAdvice,
+  getAdviceForProgram,
+} from "@/data/suppAdvice";
 import { getUniversityById } from "@/data/universities";
 
 // ── Grade Calculator ──────────────────────────────────────────────────────────
@@ -441,7 +447,141 @@ export default function ApplyScreen() {
           </Text>
         </View>
       )}
+
+      {/* Supplementary Application Advice */}
+      <SuppAdviceSection />
     </ScrollView>
+  );
+}
+
+// ── Supplementary Advice Section ──────────────────────────────────────────────
+function SuppAdviceSection() {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
+
+  const featuredAdvice = getAllFeaturedAdvice();
+  const programGroups = featuredAdvice.reduce<Record<string, string>>((acc, card) => {
+    acc[card.programId] = card.programDisplay;
+    return acc;
+  }, {});
+  const programKeys = Object.keys(programGroups);
+
+  const displayedAdvice = selectedProgram
+    ? getAdviceForProgram(selectedProgram)
+    : featuredAdvice;
+
+  return (
+    <View style={styles.adviceSection}>
+      <View style={styles.adviceSectionHeaderRow}>
+        <View style={styles.adviceIconBox}>
+          <Feather name="message-circle" size={16} color="#fff" />
+        </View>
+        <View>
+          <Text style={styles.adviceSectionTitle}>Supplementary App Advice</Text>
+          <Text style={styles.adviceSectionSub}>
+            From alumni, official sources, Youthfully & Grantme
+          </Text>
+        </View>
+      </View>
+
+      {/* Program filter */}
+      <FlatList
+        horizontal
+        data={[null, ...programKeys] as (string | null)[]}
+        keyExtractor={(k) => k ?? "all"}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.adviceFilterRow}
+        renderItem={({ item }) => (
+          <Pressable
+            style={[
+              styles.adviceFilterPill,
+              selectedProgram === item && styles.adviceFilterPillActive,
+            ]}
+            onPress={() => setSelectedProgram(item)}
+          >
+            <Text
+              style={[
+                styles.adviceFilterText,
+                selectedProgram === item && styles.adviceFilterTextActive,
+              ]}
+              numberOfLines={1}
+            >
+              {item ? programGroups[item] : "All Programs"}
+            </Text>
+          </Pressable>
+        )}
+      />
+
+      {/* Advice cards */}
+      {displayedAdvice.map((card) => {
+        const srcCfg = SOURCE_TYPE_CONFIG[card.sourceType];
+        const isOpen = expandedId === card.id;
+        return (
+          <Pressable
+            key={card.id}
+            style={styles.adviceCard}
+            onPress={() => setExpandedId(isOpen ? null : card.id)}
+          >
+            <View style={styles.adviceCardTopRow}>
+              <View style={[styles.adviceSrcBadge, { backgroundColor: srcCfg.color + "18" }]}>
+                <Feather name={srcCfg.icon as any} size={11} color={srcCfg.color} />
+                <Text style={[styles.adviceSrcText, { color: srcCfg.color }]}>{srcCfg.label}</Text>
+              </View>
+              <Text style={styles.adviceProgLabel} numberOfLines={1}>
+                {card.programDisplay}
+              </Text>
+              <Feather
+                name={isOpen ? "chevron-up" : "chevron-down"}
+                size={15}
+                color={Colors.light.textMuted}
+              />
+            </View>
+            <Text style={styles.adviceCardTitle}>{card.title}</Text>
+            {isOpen && (
+              <>
+                <Text style={styles.adviceCardBody}>{card.content}</Text>
+                <View style={styles.adviceSourceRow}>
+                  <Feather name="link" size={11} color={Colors.light.textMuted} />
+                  <Text style={styles.adviceSourceText} numberOfLines={1}>
+                    {card.source}
+                  </Text>
+                  {card.sourceUrl && (
+                    <Pressable onPress={() => Linking.openURL(card.sourceUrl!)}>
+                      <Text style={styles.adviceOpenLink}>Open →</Text>
+                    </Pressable>
+                  )}
+                </View>
+                <View style={styles.adviceTagRow}>
+                  {card.tags.slice(0, 4).map((t) => (
+                    <View key={t} style={styles.adviceTag}>
+                      <Text style={styles.adviceTagText}>{t}</Text>
+                    </View>
+                  ))}
+                </View>
+                <Pressable
+                  style={styles.viewProgramBtn}
+                  onPress={() =>
+                    router.push({ pathname: "/program/[id]", params: { id: card.programId } })
+                  }
+                >
+                  <Text style={styles.viewProgramBtnText}>View Full Program Details</Text>
+                  <Feather name="arrow-right" size={13} color={Colors.light.primary} />
+                </Pressable>
+              </>
+            )}
+          </Pressable>
+        );
+      })}
+
+      <Pressable
+        style={styles.viewAllPrograms}
+        onPress={() => router.push("/(tabs)/programs")}
+      >
+        <Feather name="book-open" size={14} color={Colors.light.primary} />
+        <Text style={styles.viewAllProgramsText}>Browse All Programs</Text>
+        <Feather name="arrow-right" size={14} color={Colors.light.primary} />
+      </Pressable>
+    </View>
   );
 }
 
@@ -926,6 +1066,184 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   ouacLink: {
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.primary,
+  },
+  // ── Supplementary Advice Section ──
+  adviceSection: {
+    marginHorizontal: 16,
+    marginTop: 20,
+    gap: 10,
+  },
+  adviceSectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 2,
+  },
+  adviceIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: "#7C3AED",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  adviceSectionTitle: {
+    fontSize: 16,
+    fontFamily: "Inter_700Bold",
+    color: Colors.light.text,
+  },
+  adviceSectionSub: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textMuted,
+    marginTop: 1,
+  },
+  adviceFilterRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingVertical: 2,
+  },
+  adviceFilterPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: Colors.light.surface,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    maxWidth: 160,
+  },
+  adviceFilterPillActive: {
+    backgroundColor: "#7C3AED18",
+    borderColor: "#7C3AED",
+  },
+  adviceFilterText: {
+    fontSize: 12,
+    fontFamily: "Inter_500Medium",
+    color: Colors.light.textSecondary,
+  },
+  adviceFilterTextActive: {
+    fontFamily: "Inter_600SemiBold",
+    color: "#7C3AED",
+  },
+  adviceCard: {
+    backgroundColor: Colors.light.surface,
+    borderRadius: 14,
+    padding: 14,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  adviceCardTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+  adviceSrcBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 5,
+    flexShrink: 0,
+  },
+  adviceSrcText: {
+    fontSize: 11,
+    fontFamily: "Inter_600SemiBold",
+  },
+  adviceProgLabel: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    color: Colors.light.textMuted,
+  },
+  adviceCardTitle: {
+    fontSize: 14,
+    fontFamily: "Inter_700Bold",
+    color: Colors.light.text,
+    lineHeight: 20,
+  },
+  adviceCardBody: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textSecondary,
+    lineHeight: 20,
+  },
+  adviceSourceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: Colors.light.backgroundSecondary,
+    borderRadius: 8,
+    padding: 8,
+  },
+  adviceSourceText: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textMuted,
+  },
+  adviceOpenLink: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.primary,
+    flexShrink: 0,
+  },
+  adviceTagRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  adviceTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 5,
+    backgroundColor: Colors.light.backgroundSecondary,
+  },
+  adviceTagText: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    color: Colors.light.textSecondary,
+  },
+  viewProgramBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: Colors.light.primaryMuted,
+    borderWidth: 1,
+    borderColor: Colors.light.primary + "33",
+  },
+  viewProgramBtnText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.primary,
+  },
+  viewAllPrograms: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.light.surface,
+    borderWidth: 1,
+    borderColor: Colors.light.primary + "44",
+    marginTop: 4,
+    marginBottom: 20,
+  },
+  viewAllProgramsText: {
+    fontSize: 15,
     fontFamily: "Inter_600SemiBold",
     color: Colors.light.primary,
   },

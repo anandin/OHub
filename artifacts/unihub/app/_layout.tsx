@@ -34,6 +34,10 @@ function RootLayoutNav() {
         name="post/[id]"
         options={{ headerShown: false, presentation: "card" }}
       />
+      <Stack.Screen
+        name="program/[id]"
+        options={{ headerShown: false, presentation: "card" }}
+      />
     </Stack>
   );
 }

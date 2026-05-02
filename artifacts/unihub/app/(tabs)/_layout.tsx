@@ -21,6 +21,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "building.columns", selected: "building.columns.fill" }} />
         <Label>Universities</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="programs">
+        <Icon sf={{ default: "list.bullet", selected: "list.bullet" }} />
+        <Label>Programs</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="search">
         <Icon sf={{ default: "magnifyingglass", selected: "magnifyingglass" }} />
         <Label>Search</Label>
@@ -46,6 +50,10 @@ function ClassicTabLayout() {
         headerShown: false,
         tabBarActiveTintColor: Colors.light.primary,
         tabBarInactiveTintColor: Colors.light.tabIconDefault,
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontFamily: "Inter_500Medium",
+        },
         tabBarStyle: {
           position: "absolute",
           backgroundColor: isIOS ? "transparent" : isDark ? "#000" : "#fff",
@@ -78,9 +86,9 @@ function ClassicTabLayout() {
           title: "Home",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="house" tintColor={color} size={24} />
+              <SymbolView name="house" tintColor={color} size={22} />
             ) : (
-              <Feather name="home" size={22} color={color} />
+              <Feather name="home" size={21} color={color} />
             ),
         }}
       />
@@ -90,9 +98,21 @@ function ClassicTabLayout() {
           title: "Universities",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="building.columns" tintColor={color} size={24} />
+              <SymbolView name="building.columns" tintColor={color} size={22} />
             ) : (
-              <Feather name="grid" size={22} color={color} />
+              <Feather name="grid" size={21} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="programs"
+        options={{
+          title: "Programs",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="list.bullet" tintColor={color} size={22} />
+            ) : (
+              <Feather name="book-open" size={21} color={color} />
             ),
         }}
       />
@@ -102,9 +122,9 @@ function ClassicTabLayout() {
           title: "Search",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="magnifyingglass" tintColor={color} size={24} />
+              <SymbolView name="magnifyingglass" tintColor={color} size={22} />
             ) : (
-              <Feather name="search" size={22} color={color} />
+              <Feather name="search" size={21} color={color} />
             ),
         }}
       />
@@ -114,9 +134,9 @@ function ClassicTabLayout() {
           title: "Apply",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="checklist" tintColor={color} size={24} />
+              <SymbolView name="checklist" tintColor={color} size={22} />
             ) : (
-              <Feather name="check-square" size={22} color={color} />
+              <Feather name="check-square" size={21} color={color} />
             ),
         }}
       />

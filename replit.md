@@ -20,36 +20,89 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ### `artifacts/unihub` - UniHub Mobile App (Expo)
 
-A Reddit-style mobile app for Ontario university students. Aggregates information from all Ontario universities including programs, events, hackathons, scholarships, club events, merch drops, open houses, etc.
+A Reddit-style mobile app for Ontario Grade 12 applicants. Aggregates university info, tracks applications, and guides students through the Ontario university admissions process.
 
-**Features:**
-- Reddit-style scrollable feed with posts from subscribed universities
-- University subscription system (subscribe/unsubscribe to any Ontario university)
-- Post voting and saving system (persisted via AsyncStorage)
-- Category filtering (events, hackathons, open houses, programs, scholarships, etc.)
-- Hot/New/Top sorting
-- University detail pages with Feed, Programs, Faculties, About tabs
-- Post detail pages with source links
-- Full-text search across posts, programs, and universities
-- Saved posts bookmarking
+**Tech Stack:** Expo SDK 54, expo-router, AsyncStorage, @tanstack/react-query, Inter font, @expo/vector-icons (Feather)
 
-**Data:**
-- 16 Ontario universities pre-seeded with full data
-- Sample posts representing real-world content categories
-- Sample programs for major universities with requirements, deadlines, tuition
+**Tab Navigation (5 tabs):**
+- `/(tabs)/index` — Home feed
+- `/(tabs)/universities` — Browse & subscribe to universities
+- `/(tabs)/programs` — Search all Ontario programs
+- `/(tabs)/search` — Full-text search across posts/programs/universities
+- `/(tabs)/apply` — Application tracker, grade calculator, deadlines, supp advice
 
 **Routes:**
-- `/(tabs)/index` - Home feed
-- `/(tabs)/universities` - Browse all universities
-- `/(tabs)/search` - Search posts, programs, universities
-- `/(tabs)/saved` - Saved posts
-- `/university/[id]` - University detail
-- `/post/[id]` - Post detail
+- `/university/[id]` — University detail (Feed / Programs / Admissions / About tabs)
+- `/program/[id]` — Program detail with requirements, careers, supp advice
+- `/post/[id]` — Post detail
 
-**Data Sources (future integration):**
-- OUInfo.ca
-- Individual university websites
-- Affiliated organizations (MathSoc, EngSoc, etc.)
+**Features:**
+
+*Feed:*
+- Reddit-style feed from subscribed universities
+- Heart-based likes, bookmarking (SavedPostsContext)
+- Applicant Mode toggle (hides club/sports/merch posts)
+- Hot/New/Top sorting
+- Category filter chips
+- 6-hour auto-refresh via useFeedRefresh + feedRefreshBatches
+- Upcoming deadline banner at top
+- University pill shortcuts
+
+*Programs Tab (`/(tabs)/programs`):*
+- 53+ Ontario university programs database (`data/programs.ts`)
+- Full-text search (name, description, careers, faculty)
+- Filter by faculty type: Engineering, Business, CS, Science, Health, Law, Architecture, Math, Arts, Music, Education, Environment
+- Filter by university (dropdown)
+- Sort: A–Z, Easiest Entry, Hardest Entry, By University
+- Program cards show: avg grade, degree, duration, co-op status, supp required badge, competitiveness
+
+*Program Detail (`/program/[id]`):*
+- Full program info: degree, duration, tuition, intake size, OUAC code, deadline
+- Required Grade 12 courses
+- Career paths
+- Notable features
+- Supplementary app warning box
+- Track Application button → links to ApplicationsContext
+- Supplementary application advice cards (expandable, sourced from alumni/official/coaching/community)
+
+*Apply Tab (`/(tabs)/apply`):*
+- Application tracker: track per-university status (Shortlisted → Applied → Supp Sent → Offer → Accepted → Declined), notes, remove
+- Progress bar overview
+- Grade Average Calculator: enter top-6 marks → shows program eligibility (green/yellow/red)
+- Deadline countdown strip (upcoming 5 deadlines from `data/deadlines.ts`)
+- **Supplementary Application Advice section**: expandable cards filtered by program, sourced from:
+  - Official university pages
+  - Alumni accounts (Reddit, LinkedIn)
+  - Youthfully.ca coaching guides
+  - Grantme.ca coaching guides
+  - "Browse All Programs" CTA
+
+*University Detail (`/university/[id]`):*
+- Tabs: Feed / Programs / Admissions / About
+- Admissions tab: OUAC info, per-program requirements, admission averages, required courses, deadlines, supplementary app warnings, career paths
+- Track My Application button (opens status picker)
+
+**Data Files:**
+- `data/universities.ts` — 16 Ontario universities
+- `data/feed.ts` — 50+ SAMPLE_POSTS across all universities
+- `data/feedRefreshBatches.ts` — 4 rotating refresh batches
+- `data/programs.ts` — 53+ programs with full admission data (`ALL_PROGRAMS`, `SAMPLE_PROGRAMS`)
+- `data/deadlines.ts` — Ontario application lifecycle deadlines (OUAC, supp apps, scholarships, offers)
+- `data/suppAdvice.ts` — Supplementary application advice cards by program
+
+**Context Providers (in `_layout.tsx`):**
+SubscriptionsProvider → SavedPostsProvider → ApplicationsProvider → GestureHandlerRootView → KeyboardProvider
+
+**Design System:**
+- Colors: primary `#1A3A6B`, accent `#D4A017`, likeColor `#FF2D55`
+- `Colors.light.primaryMuted` for tinted backgrounds
+- `Colors.light.success` for co-op/acceptance indicators
+
+**Key Notes:**
+- `saved.tsx` still exists but is `href: null` (hidden) — PostCard still imports SavedPostsContext
+- Post interface uses `likes` field (not `upvotes`)
+- Applicant Mode hides categories: `["club", "sports", "merch"]`
+- Application statuses: shortlisted → applied → supp_sent → offer → accepted → declined
 
 ## Structure
 
@@ -63,23 +116,13 @@ artifacts-monorepo/
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
 │   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+├── scripts/                # Utility scripts
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+├── tsconfig.json
+└── package.json
 ```
 
 ## TypeScript & Composite Projects
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
-
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
-
-## Root Scripts
-
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+Every package extends `tsconfig.base.json` which sets `composite: true`. Always typecheck from root: `pnpm run typecheck`.
