@@ -17,20 +17,29 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { PostCard } from "@/components/PostCard";
 import Colors from "@/constants/colors";
+import {
+  APP_STATUS_CONFIG,
+  APP_STATUS_ORDER,
+  AppStatus,
+  useApplications,
+} from "@/context/ApplicationsContext";
 import { useSubscriptions } from "@/context/SubscriptionsContext";
 import { PostCategory, SAMPLE_POSTS } from "@/data/feed";
 import { SAMPLE_PROGRAMS } from "@/data/programs";
+import { ONTARIO_DEADLINES } from "@/data/deadlines";
 import { getUniversityById } from "@/data/universities";
 
-type DetailTab = "feed" | "programs" | "faculties" | "about";
+type DetailTab = "feed" | "programs" | "admissions" | "about";
 
 export default function UniversityDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 67 : insets.top;
   const { isSubscribed, toggleSubscription } = useSubscriptions();
+  const { isTracked, addApplication, getApplication, updateStatus, removeApplication } = useApplications();
   const [activeTab, setActiveTab] = useState<DetailTab>("feed");
   const [selectedCategory, setSelectedCategory] = useState<PostCategory | null>(null);
+  const [showStatusPicker, setShowStatusPicker] = useState(false);
 
   const university = getUniversityById(id);
 
@@ -46,8 +55,11 @@ export default function UniversityDetailScreen() {
   }
 
   const subscribed = isSubscribed(university.id);
+  const tracked = isTracked(university.id);
+  const application = getApplication(university.id);
   const uniPosts = SAMPLE_POSTS.filter((p) => p.universityId === university.id);
   const uniPrograms = SAMPLE_PROGRAMS.filter((p) => p.universityId === university.id);
+  const uniDeadlines = ONTARIO_DEADLINES.filter((d) => d.universityId === university.id);
 
   const filteredPosts = selectedCategory
     ? uniPosts.filter((p) => p.category === selectedCategory)
@@ -58,10 +70,19 @@ export default function UniversityDetailScreen() {
     toggleSubscription(university.id);
   };
 
+  const handleTrack = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (tracked) {
+      setShowStatusPicker((s) => !s);
+    } else {
+      addApplication(university.id);
+    }
+  };
+
   const DETAIL_TABS: { id: DetailTab; label: string }[] = [
     { id: "feed", label: "Feed" },
     { id: "programs", label: "Programs" },
-    { id: "faculties", label: "Faculties" },
+    { id: "admissions", label: "Admissions" },
     { id: "about", label: "About" },
   ];
 
@@ -72,24 +93,21 @@ export default function UniversityDetailScreen() {
           <Pressable style={styles.backBtn} onPress={() => router.back()}>
             <Feather name="arrow-left" size={20} color="#fff" />
           </Pressable>
-          <Pressable
-            style={[styles.subscribeHeroBtn, subscribed && styles.subscribedHeroBtn]}
-            onPress={handleSubscribe}
-          >
-            <Feather
-              name={subscribed ? "check" : "plus"}
-              size={16}
-              color={subscribed ? university.color : "#fff"}
-            />
-            <Text
-              style={[
-                styles.subscribeHeroBtnText,
-                subscribed && { color: university.color },
-              ]}
+          <View style={styles.topBarRight}>
+            <Pressable
+              style={[styles.subscribeHeroBtn, subscribed && styles.subscribedHeroBtn]}
+              onPress={handleSubscribe}
             >
-              {subscribed ? "Joined" : "Join"}
-            </Text>
-          </Pressable>
+              <Feather
+                name={subscribed ? "check" : "rss"}
+                size={15}
+                color={subscribed ? university.color : "#fff"}
+              />
+              <Text style={[styles.subscribeHeroBtnText, subscribed && { color: university.color }]}>
+                {subscribed ? "Following" : "Follow"}
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.heroContent}>
@@ -118,13 +136,88 @@ export default function UniversityDetailScreen() {
             </View>
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStat}>
-              <Text style={styles.heroStatValue}>{uniPosts.length}</Text>
-              <Text style={styles.heroStatLabel}>Posts</Text>
+              <Text style={styles.heroStatValue}>{uniPrograms.length || "–"}</Text>
+              <Text style={styles.heroStatLabel}>Programs</Text>
             </View>
           </View>
         </View>
       </View>
 
+      {/* Track Application button */}
+      <View style={styles.trackSection}>
+        <Pressable
+          style={[
+            styles.trackBtn,
+            tracked && {
+              backgroundColor: APP_STATUS_CONFIG[application!.status].bg,
+              borderColor: APP_STATUS_CONFIG[application!.status].color + "44",
+            },
+          ]}
+          onPress={handleTrack}
+        >
+          <Feather
+            name={tracked ? (APP_STATUS_CONFIG[application!.status].icon as any) : "clipboard"}
+            size={16}
+            color={tracked ? APP_STATUS_CONFIG[application!.status].color : Colors.light.primary}
+          />
+          <Text
+            style={[
+              styles.trackBtnText,
+              tracked && { color: APP_STATUS_CONFIG[application!.status].color },
+            ]}
+          >
+            {tracked
+              ? `${APP_STATUS_CONFIG[application!.status].label} — tap to update`
+              : "Track My Application"}
+          </Text>
+          {tracked && (
+            <Feather
+              name="chevron-down"
+              size={14}
+              color={APP_STATUS_CONFIG[application!.status].color}
+            />
+          )}
+        </Pressable>
+
+        {showStatusPicker && tracked && (
+          <View style={styles.statusPicker}>
+            {APP_STATUS_ORDER.map((s) => {
+              const cfg = APP_STATUS_CONFIG[s];
+              return (
+                <Pressable
+                  key={s}
+                  style={[
+                    styles.statusOption,
+                    application?.status === s && { backgroundColor: cfg.bg },
+                  ]}
+                  onPress={() => {
+                    updateStatus(university.id, s as AppStatus);
+                    setShowStatusPicker(false);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                >
+                  <Feather name={cfg.icon as any} size={14} color={cfg.color} />
+                  <Text style={[styles.statusOptionText, { color: cfg.color }]}>
+                    {cfg.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+            <Pressable
+              style={styles.removeTrackBtn}
+              onPress={() => {
+                removeApplication(university.id);
+                setShowStatusPicker(false);
+              }}
+            >
+              <Feather name="trash-2" size={13} color={Colors.light.textMuted} />
+              <Text style={styles.removeTrackText}>Remove from tracker</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+
+      {/* Tab bar */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -153,10 +246,7 @@ export default function UniversityDetailScreen() {
       </ScrollView>
 
       {activeTab === "feed" && (
-        <CategoryFilter
-          selected={selectedCategory}
-          onSelect={setSelectedCategory}
-        />
+        <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
       )}
     </>
   );
@@ -174,7 +264,7 @@ export default function UniversityDetailScreen() {
             Platform.OS === "web" && { paddingBottom: 34 },
           ]}
           showsVerticalScrollIndicator={false}
-          scrollEnabled={!!filteredPosts.length}
+          scrollEnabled
           ListEmptyComponent={
             <View style={styles.emptySection}>
               <Feather name="inbox" size={36} color={Colors.light.textMuted} />
@@ -194,6 +284,8 @@ export default function UniversityDetailScreen() {
         ]}
       >
         {renderHeader()}
+
+        {/* ── PROGRAMS TAB ── */}
         {activeTab === "programs" && (
           <View style={styles.section}>
             {uniPrograms.length === 0 ? (
@@ -211,7 +303,7 @@ export default function UniversityDetailScreen() {
                     </View>
                     <View style={[styles.progBadge, prog.hasCoOp && styles.coOpBadge]}>
                       <Text style={[styles.progBadgeText, prog.hasCoOp && { color: Colors.light.success }]}>
-                        {prog.hasCoOp ? "Co-op" : "Regular"}
+                        {prog.hasCoOp ? "Co-op ✓" : "Regular"}
                       </Text>
                     </View>
                   </View>
@@ -219,7 +311,7 @@ export default function UniversityDetailScreen() {
                   <View style={styles.progStats}>
                     <View style={styles.progStat}>
                       <Feather name="trending-up" size={12} color={Colors.light.primary} />
-                      <Text style={styles.progStatText}>{prog.averageGrade}</Text>
+                      <Text style={styles.progStatText}>{prog.averageGrade} avg</Text>
                     </View>
                     <View style={styles.progStat}>
                       <Feather name="clock" size={12} color={Colors.light.primary} />
@@ -242,9 +334,7 @@ export default function UniversityDetailScreen() {
                   </View>
                   <View style={styles.deadlineRow}>
                     <Feather name="calendar" size={13} color={Colors.light.textMuted} />
-                    <Text style={styles.deadlineText}>
-                      Deadline: {prog.applicationDeadline}
-                    </Text>
+                    <Text style={styles.deadlineText}>Deadline: {prog.applicationDeadline}</Text>
                     <Text style={styles.ouacCode}>OUAC: {prog.ouacCode}</Text>
                   </View>
                 </View>
@@ -253,31 +343,164 @@ export default function UniversityDetailScreen() {
           </View>
         )}
 
-        {activeTab === "faculties" && (
+        {/* ── ADMISSIONS TAB ── */}
+        {activeTab === "admissions" && (
           <View style={styles.section}>
-            {university.faculties.map((faculty, index) => (
-              <View key={index} style={styles.facultyRow}>
-                <View
-                  style={[styles.facultyDot, { backgroundColor: university.color }]}
-                />
-                <Text style={styles.facultyName}>{faculty}</Text>
-              </View>
-            ))}
 
-            {university.affiliated.length > 0 && (
+            {/* OUAC info card */}
+            <View style={styles.admissionInfoCard}>
+              <View style={styles.admissionInfoHeader}>
+                <Feather name="send" size={16} color={Colors.light.primary} />
+                <Text style={styles.admissionInfoTitle}>How to Apply</Text>
+              </View>
+              <Text style={styles.admissionInfoBody}>
+                Apply to {university.shortName} through the Ontario Universities' Application Centre (OUAC) at{" "}
+                <Text style={styles.admissionLink}>ouac.on.ca</Text>
+                . The main deadline is <Text style={{ fontFamily: "Inter_600SemiBold" }}>January 15</Text> for
+                most Ontario universities.
+              </Text>
+              <Pressable
+                style={styles.ouacApplyBtn}
+                onPress={() => Linking.openURL("https://www.ouac.on.ca")}
+              >
+                <Feather name="external-link" size={14} color="#fff" />
+                <Text style={styles.ouacApplyBtnText}>Open OUAC Portal</Text>
+              </Pressable>
+            </View>
+
+            {/* Program admission requirements */}
+            {uniPrograms.length > 0 && (
               <>
-                <Text style={styles.sectionTitle}>Affiliated Organizations</Text>
-                {university.affiliated.map((org, index) => (
-                  <View key={index} style={styles.affiliatedRow}>
-                    <Feather name="users" size={14} color={Colors.light.primary} />
-                    <Text style={styles.affiliatedName}>{org}</Text>
+                <Text style={styles.sectionTitle}>Admission Requirements by Program</Text>
+                {uniPrograms.map((prog) => (
+                  <View key={prog.id} style={styles.admissionProgCard}>
+                    <View style={styles.admissionProgHeader}>
+                      <View style={styles.admissionProgLeft}>
+                        <Text style={styles.admissionProgName}>{prog.name}</Text>
+                        <Text style={styles.admissionProgFaculty}>{prog.faculty}</Text>
+                      </View>
+                      <View style={styles.admissionAvgBadge}>
+                        <Text style={styles.admissionAvgText}>{prog.averageGrade}</Text>
+                        <Text style={styles.admissionAvgLabel}>avg</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.admissionProgGrid}>
+                      <View style={styles.admissionProgItem}>
+                        <Text style={styles.admissionProgItemLabel}>Degree</Text>
+                        <Text style={styles.admissionProgItemValue}>{prog.degree}</Text>
+                      </View>
+                      <View style={styles.admissionProgItem}>
+                        <Text style={styles.admissionProgItemLabel}>Duration</Text>
+                        <Text style={styles.admissionProgItemValue}>{prog.duration}</Text>
+                      </View>
+                      <View style={styles.admissionProgItem}>
+                        <Text style={styles.admissionProgItemLabel}>Tuition</Text>
+                        <Text style={styles.admissionProgItemValue}>{prog.tuition}</Text>
+                      </View>
+                      <View style={styles.admissionProgItem}>
+                        <Text style={styles.admissionProgItemLabel}>Co-op</Text>
+                        <Text style={[styles.admissionProgItemValue, { color: prog.hasCoOp ? Colors.light.success : Colors.light.textMuted }]}>
+                          {prog.hasCoOp ? "Available ✓" : "No"}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.reqCoursesSection}>
+                      <Text style={styles.reqCoursesLabel}>Required 4U/4M Courses</Text>
+                      <View style={styles.reqCoursesList}>
+                        {prog.requiredCourses.map((c) => (
+                          <View key={c} style={styles.reqCourse}>
+                            <Text style={styles.reqCourseText}>{c}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+
+                    <View style={styles.admissionProgDeadline}>
+                      <Feather name="calendar" size={12} color={Colors.light.textMuted} />
+                      <Text style={styles.admissionProgDeadlineText}>
+                        Deadline: {prog.applicationDeadline}
+                      </Text>
+                      <View style={styles.ouacCodeBadge}>
+                        <Text style={styles.ouacCodeText}>{prog.ouacCode}</Text>
+                      </View>
+                    </View>
                   </View>
                 ))}
+              </>
+            )}
+
+            {/* University-specific deadlines */}
+            {uniDeadlines.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Key Deadlines</Text>
+                {uniDeadlines.map((d) => {
+                  const now = new Date();
+                  const target = new Date(d.date);
+                  const days = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <View key={d.id} style={styles.deadlineCard}>
+                      <View style={styles.deadlineCardLeft}>
+                        <Text style={styles.deadlineCardTitle}>{d.title}</Text>
+                        <Text style={styles.deadlineCardDesc}>{d.description}</Text>
+                        <Text style={styles.deadlineCardDate}>{d.date}</Text>
+                      </View>
+                      <View style={styles.deadlineCardDays}>
+                        <Text
+                          style={[
+                            styles.deadlineCardDaysNum,
+                            { color: days <= 14 ? "#EF4444" : Colors.light.primary },
+                          ]}
+                        >
+                          {days < 0 ? "–" : days === 0 ? "Today" : days}
+                        </Text>
+                        {days > 0 && (
+                          <Text style={styles.deadlineCardDaysLabel}>days</Text>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Supplementary app info */}
+            <View style={styles.suppCard}>
+              <Feather name="file-text" size={16} color="#F59E0B" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.suppTitle}>Supplementary Applications</Text>
+                <Text style={styles.suppBody}>
+                  Many competitive programs at {university.shortName} require a supplementary
+                  application or essay beyond the OUAC form. Check the program's official page
+                  for requirements and deadlines — these are separate from OUAC.
+                </Text>
+                <Pressable
+                  style={styles.suppLink}
+                  onPress={() => Linking.openURL(university.website)}
+                >
+                  <Text style={styles.suppLinkText}>Check {university.shortName} website →</Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Career paths from programs */}
+            {uniPrograms.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Career Paths</Text>
+                <View style={styles.careerGrid}>
+                  {[...new Set(uniPrograms.flatMap((p) => p.careerPaths))].map((c) => (
+                    <View key={c} style={styles.careerChip}>
+                      <Text style={styles.careerChipText}>{c}</Text>
+                    </View>
+                  ))}
+                </View>
               </>
             )}
           </View>
         )}
 
+        {/* ── ABOUT TAB ── */}
         {activeTab === "about" && (
           <View style={styles.section}>
             <View style={styles.aboutCard}>
@@ -308,30 +531,30 @@ export default function UniversityDetailScreen() {
                 <Text style={styles.infoValue}>{university.location}</Text>
               </View>
               <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Website</Text>
-                <Text style={[styles.infoValue, { color: Colors.light.primary }]}>
-                  {university.website.replace("https://", "")}
-                </Text>
+                <Text style={styles.infoLabel}>Faculties</Text>
+                <Text style={styles.infoValue}>{university.faculties.length} faculties</Text>
               </View>
             </View>
 
-            <Text style={styles.sectionTitle}>Data Sources</Text>
-            <View style={styles.sourceCard}>
-              <View style={styles.sourceRow}>
-                <Feather name="globe" size={14} color={Colors.light.primary} />
-                <Text style={styles.sourceText}>OUInfo.ca — Ontario Universities Info</Text>
+            <Text style={styles.sectionTitle}>Faculties</Text>
+            {university.faculties.map((faculty, index) => (
+              <View key={index} style={styles.facultyRow}>
+                <View style={[styles.facultyDot, { backgroundColor: university.color }]} />
+                <Text style={styles.facultyName}>{faculty}</Text>
               </View>
-              <View style={styles.sourceRow}>
-                <Feather name="globe" size={14} color={Colors.light.primary} />
-                <Text style={styles.sourceText}>{university.website}</Text>
-              </View>
-              {university.affiliated.map((org, i) => (
-                <View key={i} style={styles.sourceRow}>
-                  <Feather name="users" size={14} color={Colors.light.textMuted} />
-                  <Text style={styles.sourceText}>{org}</Text>
-                </View>
-              ))}
-            </View>
+            ))}
+
+            {university.affiliated.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Affiliated Organizations</Text>
+                {university.affiliated.map((org, index) => (
+                  <View key={index} style={styles.affiliatedRow}>
+                    <Feather name="users" size={14} color={Colors.light.primary} />
+                    <Text style={styles.affiliatedName}>{org}</Text>
+                  </View>
+                ))}
+              </>
+            )}
           </View>
         )}
       </ScrollView>
@@ -372,6 +595,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
   },
+  topBarRight: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
   backBtn: {
     width: 36,
     height: 36,
@@ -385,7 +613,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
   },
@@ -464,6 +692,64 @@ const styles = StyleSheet.create({
     width: 1,
     height: 32,
     backgroundColor: "rgba(255,255,255,0.25)",
+  },
+  trackSection: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+    backgroundColor: Colors.light.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  trackBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: 12,
+    backgroundColor: Colors.light.primaryMuted,
+    borderWidth: 1,
+    borderColor: Colors.light.primary + "33",
+  },
+  trackBtnText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.primary,
+  },
+  statusPicker: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    paddingTop: 2,
+  },
+  statusOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: Colors.light.backgroundSecondary,
+  },
+  statusOptionText: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+  },
+  removeTrackBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: Colors.light.backgroundSecondary,
+  },
+  removeTrackText: {
+    fontSize: 12,
+    fontFamily: "Inter_500Medium",
+    color: Colors.light.textMuted,
   },
   tabsBar: {
     backgroundColor: Colors.light.surface,
@@ -630,6 +916,247 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
+  // Admissions tab styles
+  admissionInfoCard: {
+    backgroundColor: Colors.light.surface,
+    borderRadius: 14,
+    padding: 14,
+    gap: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.light.primary,
+  },
+  admissionInfoHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  admissionInfoTitle: {
+    fontSize: 15,
+    fontFamily: "Inter_700Bold",
+    color: Colors.light.text,
+  },
+  admissionInfoBody: {
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textSecondary,
+    lineHeight: 21,
+  },
+  admissionLink: {
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.primary,
+  },
+  ouacApplyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: Colors.light.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignSelf: "flex-start",
+  },
+  ouacApplyBtnText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: "#fff",
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontFamily: "Inter_700Bold",
+    color: Colors.light.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginTop: 6,
+  },
+  admissionProgCard: {
+    backgroundColor: Colors.light.surface,
+    borderRadius: 14,
+    padding: 14,
+    gap: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  admissionProgHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  admissionProgLeft: {
+    flex: 1,
+    gap: 2,
+  },
+  admissionProgName: {
+    fontSize: 16,
+    fontFamily: "Inter_700Bold",
+    color: Colors.light.text,
+  },
+  admissionProgFaculty: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textMuted,
+  },
+  admissionAvgBadge: {
+    backgroundColor: Colors.light.primaryMuted,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  admissionAvgText: {
+    fontSize: 16,
+    fontFamily: "Inter_700Bold",
+    color: Colors.light.primary,
+  },
+  admissionAvgLabel: {
+    fontSize: 10,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.primary,
+  },
+  admissionProgGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  admissionProgItem: {
+    width: "47%",
+    backgroundColor: Colors.light.backgroundSecondary,
+    borderRadius: 10,
+    padding: 10,
+    gap: 2,
+  },
+  admissionProgItemLabel: {
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  admissionProgItemValue: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.text,
+  },
+  admissionProgDeadline: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "wrap",
+  },
+  admissionProgDeadlineText: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textMuted,
+    flex: 1,
+  },
+  ouacCodeBadge: {
+    backgroundColor: Colors.light.primaryMuted,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  ouacCodeText: {
+    fontSize: 11,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.primary,
+  },
+  deadlineCard: {
+    flexDirection: "row",
+    backgroundColor: Colors.light.surface,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  deadlineCardLeft: {
+    flex: 1,
+    gap: 3,
+  },
+  deadlineCardTitle: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.text,
+  },
+  deadlineCardDesc: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textSecondary,
+    lineHeight: 17,
+  },
+  deadlineCardDate: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    color: Colors.light.textMuted,
+    marginTop: 2,
+  },
+  deadlineCardDays: {
+    alignItems: "center",
+    minWidth: 40,
+  },
+  deadlineCardDaysNum: {
+    fontSize: 20,
+    fontFamily: "Inter_700Bold",
+  },
+  deadlineCardDaysLabel: {
+    fontSize: 10,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textMuted,
+  },
+  suppCard: {
+    flexDirection: "row",
+    gap: 12,
+    backgroundColor: "#FFFBEB",
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#F59E0B33",
+  },
+  suppTitle: {
+    fontSize: 14,
+    fontFamily: "Inter_700Bold",
+    color: "#92400E",
+    marginBottom: 4,
+  },
+  suppBody: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    color: "#78350F",
+    lineHeight: 19,
+  },
+  suppLink: {
+    marginTop: 8,
+  },
+  suppLinkText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.primary,
+  },
+  careerGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  careerChip: {
+    backgroundColor: Colors.light.surface,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  careerChipText: {
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+    color: Colors.light.textSecondary,
+  },
+  // About tab
   facultyRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -653,14 +1180,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Inter_500Medium",
     color: Colors.light.text,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginTop: 8,
   },
   affiliatedRow: {
     flexDirection: "row",
@@ -735,21 +1254,5 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     maxWidth: "60%",
     textAlign: "right",
-  },
-  sourceCard: {
-    backgroundColor: Colors.light.surface,
-    borderRadius: 14,
-    padding: 14,
-    gap: 10,
-  },
-  sourceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  sourceText: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
   },
 });

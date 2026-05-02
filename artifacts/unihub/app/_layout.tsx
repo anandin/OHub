@@ -14,6 +14,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ApplicationsProvider } from "@/context/ApplicationsContext";
 import { SavedPostsProvider } from "@/context/SavedPostsContext";
 import { SubscriptionsProvider } from "@/context/SubscriptionsContext";
 
@@ -59,11 +60,13 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <SubscriptionsProvider>
             <SavedPostsProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <KeyboardProvider>
-                  <RootLayoutNav />
-                </KeyboardProvider>
-              </GestureHandlerRootView>
+              <ApplicationsProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <KeyboardProvider>
+                    <RootLayoutNav />
+                  </KeyboardProvider>
+                </GestureHandlerRootView>
+              </ApplicationsProvider>
             </SavedPostsProvider>
           </SubscriptionsProvider>
         </QueryClientProvider>

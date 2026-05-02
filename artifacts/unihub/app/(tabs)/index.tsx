@@ -16,11 +16,14 @@ import { CategoryFilter } from "@/components/CategoryFilter";
 import { PostCard } from "@/components/PostCard";
 import Colors from "@/constants/colors";
 import { useSubscriptions } from "@/context/SubscriptionsContext";
-import { PostCategory, SAMPLE_POSTS } from "@/data/feed";
+import { Post, PostCategory, SAMPLE_POSTS } from "@/data/feed";
+import { getUpcomingDeadlines } from "@/data/deadlines";
 import { ONTARIO_UNIVERSITIES } from "@/data/universities";
 import { useFeedRefresh } from "@/hooks/useFeedRefresh";
 
 type SortBy = "hot" | "new" | "top";
+
+const APPLICANT_HIDE_CATEGORIES: PostCategory[] = ["club", "sports", "merch"];
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -29,15 +32,21 @@ export default function HomeScreen() {
   const [selectedCategory, setSelectedCategory] = useState<PostCategory | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [sortBy, setSortBy] = useState<SortBy>("hot");
+  const [applicantMode, setApplicantMode] = useState(false);
 
   const { extraPosts, nextRefreshIn, manualRefresh } = useFeedRefresh();
+  const upcomingDeadlines = useMemo(() => getUpcomingDeadlines(1), []);
+  const nextDeadline = upcomingDeadlines[0] ?? null;
 
-  const allPosts = useMemo(() => [...extraPosts, ...SAMPLE_POSTS], [extraPosts]);
+  const allPosts = useMemo<Post[]>(() => [...extraPosts, ...SAMPLE_POSTS], [extraPosts]);
 
   const filteredPosts = useMemo(() => {
     let posts = allPosts.filter(
       (p) => subscribed.length === 0 || subscribed.includes(p.universityId)
     );
+    if (applicantMode) {
+      posts = posts.filter((p) => !APPLICANT_HIDE_CATEGORIES.includes(p.category));
+    }
     if (selectedCategory) {
       posts = posts.filter((p) => p.category === selectedCategory);
     }
@@ -51,7 +60,7 @@ export default function HomeScreen() {
       );
     }
     return posts;
-  }, [allPosts, subscribed, selectedCategory, sortBy]);
+  }, [allPosts, subscribed, selectedCategory, sortBy, applicantMode]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -65,6 +74,44 @@ export default function HomeScreen() {
 
   const renderHeader = () => (
     <View>
+      {/* Deadline banner */}
+      {nextDeadline && (
+        <Pressable
+          style={[
+            styles.deadlineBanner,
+            nextDeadline.daysUntil <= 14 && styles.deadlineBannerUrgent,
+          ]}
+          onPress={() => router.push("/(tabs)/apply")}
+        >
+          <View style={styles.deadlineBannerLeft}>
+            <Feather
+              name="clock"
+              size={14}
+              color={nextDeadline.daysUntil <= 14 ? "#EF4444" : Colors.light.primary}
+            />
+            <View style={styles.deadlineBannerText}>
+              <Text style={styles.deadlineBannerTitle} numberOfLines={1}>
+                {nextDeadline.title}
+              </Text>
+              <Text
+                style={[
+                  styles.deadlineBannerDays,
+                  { color: nextDeadline.daysUntil <= 14 ? "#EF4444" : Colors.light.primary },
+                ]}
+              >
+                {nextDeadline.daysUntil === 0
+                  ? "Due today"
+                  : nextDeadline.daysUntil === 1
+                  ? "Due tomorrow"
+                  : `${nextDeadline.daysUntil} days left`}
+              </Text>
+            </View>
+          </View>
+          <Feather name="chevron-right" size={16} color={Colors.light.textMuted} />
+        </Pressable>
+      )}
+
+      {/* Subscribed university pills */}
       {subscribed.length > 0 && (
         <View style={styles.subscribedScroll}>
           <FlatList
@@ -88,6 +135,7 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {/* Sort + Applicant Mode row */}
       <View style={styles.sortRow}>
         {(["hot", "new", "top"] as SortBy[]).map((s) => (
           <Pressable
@@ -106,13 +154,44 @@ export default function HomeScreen() {
           </Pressable>
         ))}
 
-        {nextRefreshIn.length > 0 && (
-          <View style={styles.refreshBadge}>
-            <Feather name="refresh-cw" size={10} color={Colors.light.textMuted} />
-            <Text style={styles.refreshBadgeText}>in {nextRefreshIn}</Text>
-          </View>
-        )}
+        <Pressable
+          style={[styles.applicantToggle, applicantMode && styles.applicantToggleActive]}
+          onPress={() => {
+            setApplicantMode((m) => !m);
+            if (applicantMode) setSelectedCategory(null);
+          }}
+        >
+          <Feather
+            name="user-check"
+            size={13}
+            color={applicantMode ? "#fff" : Colors.light.textSecondary}
+          />
+          <Text
+            style={[
+              styles.applicantToggleText,
+              applicantMode && styles.applicantToggleTextActive,
+            ]}
+          >
+            Applicant
+          </Text>
+        </Pressable>
       </View>
+
+      {applicantMode && (
+        <View style={styles.applicantModeBanner}>
+          <Feather name="info" size={12} color={Colors.light.primary} />
+          <Text style={styles.applicantModeText}>
+            Showing admission-relevant posts · Club, sports &amp; merch posts hidden
+          </Text>
+        </View>
+      )}
+
+      {nextRefreshIn.length > 0 && (
+        <View style={styles.refreshHint}>
+          <Feather name="refresh-cw" size={10} color={Colors.light.textMuted} />
+          <Text style={styles.refreshHintText}>Next update in {nextRefreshIn}</Text>
+        </View>
+      )}
 
       <CategoryFilter
         selected={selectedCategory}
@@ -148,7 +227,7 @@ export default function HomeScreen() {
           <Feather name="plus-circle" size={40} color={Colors.light.primary} />
           <Text style={styles.emptyTitle}>Find Your Universities</Text>
           <Text style={styles.emptySubtitle}>
-            Subscribe to Ontario universities to see their latest posts, events, and updates.
+            Subscribe to Ontario universities to see their latest posts, events, and updates in your feed.
           </Text>
           <Pressable
             style={styles.exploreBtn}
@@ -173,7 +252,10 @@ export default function HomeScreen() {
             <Text style={styles.appSubtitle}>Ontario Universities</Text>
           </View>
         </View>
-        <Pressable style={styles.notifBtn} onPress={() => router.push("/(tabs)/search")}>
+        <Pressable
+          style={styles.notifBtn}
+          onPress={() => router.push("/(tabs)/apply")}
+        >
           <Feather name="bell" size={22} color={Colors.light.text} />
         </Pressable>
       </View>
@@ -188,7 +270,7 @@ export default function HomeScreen() {
           Platform.OS === "web" && { paddingBottom: 34 },
         ]}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!!filteredPosts.length}
+        scrollEnabled
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -200,8 +282,13 @@ export default function HomeScreen() {
           <View style={styles.noPostsEmpty}>
             <Feather name="inbox" size={36} color={Colors.light.textMuted} />
             <Text style={styles.noPostsText}>No posts match this filter</Text>
-            <Pressable onPress={() => setSelectedCategory(null)}>
-              <Text style={styles.clearFilter}>Clear filter</Text>
+            <Pressable
+              onPress={() => {
+                setSelectedCategory(null);
+                setApplicantMode(false);
+              }}
+            >
+              <Text style={styles.clearFilter}>Clear filters</Text>
             </Pressable>
           </View>
         }
@@ -255,6 +342,41 @@ const styles = StyleSheet.create({
   notifBtn: {
     padding: 6,
   },
+  deadlineBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginHorizontal: 12,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.light.primaryMuted,
+    borderWidth: 1,
+    borderColor: Colors.light.primary + "30",
+  },
+  deadlineBannerUrgent: {
+    backgroundColor: "#FEF2F2",
+    borderColor: "#EF444430",
+  },
+  deadlineBannerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
+  },
+  deadlineBannerText: {
+    flex: 1,
+    gap: 1,
+  },
+  deadlineBannerTitle: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.text,
+  },
+  deadlineBannerDays: {
+    fontSize: 12,
+    fontFamily: "Inter_500Medium",
+  },
   subscribedScroll: {
     marginBottom: 4,
   },
@@ -288,7 +410,7 @@ const styles = StyleSheet.create({
   sortRow: {
     flexDirection: "row",
     paddingHorizontal: 12,
-    gap: 8,
+    gap: 6,
     paddingTop: 8,
     paddingBottom: 2,
     alignItems: "center",
@@ -318,19 +440,57 @@ const styles = StyleSheet.create({
     color: Colors.light.primary,
     fontFamily: "Inter_600SemiBold",
   },
-  refreshBadge: {
+  applicantToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: Colors.light.surface,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    marginLeft: "auto",
+  },
+  applicantToggleActive: {
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
+  },
+  applicantToggleText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.textSecondary,
+  },
+  applicantToggleTextActive: {
+    color: "#fff",
+  },
+  applicantModeBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginHorizontal: 12,
+    marginTop: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
+    backgroundColor: Colors.light.primaryMuted,
+  },
+  applicantModeText: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.primary,
+    flex: 1,
+  },
+  refreshHint: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginLeft: "auto",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-    backgroundColor: Colors.light.backgroundSecondary,
+    marginHorizontal: 12,
+    marginTop: 6,
   },
-  refreshBadgeText: {
+  refreshHintText: {
     fontSize: 11,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Inter_400Regular",
     color: Colors.light.textMuted,
   },
   newPostsBanner: {
