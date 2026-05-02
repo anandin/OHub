@@ -26,7 +26,7 @@ A Reddit-style mobile app for Ontario Grade 12 applicants. Aggregates university
 
 **Tab Navigation (5 tabs):**
 - `/(tabs)/index` — Home feed
-- `/(tabs)/universities` — Browse & subscribe to universities
+- `/(tabs)/universities` — Browse & subscribe to all 23 Ontario universities
 - `/(tabs)/programs` — Search all Ontario programs
 - `/(tabs)/search` — Full-text search across posts/programs/universities
 - `/(tabs)/apply` — Application tracker, grade calculator, deadlines, supp advice
@@ -49,7 +49,7 @@ A Reddit-style mobile app for Ontario Grade 12 applicants. Aggregates university
 - University pill shortcuts
 
 *Programs Tab (`/(tabs)/programs`):*
-- 53+ Ontario university programs database (`data/programs.ts`)
+- **1,406 Ontario university programs** database (`data/programs.ts`) — every program from all 23 Ontario universities sourced from OUinfo.ca
 - Full-text search (name, description, careers, faculty)
 - Filter by faculty type: Engineering, Business, CS, Science, Health, Law, Architecture, Math, Arts, Music, Education, Environment
 - Filter by university (dropdown)
@@ -86,7 +86,7 @@ A Reddit-style mobile app for Ontario Grade 12 applicants. Aggregates university
 - `data/universities.ts` — 16 Ontario universities
 - `data/feed.ts` — 50+ SAMPLE_POSTS across all universities
 - `data/feedRefreshBatches.ts` — 4 rotating refresh batches
-- `data/programs.ts` — 53+ programs with full admission data (`ALL_PROGRAMS`, `SAMPLE_PROGRAMS`)
+- `data/programs.ts` — **1,406 programs** across all 23 Ontario universities sourced from OUinfo.ca (`ALL_PROGRAMS`, `SAMPLE_PROGRAMS`)
 - `data/deadlines.ts` — Ontario application lifecycle deadlines (OUAC, supp apps, scholarships, offers)
 - `data/suppAdvice.ts` — Supplementary application advice cards by program
 
