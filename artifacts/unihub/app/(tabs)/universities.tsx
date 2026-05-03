@@ -1,4 +1,3 @@
-import { Feather } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
   FlatList,
@@ -6,120 +5,154 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
 
-import { UniversityCard } from "@/components/UniversityCard";
-import Colors from "@/constants/colors";
+import { Post, SAMPLE_POSTS } from "@/data/feed";
+import { getUniversityById } from "@/data/universities";
 import { useSubscriptions } from "@/context/SubscriptionsContext";
-import { ONTARIO_UNIVERSITIES } from "@/data/universities";
 
-type Filter = "all" | "subscribed";
+type FeedTab = 'following' | 'school' | 'all';
 
-export default function UniversitiesScreen() {
+const ED = {
+  paper: '#f5f1e8',
+  card: '#fbf8f1',
+  ink: '#1a1612',
+  softInk: '#5c4a2f',
+  muted: '#8b7e62',
+  rule: '#e8e0cf',
+  warn: '#c2410c',
+  warnBg: '#fef3e2',
+  success: '#15803d',
+  pillBorder: '#d4c9b0',
+};
+
+function PostItem({ post }: { post: Post }) {
+  const uni = getUniversityById(post.universityId);
+  const [liked, setLiked] = useState(false);
+  const [likes, setLikes] = useState(post.likes);
+
+  const handleLike = () => {
+    setLiked(l => !l);
+    setLikes(n => liked ? n - 1 : n + 1);
+  };
+
+  const isTip = post.category === 'advice' || post.category === 'academic';
+
+  return (
+    <View style={styles.postItem}>
+      {isTip && (
+        <View style={styles.tipBadge}>
+          <Text style={styles.tipBadgeText}>oHub Tips</Text>
+        </View>
+      )}
+      <View style={styles.postMeta}>
+        <View style={[styles.uniDot, { backgroundColor: uni?.color ?? '#8b7e62' }]} />
+        <Text style={styles.postAuthor}>{post.author}</Text>
+        <Text style={styles.postMetaSep}>·</Text>
+        <Text style={styles.postUni}>{uni?.shortName ?? 'Ontario'}</Text>
+        <Text style={styles.postMetaSep}>·</Text>
+        <Text style={styles.postTime}>{post.timeAgo}</Text>
+      </View>
+      <Text style={styles.postTitle}>{post.title}</Text>
+      {post.body.length > 0 && (
+        <Text style={styles.postBody} numberOfLines={3}>{post.body}</Text>
+      )}
+      {post.tags && post.tags.length > 0 && (
+        <View style={styles.tagRow}>
+          {post.tags.slice(0, 3).map(tag => (
+            <View key={tag} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+      <View style={styles.postActions}>
+        <Pressable style={styles.actionBtn} onPress={handleLike}>
+          <Feather
+            name="heart"
+            size={14}
+            color={liked ? ED.warn : ED.muted}
+            style={liked ? { fill: ED.warn } : undefined}
+          />
+          <Text style={[styles.actionText, liked && { color: ED.warn }]}>{likes}</Text>
+        </Pressable>
+        <Pressable style={styles.actionBtn}>
+          <Feather name="message-circle" size={14} color={ED.muted} />
+          <Text style={styles.actionText}>{post.comments}</Text>
+        </Pressable>
+        <Pressable style={styles.actionBtn}>
+          <Feather name="share" size={14} color={ED.muted} />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+export default function PulseScreen() {
   const insets = useSafeAreaInsets();
-  const topInset = Platform.OS === "web" ? 67 : insets.top;
+  const topInset = Platform.OS === "web" ? 20 : insets.top;
   const { subscribed } = useSubscriptions();
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
+  const [activeTab, setActiveTab] = useState<FeedTab>('all');
 
-  const filtered = useMemo(() => {
-    let unis = ONTARIO_UNIVERSITIES;
-    if (filter === "subscribed") {
-      unis = unis.filter((u) => subscribed.includes(u.id));
+  const posts = useMemo(() => {
+    if (activeTab === 'following' && subscribed.length > 0) {
+      return SAMPLE_POSTS.filter(p => subscribed.includes(p.universityId));
     }
-    if (query.trim()) {
-      const q = query.toLowerCase();
-      unis = unis.filter(
-        (u) =>
-          u.name.toLowerCase().includes(q) ||
-          u.shortName.toLowerCase().includes(q) ||
-          u.location.toLowerCase().includes(q) ||
-          u.faculties.some((f) => f.toLowerCase().includes(q))
-      );
-    }
-    return unis;
-  }, [query, filter, subscribed]);
+    return SAMPLE_POSTS;
+  }, [activeTab, subscribed]);
+
+  const tabs: { id: FeedTab; label: string }[] = [
+    { id: 'following', label: 'Following' },
+    { id: 'school', label: 'School' },
+    { id: 'all', label: 'All' },
+  ];
 
   return (
     <View style={[styles.container, { paddingTop: topInset }]}>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Universities</Text>
-        <Text style={styles.subtitle}>
-          {ONTARIO_UNIVERSITIES.length} Ontario universities
-        </Text>
-      </View>
-
-      <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
-          <Feather name="search" size={16} color={Colors.light.textMuted} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search universities, faculties…"
-            placeholderTextColor={Colors.light.textMuted}
-            value={query}
-            onChangeText={setQuery}
-            autoCorrect={false}
-          />
-          {query.length > 0 && (
-            <Pressable onPress={() => setQuery("")}>
-              <Feather name="x" size={16} color={Colors.light.textMuted} />
-            </Pressable>
-          )}
+        <View>
+          <Text style={styles.eyebrow}>Community</Text>
+          <Text style={styles.title}>Pulse</Text>
         </View>
+        <Pressable style={styles.composeBtn}>
+          <Feather name="edit-2" size={18} color={ED.ink} />
+        </Pressable>
       </View>
 
-      <View style={styles.filterRow}>
-        <Pressable
-          style={[styles.filterChip, filter === "all" && styles.filterChipActive]}
-          onPress={() => setFilter("all")}
-        >
-          <Text
-            style={[
-              styles.filterChipText,
-              filter === "all" && styles.filterChipTextActive,
-            ]}
+      {/* Tab pills */}
+      <View style={styles.tabRow}>
+        {tabs.map(tab => (
+          <Pressable
+            key={tab.id}
+            style={[styles.tabPill, activeTab === tab.id && styles.tabPillActive]}
+            onPress={() => setActiveTab(tab.id)}
           >
-            All ({ONTARIO_UNIVERSITIES.length})
-          </Text>
-        </Pressable>
-        <Pressable
-          style={[
-            styles.filterChip,
-            filter === "subscribed" && styles.filterChipActive,
-          ]}
-          onPress={() => setFilter("subscribed")}
-        >
-          <Text
-            style={[
-              styles.filterChipText,
-              filter === "subscribed" && styles.filterChipTextActive,
-            ]}
-          >
-            Joined ({subscribed.length})
-          </Text>
-        </Pressable>
+            <Text style={[styles.tabLabel, activeTab === tab.id && styles.tabLabelActive]}>
+              {tab.label}
+            </Text>
+          </Pressable>
+        ))}
       </View>
 
       <FlatList
-        data={filtered}
-        keyExtractor={(u) => u.id}
-        renderItem={({ item }) => <UniversityCard university={item} />}
-        contentContainerStyle={[
-          styles.list,
-          Platform.OS === "web" && { paddingBottom: 34 },
-        ]}
+        data={posts}
+        keyExtractor={p => p.id}
+        renderItem={({ item }) => <PostItem post={item} />}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!!filtered.length}
+        contentContainerStyle={styles.listContent}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Feather name="search" size={36} color={Colors.light.textMuted} />
-            <Text style={styles.emptyText}>No universities found</Text>
-            <Pressable onPress={() => { setQuery(""); setFilter("all"); }}>
-              <Text style={styles.clearText}>Clear search</Text>
-            </Pressable>
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>No posts yet</Text>
+            <Text style={styles.emptyBody}>
+              {activeTab === 'following'
+                ? 'Follow some schools to see their posts here.'
+                : 'The community feed is quiet right now.'}
+            </Text>
           </View>
         }
       />
@@ -128,93 +161,106 @@ export default function UniversitiesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-  },
+  container: { flex: 1, backgroundColor: '#f5f1e8' },
   header: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    paddingTop: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  eyebrow: {
+    fontSize: 10,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    color: '#8b7e62',
+    fontFamily: 'Inter_500Medium',
+    marginBottom: 2,
   },
   title: {
-    fontSize: 28,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    fontFamily: 'Fraunces_600SemiBold',
+    fontSize: 30,
+    color: '#1a1612',
+    lineHeight: 32,
   },
-  subtitle: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
-    marginTop: 2,
+  composeBtn: { padding: 4 },
+  tabRow: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
   },
-  searchRow: {
-    paddingHorizontal: 12,
-    paddingBottom: 8,
-  },
-  searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.light.surface,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
+  tabPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: '#d4c9b0',
+    backgroundColor: 'transparent',
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.text,
-    padding: 0,
+  tabPillActive: {
+    backgroundColor: '#1a1612',
+    borderColor: '#1a1612',
   },
-  filterRow: {
-    flexDirection: "row",
-    paddingHorizontal: 12,
-    gap: 8,
-    paddingBottom: 10,
+  tabLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter_500Medium',
+    color: '#1a1612',
   },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: Colors.light.surface,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+  tabLabelActive: { color: '#f5f1e8' },
+  listContent: { paddingBottom: 100 },
+  separator: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24 },
+  postItem: { paddingHorizontal: 24, paddingVertical: 18 },
+  tipBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#fef3e2',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    marginBottom: 8,
   },
-  filterChipActive: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
+  tipBadgeText: { fontSize: 10, color: '#9a3412', fontFamily: 'Inter_600SemiBold', letterSpacing: 0.5 },
+  postMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 8,
+    flexWrap: 'wrap',
   },
-  filterChipText: {
+  uniDot: { width: 7, height: 7, borderRadius: 999 },
+  postAuthor: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
+  postUni: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#8b7e62' },
+  postMetaSep: { fontSize: 12, color: '#d4c9b0' },
+  postTime: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  postTitle: {
+    fontFamily: 'Fraunces_500Medium',
+    fontSize: 17,
+    lineHeight: 22,
+    color: '#1a1612',
+    marginBottom: 6,
+  },
+  postBody: {
     fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.textSecondary,
+    fontFamily: 'Inter_400Regular',
+    color: '#5c4a2f',
+    lineHeight: 20,
+    marginBottom: 8,
   },
-  filterChipTextActive: {
-    color: "#fff",
-    fontFamily: "Inter_600SemiBold",
+  tagRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 12 },
+  tag: {
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: '#fbf8f1',
   },
-  list: {
-    paddingTop: 4,
-    paddingBottom: 100,
-  },
-  empty: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.textMuted,
-  },
-  clearText: {
-    fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
-  },
+  tagText: { fontSize: 10, color: '#5c4a2f', fontFamily: 'Inter_500Medium' },
+  postActions: { flexDirection: 'row', gap: 16, alignItems: 'center' },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  actionText: { fontSize: 12, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  emptyState: { padding: 48, alignItems: 'center' },
+  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612', marginBottom: 8 },
+  emptyBody: { fontSize: 13, color: '#8b7e62', textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular' },
 });

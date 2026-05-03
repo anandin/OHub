@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>oHub — Direction A (Editorial)</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  #root { height: 100vh; }
+</style>
+<script>
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "accent": "#1a1612",
+    "paper": "#f5f1e8",
+    "serifWeight": 600,
+    "density": "regular"
+  }/*EDITMODE-END*/;
+</script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="data.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="editorial.jsx"></script>
+<script type="text/babel" src="editorial2.jsx"></script>
+
+<script type="text/babel">
+const { DesignCanvas, DCSection, DCArtboard, TweaksPanel, useTweaks, TweakSection, TweakColor, TweakRadio, TweakSlider } = window;
+const { EdToday, EdPrograms, EdProgramDetail, EdApply, EdPulse, EdProfile } = window.EditorialScreens;
+const { EdOnboarding, EdOnboarding2, EdScholarships, EdChatList, EdChatThread, EdEssay } = window.EditorialScreens2;
+
+const App = () => {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  // Apply tweaks via CSS vars on root
+  React.useEffect(() => {
+    const styleId = 'ed-tweaks-overrides';
+    let s = document.getElementById(styleId);
+    if (!s) { s = document.createElement('style'); s.id = styleId; document.head.appendChild(s); }
+    const scale = tweaks.density === 'compact' ? 0.92 : tweaks.density === 'spacious' ? 1.08 : 1;
+    s.textContent = `
+      .ed-btn { background: ${tweaks.accent} !important; }
+      .ed-btn-ghost { color: ${tweaks.accent} !important; border-color: ${tweaks.accent} !important; }
+      .ed { background: ${tweaks.paper} !important; }
+      .ed-serif { font-weight: ${tweaks.serifWeight} !important; }
+    `;
+  }, [tweaks]);
+
+  return (
+    <>
+      <DesignCanvas
+        title="oHub · Direction A"
+        subtitle="Ontario university applications, calmly · Editorial direction · 11 screens"
+      >
+        <DCSection id="onboard" title="Onboarding">
+          <DCArtboard id="ed-onb1" label="Welcome" width={390} height={844}>
+            <EdOnboarding />
+          </DCArtboard>
+          <DCArtboard id="ed-onb2" label="Pick your schools" width={390} height={844}>
+            <EdOnboarding2 />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="core" title="Core flow">
+          <DCArtboard id="ed-today" label="Today" width={390} height={844}>
+            <EdToday />
+          </DCArtboard>
+          <DCArtboard id="ed-programs" label="Programs (live search + filter)" width={390} height={844}>
+            <EdPrograms />
+          </DCArtboard>
+          <DCArtboard id="ed-detail" label="Program detail — Waterloo CS" width={390} height={844}>
+            <EdProgramDetail />
+          </DCArtboard>
+          <DCArtboard id="ed-apply" label="Apply / OUAC tracker" width={390} height={844}>
+            <EdApply />
+          </DCArtboard>
+          <DCArtboard id="ed-essay" label="Essay drafting (Waterloo AIF)" width={390} height={844}>
+            <EdEssay />
+          </DCArtboard>
+          <DCArtboard id="ed-scholarships" label="Scholarships" width={390} height={844}>
+            <EdScholarships />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="social" title="Social">
+          <DCArtboard id="ed-pulse" label="Pulse — feed" width={390} height={844}>
+            <EdPulse />
+          </DCArtboard>
+          <DCArtboard id="ed-chats" label="Chat list" width={390} height={844}>
+            <EdChatList />
+          </DCArtboard>
+          <DCArtboard id="ed-thread" label="Group chat — OUAC '26" width={390} height={844}>
+            <EdChatThread />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="profile-section" title="Profile">
+          <DCArtboard id="ed-profile" label="You / profile" width={390} height={844}>
+            <EdProfile />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Color">
+          <TweakColor label="Accent (buttons, headlines)" value={tweaks.accent} onChange={v => setTweak('accent', v)} />
+          <TweakColor label="Paper (background)" value={tweaks.paper} onChange={v => setTweak('paper', v)} />
+        </TweakSection>
+        <TweakSection label="Type">
+          <TweakSlider label="Serif weight" min={400} max={700} step={100} value={tweaks.serifWeight} onChange={v => setTweak('serifWeight', v)} />
+        </TweakSection>
+        <TweakSection label="Density">
+          <TweakRadio value={tweaks.density} onChange={v => setTweak('density', v)} options={[
+            { value: 'compact', label: 'Compact' },
+            { value: 'regular', label: 'Regular' },
+            { value: 'spacious', label: 'Spacious' },
+          ]} />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

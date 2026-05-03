@@ -1,564 +1,344 @@
-import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
-  FlatList,
   Platform,
   Pressable,
-  RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CategoryFilter } from "@/components/CategoryFilter";
-import { PostCard } from "@/components/PostCard";
-import Colors from "@/constants/colors";
-import { useSubscriptions } from "@/context/SubscriptionsContext";
-import { Post, PostCategory, SAMPLE_POSTS } from "@/data/feed";
+import { useUser } from "@/context/UserContext";
 import { getUpcomingDeadlines } from "@/data/deadlines";
-import { ONTARIO_UNIVERSITIES } from "@/data/universities";
-import { useFeedRefresh } from "@/hooks/useFeedRefresh";
+import { FEATURED_ARTICLES, UPCOMING_EVENTS } from "@/data/userData";
+import { useApplications } from "@/context/ApplicationsContext";
 
-type SortBy = "hot" | "new" | "top";
+const ED = {
+  paper: '#f5f1e8',
+  card: '#fbf8f1',
+  ink: '#1a1612',
+  softInk: '#5c4a2f',
+  muted: '#8b7e62',
+  rule: '#e8e0cf',
+  pillBorder: '#d4c9b0',
+  warn: '#c2410c',
+  warnBg: '#fef3e2',
+  success: '#15803d',
+  successBg: '#ecfdf5',
+};
 
-const APPLICANT_HIDE_CATEGORIES: PostCategory[] = ["club", "sports", "merch"];
+function issueNumber() {
+  const start = new Date('2025-09-01');
+  const now = new Date();
+  const weeks = Math.floor((now.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000));
+  return Math.max(1, weeks + 1);
+}
 
-export default function HomeScreen() {
+function formatDay() {
+  const d = new Date();
+  return d.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+export default function TodayScreen() {
   const insets = useSafeAreaInsets();
-  const topInset = Platform.OS === "web" ? 67 : insets.top;
-  const { subscribed } = useSubscriptions();
-  const [selectedCategory, setSelectedCategory] = useState<PostCategory | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [sortBy, setSortBy] = useState<SortBy>("hot");
-  const [applicantMode, setApplicantMode] = useState(false);
+  const topInset = Platform.OS === "web" ? 20 : insets.top;
+  const { profile, tasks, doneTasks, toggleTask } = useUser();
+  const { applications } = useApplications();
 
-  const { extraPosts, nextRefreshIn, manualRefresh } = useFeedRefresh();
-  const upcomingDeadlines = useMemo(() => getUpcomingDeadlines(1), []);
-  const nextDeadline = upcomingDeadlines[0] ?? null;
+  const submitted = applications.filter(a => ['applied', 'supp_sent', 'offer', 'accepted'].includes(a.status)).length;
+  const total = Math.max(applications.length, submitted);
 
-  const allPosts = useMemo<Post[]>(() => [...extraPosts, ...SAMPLE_POSTS], [extraPosts]);
+  const deadlines = useMemo(() => getUpcomingDeadlines(3), []);
+  const nextDeadline = deadlines[0] ?? null;
+  const daysLeft = nextDeadline ? nextDeadline.daysUntil : 0;
 
-  const filteredPosts = useMemo(() => {
-    let posts = allPosts.filter(
-      (p) => subscribed.length === 0 || subscribed.includes(p.universityId)
-    );
-    if (applicantMode) {
-      posts = posts.filter((p) => !APPLICANT_HIDE_CATEGORIES.includes(p.category));
-    }
-    if (selectedCategory) {
-      posts = posts.filter((p) => p.category === selectedCategory);
-    }
-    if (sortBy === "hot") {
-      posts = [...posts].sort((a, b) => b.likes - a.likes);
-    } else if (sortBy === "new") {
-      posts = [...posts].reverse();
-    } else {
-      posts = [...posts].sort(
-        (a, b) => b.likes + b.comments - (a.likes + a.comments)
-      );
-    }
-    return posts;
-  }, [allPosts, subscribed, selectedCategory, sortBy, applicantMode]);
+  const article = FEATURED_ARTICLES[0];
+  const progress = total > 0 ? (submitted / total) * 100 : 0;
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await manualRefresh();
-    setRefreshing(false);
-  };
-
-  const subscribedUnis = ONTARIO_UNIVERSITIES.filter((u) =>
-    subscribed.includes(u.id)
-  );
-
-  const renderHeader = () => (
-    <View>
-      {/* Deadline banner */}
-      {nextDeadline && (
-        <Pressable
-          style={[
-            styles.deadlineBanner,
-            nextDeadline.daysUntil <= 14 && styles.deadlineBannerUrgent,
-          ]}
-          onPress={() => router.push("/(tabs)/apply")}
-        >
-          <View style={styles.deadlineBannerLeft}>
-            <Feather
-              name="clock"
-              size={14}
-              color={nextDeadline.daysUntil <= 14 ? "#EF4444" : Colors.light.primary}
-            />
-            <View style={styles.deadlineBannerText}>
-              <Text style={styles.deadlineBannerTitle} numberOfLines={1}>
-                {nextDeadline.title}
-              </Text>
-              <Text
-                style={[
-                  styles.deadlineBannerDays,
-                  { color: nextDeadline.daysUntil <= 14 ? "#EF4444" : Colors.light.primary },
-                ]}
-              >
-                {nextDeadline.daysUntil === 0
-                  ? "Due today"
-                  : nextDeadline.daysUntil === 1
-                  ? "Due tomorrow"
-                  : `${nextDeadline.daysUntil} days left`}
-              </Text>
-            </View>
-          </View>
-          <Feather name="chevron-right" size={16} color={Colors.light.textMuted} />
-        </Pressable>
-      )}
-
-      {/* Subscribed university pills */}
-      {subscribed.length > 0 && (
-        <View style={styles.subscribedScroll}>
-          <FlatList
-            horizontal
-            data={subscribedUnis}
-            keyExtractor={(u) => u.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.uniPillsRow}
-            renderItem={({ item }) => (
-              <Pressable
-                style={styles.uniPill}
-                onPress={() =>
-                  router.push({ pathname: "/university/[id]", params: { id: item.id } })
-                }
-              >
-                <View style={[styles.uniPillDot, { backgroundColor: item.color }]} />
-                <Text style={styles.uniPillText}>{item.shortName}</Text>
-              </Pressable>
-            )}
-          />
-        </View>
-      )}
-
-      {/* Sort + Applicant Mode row */}
-      <View style={styles.sortRow}>
-        {(["hot", "new", "top"] as SortBy[]).map((s) => (
-          <Pressable
-            key={s}
-            style={[styles.sortBtn, sortBy === s && styles.sortBtnActive]}
-            onPress={() => setSortBy(s)}
-          >
-            <Feather
-              name={s === "hot" ? "trending-up" : s === "new" ? "clock" : "star"}
-              size={14}
-              color={sortBy === s ? Colors.light.primary : Colors.light.textSecondary}
-            />
-            <Text style={[styles.sortText, sortBy === s && styles.sortTextActive]}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </Text>
-          </Pressable>
-        ))}
-
-        <Pressable
-          style={[styles.applicantToggle, applicantMode && styles.applicantToggleActive]}
-          onPress={() => {
-            setApplicantMode((m) => !m);
-            if (applicantMode) setSelectedCategory(null);
-          }}
-        >
-          <Feather
-            name="user-check"
-            size={13}
-            color={applicantMode ? "#fff" : Colors.light.textSecondary}
-          />
-          <Text
-            style={[
-              styles.applicantToggleText,
-              applicantMode && styles.applicantToggleTextActive,
-            ]}
-          >
-            Applicant
-          </Text>
-        </Pressable>
-      </View>
-
-      {applicantMode && (
-        <View style={styles.applicantModeBanner}>
-          <Feather name="info" size={12} color={Colors.light.primary} />
-          <Text style={styles.applicantModeText}>
-            Showing admission-relevant posts · Club, sports &amp; merch posts hidden
-          </Text>
-        </View>
-      )}
-
-      {nextRefreshIn.length > 0 && (
-        <View style={styles.refreshHint}>
-          <Feather name="refresh-cw" size={10} color={Colors.light.textMuted} />
-          <Text style={styles.refreshHintText}>Next update in {nextRefreshIn}</Text>
-        </View>
-      )}
-
-      <CategoryFilter
-        selected={selectedCategory}
-        onSelect={setSelectedCategory}
-      />
-
-      {extraPosts.length > 0 && (
-        <View style={styles.newPostsBanner}>
-          <Feather name="zap" size={12} color={Colors.light.primary} />
-          <Text style={styles.newPostsText}>
-            {extraPosts.length} new posts added
-          </Text>
-        </View>
-      )}
-    </View>
-  );
-
-  if (subscribed.length === 0) {
-    return (
-      <View style={[styles.container, { paddingTop: topInset }]}>
-        <View style={styles.topBar}>
-          <View style={styles.logoRow}>
-            <View style={styles.logoBox}>
-              <Text style={styles.logoText}>U</Text>
-            </View>
-            <View>
-              <Text style={styles.appName}>UniHub</Text>
-              <Text style={styles.appSubtitle}>Ontario Universities</Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.feedEmpty}>
-          <Feather name="plus-circle" size={40} color={Colors.light.primary} />
-          <Text style={styles.emptyTitle}>Find Your Universities</Text>
-          <Text style={styles.emptySubtitle}>
-            Subscribe to Ontario universities to see their latest posts, events, and updates in your feed.
-          </Text>
-          <Pressable
-            style={styles.exploreBtn}
-            onPress={() => router.push("/(tabs)/universities")}
-          >
-            <Text style={styles.exploreBtnText}>Browse Universities</Text>
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
+  const priorityLabel = (p: string) =>
+    p === 'high' ? 'High priority' : p === 'med' ? 'Medium' : 'Low';
 
   return (
-    <View style={[styles.container, { paddingTop: topInset }]}>
-      <View style={styles.topBar}>
-        <View style={styles.logoRow}>
-          <View style={styles.logoBox}>
-            <Text style={styles.logoText}>U</Text>
-          </View>
-          <View>
-            <Text style={styles.appName}>UniHub</Text>
-            <Text style={styles.appSubtitle}>Ontario Universities</Text>
-          </View>
-        </View>
-        <Pressable
-          style={styles.notifBtn}
-          onPress={() => router.push("/(tabs)/apply")}
-        >
-          <Feather name="bell" size={22} color={Colors.light.text} />
-        </Pressable>
+    <ScrollView
+      style={[styles.container, { paddingTop: topInset }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Date + Issue */}
+      <View style={styles.dateLine}>
+        <Text style={styles.dateText}>{formatDay()}</Text>
+        <Text style={styles.issueText}>Issue №{issueNumber()}</Text>
       </View>
 
-      <FlatList
-        data={filteredPosts}
-        keyExtractor={(p) => p.id}
-        renderItem={({ item }) => <PostCard post={item} />}
-        ListHeaderComponent={renderHeader}
-        contentContainerStyle={[
-          styles.listContent,
-          Platform.OS === "web" && { paddingBottom: 34 },
-        ]}
-        showsVerticalScrollIndicator={false}
-        scrollEnabled
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={Colors.light.primary}
-          />
-        }
-        ListEmptyComponent={
-          <View style={styles.noPostsEmpty}>
-            <Feather name="inbox" size={36} color={Colors.light.textMuted} />
-            <Text style={styles.noPostsText}>No posts match this filter</Text>
+      {/* Hero countdown */}
+      <View style={styles.heroSection}>
+        {nextDeadline ? (
+          <>
+            <Text style={styles.heroCount}>{daysLeft} {daysLeft === 1 ? 'day' : 'days'}</Text>
+            <Text style={styles.heroSub}>
+              until {nextDeadline.title}.{'\n'}
+              <Text style={styles.heroSubBold}>
+                {total > 0 ? `${submitted}/${total} submitted.` : "Add your applications."}
+              </Text>
+            </Text>
+            {total > 0 && (
+              <>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${progress}%` as any }]} />
+                </View>
+                <View style={styles.progressRow}>
+                  <Text style={styles.progressLabel}>{submitted} submitted</Text>
+                  <Text style={styles.progressLabel}>{total - submitted} remaining</Text>
+                </View>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <Text style={styles.heroCount}>You're on track.</Text>
+            <Text style={styles.heroSub}>No upcoming deadlines. Keep going.</Text>
+          </>
+        )}
+      </View>
+
+      <View style={styles.divider} />
+
+      {/* Today's plan */}
+      <View style={styles.section}>
+        <Text style={styles.eyebrow}>Your plan, today</Text>
+        {tasks.map((task, i) => {
+          const done = doneTasks.has(task.id);
+          return (
             <Pressable
-              onPress={() => {
-                setSelectedCategory(null);
-                setApplicantMode(false);
-              }}
+              key={task.id}
+              style={[styles.taskRow, i > 0 && styles.taskRowBorder]}
+              onPress={() => toggleTask(task.id)}
             >
-              <Text style={styles.clearFilter}>Clear filters</Text>
+              <View style={[styles.checkbox, done && styles.checkboxDone]}>
+                {done && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <View style={styles.taskBody}>
+                <Text style={[styles.taskLabel, done && styles.taskLabelDone]}>{task.label}</Text>
+                <Text style={styles.taskMeta}>{task.est} · {priorityLabel(task.priority)}</Text>
+              </View>
             </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={styles.divider} />
+
+      {/* Featured article */}
+      <View style={styles.section}>
+        <Text style={styles.eyebrow}>Read · {article.readTime}</Text>
+        <View style={styles.articleCard}>
+          <Text style={styles.articleTitle}>{article.title}</Text>
+          <Text style={styles.articleBlurb}>{article.blurb}</Text>
+          <View style={styles.tagRow}>
+            {article.tags.map(tag => (
+              <View key={tag} style={styles.pill}>
+                <Text style={styles.pillText}>{tag}</Text>
+              </View>
+            ))}
           </View>
-        }
-      />
-    </View>
+        </View>
+      </View>
+
+      {/* This week */}
+      <View style={[styles.section, { paddingBottom: 32 }]}>
+        <Text style={styles.eyebrow}>This week</Text>
+        {UPCOMING_EVENTS.slice(0, 3).map((event, i) => (
+          <View key={event.id} style={[styles.eventRow, i > 0 && styles.eventRowBorder]}>
+            <View style={styles.eventBody}>
+              <Text style={styles.eventName}>{event.name}</Text>
+              <Text style={styles.eventMeta}>{event.host} · {event.date}, {event.time}</Text>
+            </View>
+            {event.attending ? (
+              <View style={styles.goingBadge}>
+                <Text style={styles.goingText}>Going</Text>
+              </View>
+            ) : (
+              <View style={styles.rsvpBadge}>
+                <Text style={styles.rsvpText}>RSVP</Text>
+              </View>
+            )}
+          </View>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
+  container: { flex: 1, backgroundColor: '#f5f1e8' },
+  content: { paddingBottom: 100 },
+  dateLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 0,
   },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    paddingTop: 4,
-    backgroundColor: Colors.light.background,
+  dateText: {
+    fontSize: 10,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    color: '#8b7e62',
+    fontFamily: 'Inter_500Medium',
   },
-  logoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
+  issueText: {
+    fontSize: 10,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    color: '#8b7e62',
+    fontFamily: 'JetBrainsMono_400Regular',
   },
-  logoBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: Colors.light.primary,
-    alignItems: "center",
-    justifyContent: "center",
+  heroSection: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 },
+  heroCount: {
+    fontFamily: 'Fraunces_600SemiBold',
+    fontSize: 44,
+    lineHeight: 48,
+    color: '#1a1612',
   },
-  logoText: {
-    fontSize: 20,
-    fontFamily: "Inter_700Bold",
-    color: "#fff",
+  heroSub: {
+    fontFamily: 'Fraunces_400Regular',
+    fontSize: 22,
+    lineHeight: 28,
+    color: '#5c4a2f',
+    marginTop: 6,
   },
-  appName: {
-    fontSize: 20,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+  heroSubBold: {
+    fontFamily: 'Fraunces_600SemiBold',
+    color: '#1a1612',
   },
-  appSubtitle: {
+  progressTrack: {
+    marginTop: 14,
+    height: 6,
+    backgroundColor: '#e8e0cf',
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#1a1612',
+    borderRadius: 999,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  progressLabel: {
     fontSize: 11,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: '#8b7e62',
+    fontFamily: 'Inter_400Regular',
   },
-  notifBtn: {
-    padding: 6,
+  divider: {
+    height: 1,
+    backgroundColor: '#e8e0cf',
+    marginHorizontal: 24,
   },
-  deadlineBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginHorizontal: 12,
-    marginBottom: 8,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: Colors.light.primaryMuted,
+  section: { paddingHorizontal: 24, paddingTop: 20 },
+  eyebrow: {
+    fontSize: 10,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    color: '#8b7e62',
+    fontFamily: 'Inter_500Medium',
+    marginBottom: 10,
+  },
+  taskRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    paddingVertical: 12,
+  },
+  taskRowBorder: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
+  checkbox: {
+    width: 18,
+    height: 18,
+    marginTop: 2,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: '#b8a888',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  checkboxDone: {
+    backgroundColor: '#1a1612',
+    borderColor: '#1a1612',
+  },
+  checkmark: { color: '#f5f1e8', fontSize: 10, lineHeight: 12 },
+  taskBody: { flex: 1 },
+  taskLabel: {
+    fontSize: 14,
+    fontFamily: 'Inter_500Medium',
+    color: '#1a1612',
+  },
+  taskLabelDone: {
+    textDecorationLine: 'line-through',
+    color: '#8b7e62',
+  },
+  taskMeta: { fontSize: 11, color: '#8b7e62', marginTop: 2, fontFamily: 'Inter_400Regular' },
+  articleCard: {
+    backgroundColor: '#fbf8f1',
     borderWidth: 1,
-    borderColor: Colors.light.primary + "30",
-  },
-  deadlineBannerUrgent: {
-    backgroundColor: "#FEF2F2",
-    borderColor: "#EF444430",
-  },
-  deadlineBannerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flex: 1,
-  },
-  deadlineBannerText: {
-    flex: 1,
-    gap: 1,
-  },
-  deadlineBannerTitle: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
-  },
-  deadlineBannerDays: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-  },
-  subscribedScroll: {
+    borderColor: '#e8e0cf',
+    borderRadius: 14,
+    padding: 18,
     marginBottom: 4,
   },
-  uniPillsRow: {
-    paddingHorizontal: 12,
-    gap: 8,
-    flexDirection: "row",
+  articleTitle: {
+    fontFamily: 'Fraunces_600SemiBold',
+    fontSize: 20,
+    lineHeight: 24,
+    color: '#1a1612',
+  },
+  articleBlurb: {
+    fontSize: 13,
+    color: '#5c4a2f',
+    marginTop: 10,
+    lineHeight: 20,
+    fontFamily: 'Inter_400Regular',
+  },
+  tagRow: { flexDirection: 'row', gap: 6, marginTop: 14, flexWrap: 'wrap' },
+  pill: {
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: '#fbf8f1',
+  },
+  pillText: { fontSize: 11, color: '#1a1612', fontFamily: 'Inter_500Medium' },
+  eventRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  eventRowBorder: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
+  eventBody: { flex: 1 },
+  eventName: { fontSize: 14, fontFamily: 'Inter_500Medium', color: '#1a1612' },
+  eventMeta: { fontSize: 11, color: '#8b7e62', marginTop: 2, fontFamily: 'Inter_400Regular' },
+  goingBadge: {
+    backgroundColor: '#ecfdf5',
+    borderRadius: 999,
+    paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  uniPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: Colors.light.surface,
+  goingText: { fontSize: 11, color: '#14532d', fontFamily: 'Inter_500Medium' },
+  rsvpBadge: {
     borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  uniPillDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  uniPillText: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
-  },
-  sortRow: {
-    flexDirection: "row",
-    paddingHorizontal: 12,
-    gap: 6,
-    paddingTop: 8,
-    paddingBottom: 2,
-    alignItems: "center",
-    flexWrap: "wrap",
-  },
-  sortBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: Colors.light.surface,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  sortBtnActive: {
-    backgroundColor: Colors.light.primaryMuted,
-    borderColor: Colors.light.primary,
-  },
-  sortText: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.textSecondary,
-  },
-  sortTextActive: {
-    color: Colors.light.primary,
-    fontFamily: "Inter_600SemiBold",
-  },
-  applicantToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: Colors.light.surface,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    marginLeft: "auto",
-  },
-  applicantToggleActive: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
-  },
-  applicantToggleText: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.textSecondary,
-  },
-  applicantToggleTextActive: {
-    color: "#fff",
-  },
-  applicantModeBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginHorizontal: 12,
-    marginTop: 6,
+    borderColor: '#d4c9b0',
+    borderRadius: 999,
     paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 8,
-    backgroundColor: Colors.light.primaryMuted,
+    paddingVertical: 4,
+    backgroundColor: '#fbf8f1',
   },
-  applicantModeText: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.primary,
-    flex: 1,
-  },
-  refreshHint: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginHorizontal: 12,
-    marginTop: 6,
-  },
-  refreshHintText: {
-    fontSize: 11,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
-  },
-  newPostsBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginHorizontal: 12,
-    marginBottom: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: Colors.light.primaryMuted,
-  },
-  newPostsText: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
-  },
-  listContent: {
-    paddingTop: 8,
-    paddingBottom: 100,
-  },
-  feedEmpty: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 40,
-    gap: 12,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
-    textAlign: "center",
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  exploreBtn: {
-    marginTop: 8,
-    backgroundColor: Colors.light.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-  exploreBtnText: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-    color: "#fff",
-  },
-  noPostsEmpty: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-    gap: 10,
-  },
-  noPostsText: {
-    fontSize: 16,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.textMuted,
-  },
-  clearFilter: {
-    fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
-  },
+  rsvpText: { fontSize: 11, color: '#1a1612', fontFamily: 'Inter_500Medium' },
 });

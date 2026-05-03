@@ -1,498 +1,321 @@
-import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
-  FlatList,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
 
-import { PostCard } from "@/components/PostCard";
-import Colors from "@/constants/colors";
-import { SAMPLE_POSTS } from "@/data/feed";
-import { SAMPLE_PROGRAMS } from "@/data/programs";
-import { ONTARIO_UNIVERSITIES } from "@/data/universities";
+import { useUser } from "@/context/UserContext";
+import { useApplications } from "@/context/ApplicationsContext";
 
-type SearchTab = "posts" | "programs" | "universities";
+const ED = {
+  paper: '#f5f1e8',
+  card: '#fbf8f1',
+  ink: '#1a1612',
+  softInk: '#5c4a2f',
+  muted: '#8b7e62',
+  rule: '#e8e0cf',
+  pillBorder: '#d4c9b0',
+  success: '#15803d',
+  successBg: '#ecfdf5',
+  warn: '#c2410c',
+  warnBg: '#fef3e2',
+};
 
-export default function SearchScreen() {
+const TIER_COLORS: Record<string, { color: string; bg: string; label: string }> = {
+  reach:  { color: '#9a3412', bg: '#fef3e2', label: 'Reach'  },
+  target: { color: '#1a1612', bg: '#f0ebe0', label: 'Target' },
+  safety: { color: '#14532d', bg: '#ecfdf5', label: 'Safety' },
+};
+
+function parseAvg(grades: string[]): number | null {
+  const parsed = grades.map(g => parseFloat(g)).filter(g => !isNaN(g) && g > 0 && g <= 100);
+  if (parsed.length === 0) return null;
+  return Math.round((parsed.reduce((a, b) => a + b, 0) / parsed.length) * 10) / 10;
+}
+
+export default function YouScreen() {
   const insets = useSafeAreaInsets();
-  const topInset = Platform.OS === "web" ? 67 : insets.top;
-  const [query, setQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<SearchTab>("posts");
+  const topInset = Platform.OS === "web" ? 20 : insets.top;
+  const { profile, tasks, doneTasks, updateMarks } = useUser();
+  const { applications } = useApplications();
+  const [editingMarks, setEditingMarks] = useState(false);
+  const [localMarks, setLocalMarks] = useState<string[]>(profile.marks);
 
-  const filteredPosts = useMemo(() => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase();
-    return SAMPLE_POSTS.filter(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        p.body.toLowerCase().includes(q) ||
-        p.tags.some((t) => t.toLowerCase().includes(q)) ||
-        p.author.toLowerCase().includes(q)
-    );
-  }, [query]);
+  const avg = parseAvg(localMarks);
 
-  const filteredPrograms = useMemo(() => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase();
-    return SAMPLE_PROGRAMS.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.faculty.toLowerCase().includes(q) ||
-        p.careerPaths.some((c) => c.toLowerCase().includes(q))
-    );
-  }, [query]);
+  const appStats = {
+    shortlisted: applications.filter(a => a.status === 'shortlisted').length,
+    applied: applications.filter(a => ['applied', 'supp_sent'].includes(a.status)).length,
+    offers: applications.filter(a => ['offer', 'accepted'].includes(a.status)).length,
+    total: applications.length,
+  };
 
-  const filteredUniversities = useMemo(() => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase();
-    return ONTARIO_UNIVERSITIES.filter(
-      (u) =>
-        u.name.toLowerCase().includes(q) ||
-        u.shortName.toLowerCase().includes(q) ||
-        u.location.toLowerCase().includes(q) ||
-        u.faculties.some((f) => f.toLowerCase().includes(q))
-    );
-  }, [query]);
+  const doneFraction = tasks.length > 0
+    ? `${doneTasks.size}/${tasks.length} done today`
+    : 'No tasks';
 
-  const SEARCH_TABS: { id: SearchTab; label: string }[] = [
-    { id: "posts", label: `Posts${filteredPosts.length ? ` (${filteredPosts.length})` : ""}` },
-    { id: "programs", label: `Programs${filteredPrograms.length ? ` (${filteredPrograms.length})` : ""}` },
-    { id: "universities", label: `Universities${filteredUniversities.length ? ` (${filteredUniversities.length})` : ""}` },
-  ];
-
-  const POPULAR_SEARCHES = [
-    "Computer Science",
-    "Open House",
-    "Hackathon",
-    "Waterloo co-op",
-    "Scholarship",
-    "Engineering",
-    "Business",
-    "Medicine",
-  ];
+  const handleSaveMarks = () => {
+    updateMarks(localMarks);
+    setEditingMarks(false);
+  };
 
   return (
-    <View style={[styles.container, { paddingTop: topInset }]}>
+    <ScrollView
+      style={[styles.container, { paddingTop: topInset }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Search</Text>
+        <View>
+          <Text style={styles.eyebrow}>Your profile</Text>
+          <Text style={styles.title}>You</Text>
+        </View>
+        <Pressable onPress={() => router.push('/scholarships')} style={styles.schBtn}>
+          <Feather name="award" size={18} color={ED.ink} />
+        </Pressable>
       </View>
 
-      <View style={styles.searchBox}>
-        <Feather name="search" size={18} color={Colors.light.textMuted} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search posts, programs, universities…"
-          placeholderTextColor={Colors.light.textMuted}
-          value={query}
-          onChangeText={setQuery}
-          autoCapitalize="none"
-          autoCorrect={false}
-          returnKeyType="search"
-        />
-        {query.length > 0 && (
-          <Pressable onPress={() => setQuery("")} hitSlop={8}>
-            <Feather name="x-circle" size={18} color={Colors.light.textMuted} />
-          </Pressable>
-        )}
-      </View>
-
-      {query.trim() ? (
-        <>
-          <View style={styles.tabsRow}>
-            {SEARCH_TABS.map((tab) => (
-              <Pressable
-                key={tab.id}
-                style={[styles.tab, activeTab === tab.id && styles.tabActive]}
-                onPress={() => setActiveTab(tab.id)}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === tab.id && styles.tabTextActive,
-                  ]}
-                >
-                  {tab.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          {activeTab === "posts" && (
-            <FlatList
-              data={filteredPosts}
-              keyExtractor={(p) => p.id}
-              renderItem={({ item }) => <PostCard post={item} />}
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator={false}
-              scrollEnabled={!!filteredPosts.length}
-              ListEmptyComponent={
-                <View style={styles.empty}>
-                  <Feather name="file-text" size={36} color={Colors.light.textMuted} />
-                  <Text style={styles.emptyText}>No posts found</Text>
-                </View>
-              }
-            />
-          )}
-
-          {activeTab === "programs" && (
-            <FlatList
-              data={filteredPrograms}
-              keyExtractor={(p) => p.id}
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator={false}
-              scrollEnabled={!!filteredPrograms.length}
-              renderItem={({ item }) => {
-                const uni = ONTARIO_UNIVERSITIES.find(
-                  (u) => u.id === item.universityId
-                );
-                return (
-                  <Pressable
-                    style={styles.programCard}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/university/[id]",
-                        params: { id: item.universityId },
-                      })
-                    }
-                  >
-                    <View style={styles.programHeader}>
-                      <View>
-                        <Text style={styles.programName}>{item.name}</Text>
-                        <Text style={styles.programUni}>{uni?.shortName} · {item.faculty}</Text>
-                      </View>
-                      <View style={[styles.gradeBadge, item.hasCoOp && styles.coOpBadge]}>
-                        <Text style={[styles.gradeText, item.hasCoOp && { color: Colors.light.success }]}>
-                          {item.hasCoOp ? "Co-op" : item.degree}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text style={styles.programDesc} numberOfLines={2}>
-                      {item.description}
-                    </Text>
-                    <View style={styles.programMeta}>
-                      <View style={styles.metaItem}>
-                        <Feather name="bar-chart-2" size={12} color={Colors.light.textMuted} />
-                        <Text style={styles.metaText}>{item.averageGrade} avg</Text>
-                      </View>
-                      <View style={styles.metaItem}>
-                        <Feather name="clock" size={12} color={Colors.light.textMuted} />
-                        <Text style={styles.metaText}>{item.duration}</Text>
-                      </View>
-                      <View style={styles.metaItem}>
-                        <Feather name="dollar-sign" size={12} color={Colors.light.textMuted} />
-                        <Text style={styles.metaText}>{item.tuition}</Text>
-                      </View>
-                    </View>
-                  </Pressable>
-                );
-              }}
-              ListEmptyComponent={
-                <View style={styles.empty}>
-                  <Feather name="book-open" size={36} color={Colors.light.textMuted} />
-                  <Text style={styles.emptyText}>No programs found</Text>
-                </View>
-              }
-            />
-          )}
-
-          {activeTab === "universities" && (
-            <FlatList
-              data={filteredUniversities}
-              keyExtractor={(u) => u.id}
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator={false}
-              scrollEnabled={!!filteredUniversities.length}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={styles.uniResult}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/university/[id]",
-                      params: { id: item.id },
-                    })
-                  }
-                >
-                  <View
-                    style={[
-                      styles.uniLogo,
-                      { backgroundColor: item.color + "20" },
-                    ]}
-                  >
-                    <Text style={styles.uniLogoText}>{item.logo}</Text>
-                  </View>
-                  <View style={styles.uniInfo}>
-                    <Text style={styles.uniName}>{item.name}</Text>
-                    <Text style={styles.uniLocation}>{item.location}</Text>
-                    <Text style={styles.uniFaculties}>
-                      {item.faculties.slice(0, 3).join(", ")}
-                      {item.faculties.length > 3 ? "…" : ""}
-                    </Text>
-                  </View>
-                  <Feather
-                    name="chevron-right"
-                    size={18}
-                    color={Colors.light.textMuted}
-                  />
-                </Pressable>
-              )}
-              ListEmptyComponent={
-                <View style={styles.empty}>
-                  <Feather name="map-pin" size={36} color={Colors.light.textMuted} />
-                  <Text style={styles.emptyText}>No universities found</Text>
-                </View>
-              }
-            />
-          )}
-        </>
-      ) : (
-        <View style={styles.popularSection}>
-          <Text style={styles.popularTitle}>Popular Searches</Text>
-          <View style={styles.popularGrid}>
-            {POPULAR_SEARCHES.map((term) => (
-              <Pressable
-                key={term}
-                style={styles.popularChip}
-                onPress={() => setQuery(term)}
-              >
-                <Feather name="trending-up" size={12} color={Colors.light.primary} />
-                <Text style={styles.popularChipText}>{term}</Text>
-              </Pressable>
-            ))}
+      {/* Profile card */}
+      <View style={styles.profileCard}>
+        <View style={styles.avatarCircle}>
+          <Text style={styles.avatarInitials}>
+            {profile.name.split(' ').map(s => s[0]).join('').slice(0, 2)}
+          </Text>
+        </View>
+        <View style={styles.profileInfo}>
+          <Text style={styles.profileName}>{profile.name}</Text>
+          <Text style={styles.profileSchool}>{profile.school}</Text>
+          <View style={styles.ouacRow}>
+            <Text style={styles.ouacLabel}>OUAC Ref</Text>
+            <Text style={styles.ouacRef}>{profile.ouacRef}</Text>
           </View>
         </View>
+      </View>
+
+      {/* Average card */}
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Top 6 Avg</Text>
+          <Text style={styles.statValue}>{avg !== null ? `${avg}%` : '—'}</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Applications</Text>
+          <Text style={styles.statValue}>{appStats.total}</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Tasks today</Text>
+          <Text style={styles.statValue}>{doneFraction}</Text>
+        </View>
+      </View>
+
+      <View style={styles.divider} />
+
+      {/* Marks editor */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Top 6 Marks</Text>
+          {editingMarks ? (
+            <Pressable onPress={handleSaveMarks} style={styles.saveBtn}>
+              <Text style={styles.saveBtnText}>Save</Text>
+            </Pressable>
+          ) : (
+            <Pressable onPress={() => setEditingMarks(true)} style={styles.editBtn}>
+              <Feather name="edit-2" size={13} color={ED.muted} />
+              <Text style={styles.editBtnText}>Edit</Text>
+            </Pressable>
+          )}
+        </View>
+        <View style={styles.marksGrid}>
+          {[0, 1, 2, 3, 4, 5].map(i => {
+            const val = localMarks[i] ?? '';
+            const num = parseFloat(val);
+            const isValid = !isNaN(num) && num > 0 && num <= 100;
+            return (
+              <View key={i} style={styles.markItem}>
+                <Text style={styles.markCourse}>Course {i + 1}</Text>
+                {editingMarks ? (
+                  <TextInput
+                    style={styles.markInput}
+                    value={val}
+                    onChangeText={v => {
+                      const next = [...localMarks];
+                      next[i] = v;
+                      setLocalMarks(next);
+                    }}
+                    placeholder="00"
+                    placeholderTextColor={ED.muted}
+                    keyboardType="decimal-pad"
+                    maxLength={5}
+                  />
+                ) : (
+                  <Text style={[styles.markValue, !isValid && styles.markValueEmpty]}>
+                    {isValid ? `${num}%` : '—'}
+                  </Text>
+                )}
+                {isValid && (
+                  <View style={styles.markBar}>
+                    <View style={[styles.markBarFill, { width: `${num}%` as any }]} />
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.divider} />
+
+      {/* Application summary */}
+      {appStats.total > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Applications</Text>
+          {[
+            { label: 'Shortlisted', count: appStats.shortlisted, color: ED.muted },
+            { label: 'Submitted / Supp sent', count: appStats.applied, color: ED.ink },
+            { label: 'Offers', count: appStats.offers, color: ED.success },
+          ].map(row => (
+            <View key={row.label} style={styles.appSummaryRow}>
+              <Text style={styles.appSummaryLabel}>{row.label}</Text>
+              <Text style={[styles.appSummaryCount, { color: row.color }]}>{row.count}</Text>
+            </View>
+          ))}
+        </View>
       )}
-    </View>
+
+      {/* Quick links */}
+      <View style={[styles.section, styles.quickLinks]}>
+        <Pressable style={styles.quickLink} onPress={() => router.push('/scholarships')}>
+          <Feather name="award" size={16} color={ED.softInk} />
+          <Text style={styles.quickLinkText}>Scholarships</Text>
+          <Feather name="chevron-right" size={14} color={ED.muted} style={{ marginLeft: 'auto' }} />
+        </Pressable>
+        <Pressable style={[styles.quickLink, styles.quickLinkBorder]} onPress={() => router.push('/chats')}>
+          <Feather name="message-circle" size={16} color={ED.softInk} />
+          <Text style={styles.quickLinkText}>Chats</Text>
+          <Feather name="chevron-right" size={14} color={ED.muted} style={{ marginLeft: 'auto' }} />
+        </Pressable>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-  },
+  container: { flex: 1, backgroundColor: '#f5f1e8' },
+  content: { paddingBottom: 100 },
   header: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    paddingTop: 4,
-  },
-  title: {
-    fontSize: 28,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
-  },
-  searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: 12,
-    marginBottom: 12,
-    backgroundColor: Colors.light.surface,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.text,
-    padding: 0,
-  },
-  tabsRow: {
-    flexDirection: "row",
-    paddingHorizontal: 12,
-    marginBottom: 8,
-    gap: 8,
-  },
-  tab: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: Colors.light.surface,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  tabActive: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
-  },
-  tabText: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.textSecondary,
-  },
-  tabTextActive: {
-    color: "#fff",
-    fontFamily: "Inter_600SemiBold",
-  },
-  listContent: {
-    paddingTop: 4,
-    paddingBottom: 100,
-  },
-  programCard: {
-    backgroundColor: Colors.light.surface,
-    marginHorizontal: 12,
-    marginBottom: 8,
-    borderRadius: 14,
-    padding: 14,
-    gap: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  programHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  programName: {
-    fontSize: 16,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
-  },
-  programUni: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
-    marginTop: 2,
-  },
-  gradeBadge: {
-    backgroundColor: Colors.light.primaryMuted,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  coOpBadge: {
-    backgroundColor: Colors.light.success + "15",
-  },
-  gradeText: {
-    fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
-  },
-  programDesc: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
-    lineHeight: 18,
-  },
-  programMeta: {
-    flexDirection: "row",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  metaText: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
-  },
-  uniResult: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.light.surface,
-    marginHorizontal: 12,
-    marginBottom: 8,
-    borderRadius: 14,
-    padding: 14,
-    gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  uniLogo: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  uniLogoText: {
-    fontSize: 22,
-  },
-  uniInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  uniName: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
-  },
-  uniLocation: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
-  },
-  uniFaculties: {
-    fontSize: 11,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
-    marginTop: 2,
-  },
-  empty: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.textMuted,
-  },
-  popularSection: {
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingHorizontal: 24,
     paddingTop: 8,
+    paddingBottom: 16,
   },
-  popularTitle: {
-    fontSize: 16,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
-    marginBottom: 12,
+  eyebrow: {
+    fontSize: 10,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    color: '#8b7e62',
+    fontFamily: 'Inter_500Medium',
+    marginBottom: 2,
   },
-  popularGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  popularChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: Colors.light.surface,
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 30, color: '#1a1612', lineHeight: 32 },
+  schBtn: { padding: 4 },
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginHorizontal: 24,
+    marginBottom: 16,
+    padding: 18,
+    backgroundColor: '#fbf8f1',
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.light.border,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    borderColor: '#e8e0cf',
   },
-  popularChipText: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.text,
+  avatarCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 999,
+    backgroundColor: '#1a1612',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
+  avatarInitials: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18, color: '#f5f1e8' },
+  profileInfo: { flex: 1 },
+  profileName: { fontFamily: 'Inter_600SemiBold', fontSize: 16, color: '#1a1612' },
+  profileSchool: { fontSize: 12, color: '#8b7e62', marginTop: 2, fontFamily: 'Inter_400Regular' },
+  ouacRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  ouacLabel: { fontSize: 10, color: '#8b7e62', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8 },
+  ouacRef: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 12, color: '#5c4a2f' },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 24,
+    marginBottom: 20,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#fbf8f1',
+    borderWidth: 1,
+    borderColor: '#e8e0cf',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+  },
+  statLabel: { fontSize: 9, color: '#8b7e62', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, textAlign: 'center' },
+  statValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18, color: '#1a1612', textAlign: 'center' },
+  divider: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24, marginBottom: 20 },
+  section: { paddingHorizontal: 24, marginBottom: 20 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#8b7e62', textTransform: 'uppercase', letterSpacing: 1 },
+  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  editBtnText: { fontSize: 12, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  saveBtn: { backgroundColor: '#1a1612', paddingHorizontal: 14, paddingVertical: 5, borderRadius: 999 },
+  saveBtnText: { fontSize: 12, color: '#f5f1e8', fontFamily: 'Inter_500Medium' },
+  marksGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  markItem: { width: '47%', backgroundColor: '#fbf8f1', borderWidth: 1, borderColor: '#e8e0cf', borderRadius: 10, padding: 12 },
+  markCourse: { fontSize: 10, color: '#8b7e62', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 },
+  markValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: '#1a1612' },
+  markValueEmpty: { color: '#d4c9b0' },
+  markInput: {
+    fontFamily: 'JetBrainsMono_400Regular',
+    fontSize: 20,
+    color: '#1a1612',
+    borderBottomWidth: 1,
+    borderBottomColor: '#d4c9b0',
+    paddingBottom: 2,
+    paddingTop: 0,
+    margin: 0,
+  },
+  markBar: { height: 3, backgroundColor: '#e8e0cf', borderRadius: 999, marginTop: 8, overflow: 'hidden' },
+  markBarFill: { height: '100%', backgroundColor: '#1a1612', borderRadius: 999 },
+  appSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#e8e0cf',
+  },
+  appSummaryLabel: { fontSize: 13, color: '#1a1612', fontFamily: 'Inter_400Regular' },
+  appSummaryCount: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18 },
+  quickLinks: { gap: 0 },
+  quickLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+  },
+  quickLinkBorder: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
+  quickLinkText: { fontSize: 14, color: '#1a1612', fontFamily: 'Inter_500Medium', flex: 1 },
 });

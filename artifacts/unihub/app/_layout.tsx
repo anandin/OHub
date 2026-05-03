@@ -5,6 +5,16 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
+import {
+  Fraunces_400Regular,
+  Fraunces_500Medium,
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+} from "@expo-google-fonts/fraunces";
+import {
+  JetBrainsMono_400Regular,
+  JetBrainsMono_500Medium,
+} from "@expo-google-fonts/jetbrains-mono";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -17,6 +27,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ApplicationsProvider } from "@/context/ApplicationsContext";
 import { SavedPostsProvider } from "@/context/SavedPostsContext";
 import { SubscriptionsProvider } from "@/context/SubscriptionsContext";
+import { UserProvider } from "@/context/UserContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,6 +49,22 @@ function RootLayoutNav() {
         name="program/[id]"
         options={{ headerShown: false, presentation: "card" }}
       />
+      <Stack.Screen
+        name="scholarships"
+        options={{ headerShown: false, presentation: "card" }}
+      />
+      <Stack.Screen
+        name="chats"
+        options={{ headerShown: false, presentation: "card" }}
+      />
+      <Stack.Screen
+        name="chat/[id]"
+        options={{ headerShown: false, presentation: "card" }}
+      />
+      <Stack.Screen
+        name="essay/[id]"
+        options={{ headerShown: false, presentation: "card" }}
+      />
     </Stack>
   );
 }
@@ -48,6 +75,12 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    Fraunces_400Regular,
+    Fraunces_500Medium,
+    Fraunces_600SemiBold,
+    Fraunces_700Bold,
+    JetBrainsMono_400Regular,
+    JetBrainsMono_500Medium,
   });
 
   useEffect(() => {
@@ -62,17 +95,19 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <SubscriptionsProvider>
-            <SavedPostsProvider>
-              <ApplicationsProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <KeyboardProvider>
-                    <RootLayoutNav />
-                  </KeyboardProvider>
-                </GestureHandlerRootView>
-              </ApplicationsProvider>
-            </SavedPostsProvider>
-          </SubscriptionsProvider>
+          <UserProvider>
+            <SubscriptionsProvider>
+              <SavedPostsProvider>
+                <ApplicationsProvider>
+                  <GestureHandlerRootView style={{ flex: 1 }}>
+                    <KeyboardProvider>
+                      <RootLayoutNav />
+                    </KeyboardProvider>
+                  </GestureHandlerRootView>
+                </ApplicationsProvider>
+              </SavedPostsProvider>
+            </SubscriptionsProvider>
+          </UserProvider>
         </QueryClientProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
