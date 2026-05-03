@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -29,25 +30,85 @@ const ED = {
   warnBg: '#fef3e2',
 };
 
-const TIER_COLORS: Record<string, { color: string; bg: string; label: string }> = {
-  reach:  { color: '#9a3412', bg: '#fef3e2', label: 'Reach'  },
-  target: { color: '#1a1612', bg: '#f0ebe0', label: 'Target' },
-  safety: { color: '#14532d', bg: '#ecfdf5', label: 'Safety' },
-};
-
 function parseAvg(grades: string[]): number | null {
   const parsed = grades.map(g => parseFloat(g)).filter(g => !isNaN(g) && g > 0 && g <= 100);
   if (parsed.length === 0) return null;
   return Math.round((parsed.reduce((a, b) => a + b, 0) / parsed.length) * 10) / 10;
 }
 
+function EditProfileModal({ profile, onSave, onClose }: {
+  profile: { name: string; school: string; ouacRef: string };
+  onSave: (name: string, school: string, ouacRef: string) => void;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(profile.name);
+  const [school, setSchool] = useState(profile.school);
+  const [ouacRef, setOuacRef] = useState(profile.ouacRef);
+
+  return (
+    <Modal transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={styles.modalBg} onPress={onClose}>
+        <Pressable style={styles.modal} onPress={e => e.stopPropagation()}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Edit profile</Text>
+            <Pressable onPress={onClose}>
+              <Feather name="x" size={18} color={ED.muted} />
+            </Pressable>
+          </View>
+
+          <Text style={styles.modalLabel}>Your name</Text>
+          <TextInput
+            style={styles.modalInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Full name"
+            placeholderTextColor={ED.muted}
+            autoFocus
+          />
+
+          <Text style={styles.modalLabel}>School</Text>
+          <TextInput
+            style={styles.modalInput}
+            value={school}
+            onChangeText={setSchool}
+            placeholder="High school name"
+            placeholderTextColor={ED.muted}
+          />
+
+          <Text style={styles.modalLabel}>OUAC Reference Number</Text>
+          <TextInput
+            style={[styles.modalInput, { fontFamily: 'JetBrainsMono_400Regular' }]}
+            value={ouacRef}
+            onChangeText={setOuacRef}
+            placeholder="2026-0000000"
+            placeholderTextColor={ED.muted}
+            keyboardType="numbers-and-punctuation"
+          />
+
+          <Pressable
+            style={[styles.saveBtn, !name.trim() && styles.saveBtnDisabled]}
+            disabled={!name.trim()}
+            onPress={() => {
+              onSave(name.trim(), school.trim(), ouacRef.trim());
+              onClose();
+            }}
+          >
+            <Text style={styles.saveBtnText}>Save changes</Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
 export default function YouScreen() {
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 20 : insets.top;
-  const { profile, tasks, doneTasks, updateMarks } = useUser();
+  const { profile, tasks, doneTasks, updateMarks, updateProfile } = useUser();
   const { applications } = useApplications();
   const [editingMarks, setEditingMarks] = useState(false);
   const [localMarks, setLocalMarks] = useState<string[]>(profile.marks);
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   const avg = parseAvg(localMarks);
 
@@ -67,144 +128,159 @@ export default function YouScreen() {
     setEditingMarks(false);
   };
 
-  return (
-    <ScrollView
-      style={[styles.container, { paddingTop: topInset }]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.eyebrow}>Your profile</Text>
-          <Text style={styles.title}>You</Text>
-        </View>
-        <Pressable onPress={() => router.push('/scholarships')} style={styles.schBtn}>
-          <Feather name="award" size={18} color={ED.ink} />
-        </Pressable>
-      </View>
+  const handleSaveProfile = (name: string, school: string, ouacRef: string) => {
+    updateProfile({ name, school, ouacRef });
+  };
 
-      {/* Profile card */}
-      <View style={styles.profileCard}>
-        <View style={styles.avatarCircle}>
-          <Text style={styles.avatarInitials}>
-            {profile.name.split(' ').map(s => s[0]).join('').slice(0, 2)}
-          </Text>
+  return (
+    <>
+      <ScrollView
+        style={[styles.container, { paddingTop: topInset }]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.eyebrow}>Your profile</Text>
+            <Text style={styles.title}>You</Text>
+          </View>
+          <Pressable onPress={() => router.push('/scholarships')} style={styles.schBtn}>
+            <Feather name="award" size={18} color={ED.ink} />
+          </Pressable>
         </View>
-        <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{profile.name}</Text>
-          <Text style={styles.profileSchool}>{profile.school}</Text>
-          <View style={styles.ouacRow}>
-            <Text style={styles.ouacLabel}>OUAC Ref</Text>
-            <Text style={styles.ouacRef}>{profile.ouacRef}</Text>
+
+        {/* Profile card — tap to edit */}
+        <Pressable style={styles.profileCard} onPress={() => setShowEditProfile(true)}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarInitials}>
+              {profile.name.split(' ').map(s => s[0]).join('').slice(0, 2)}
+            </Text>
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{profile.name}</Text>
+            <Text style={styles.profileSchool}>{profile.school}</Text>
+            <View style={styles.ouacRow}>
+              <Text style={styles.ouacLabel}>OUAC Ref</Text>
+              <Text style={styles.ouacRef}>{profile.ouacRef}</Text>
+            </View>
+          </View>
+          <Feather name="edit-2" size={14} color={ED.muted} />
+        </Pressable>
+
+        {/* Stats grid */}
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Top 6 Avg</Text>
+            <Text style={styles.statValue}>{avg !== null ? `${avg}%` : '—'}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Applications</Text>
+            <Text style={styles.statValue}>{appStats.total}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Tasks done</Text>
+            <Text style={styles.statValue}>{doneFraction}</Text>
           </View>
         </View>
-      </View>
 
-      {/* Average card */}
-      <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Top 6 Avg</Text>
-          <Text style={styles.statValue}>{avg !== null ? `${avg}%` : '—'}</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Applications</Text>
-          <Text style={styles.statValue}>{appStats.total}</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Tasks done</Text>
-          <Text style={styles.statValue}>{doneFraction}</Text>
-        </View>
-      </View>
+        <View style={styles.divider} />
 
-      <View style={styles.divider} />
-
-      {/* Marks editor */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Top 6 Marks</Text>
-          {editingMarks ? (
-            <Pressable onPress={handleSaveMarks} style={styles.saveBtn}>
-              <Text style={styles.saveBtnText}>Save</Text>
-            </Pressable>
-          ) : (
-            <Pressable onPress={() => setEditingMarks(true)} style={styles.editBtn}>
-              <Feather name="edit-2" size={13} color={ED.muted} />
-              <Text style={styles.editBtnText}>Edit</Text>
-            </Pressable>
-          )}
-        </View>
-        <View style={styles.marksGrid}>
-          {[0, 1, 2, 3, 4, 5].map(i => {
-            const val = localMarks[i] ?? '';
-            const num = parseFloat(val);
-            const isValid = !isNaN(num) && num > 0 && num <= 100;
-            return (
-              <View key={i} style={styles.markItem}>
-                <Text style={styles.markCourse}>Course {i + 1}</Text>
-                {editingMarks ? (
-                  <TextInput
-                    style={styles.markInput}
-                    value={val}
-                    onChangeText={v => {
-                      const next = [...localMarks];
-                      next[i] = v;
-                      setLocalMarks(next);
-                    }}
-                    placeholder="00"
-                    placeholderTextColor={ED.muted}
-                    keyboardType="decimal-pad"
-                    maxLength={5}
-                  />
-                ) : (
-                  <Text style={[styles.markValue, !isValid && styles.markValueEmpty]}>
-                    {isValid ? `${num}%` : '—'}
-                  </Text>
-                )}
-                {isValid && (
-                  <View style={styles.markBar}>
-                    <View style={[styles.markBarFill, { width: `${num}%` as any }]} />
-                  </View>
-                )}
-              </View>
-            );
-          })}
-        </View>
-      </View>
-
-      <View style={styles.divider} />
-
-      {/* Application summary */}
-      {appStats.total > 0 && (
+        {/* Marks editor */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Applications</Text>
-          {[
-            { label: 'Shortlisted', count: appStats.shortlisted, color: ED.muted },
-            { label: 'Submitted / Supp sent', count: appStats.applied, color: ED.ink },
-            { label: 'Offers', count: appStats.offers, color: ED.success },
-          ].map(row => (
-            <View key={row.label} style={styles.appSummaryRow}>
-              <Text style={styles.appSummaryLabel}>{row.label}</Text>
-              <Text style={[styles.appSummaryCount, { color: row.color }]}>{row.count}</Text>
-            </View>
-          ))}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Top 6 Marks</Text>
+            {editingMarks ? (
+              <Pressable onPress={handleSaveMarks} style={styles.saveMarksBtn}>
+                <Text style={styles.saveMarksBtnText}>Save</Text>
+              </Pressable>
+            ) : (
+              <Pressable onPress={() => setEditingMarks(true)} style={styles.editBtn}>
+                <Feather name="edit-2" size={13} color={ED.muted} />
+                <Text style={styles.editBtnText}>Edit</Text>
+              </Pressable>
+            )}
+          </View>
+          <View style={styles.marksGrid}>
+            {[0, 1, 2, 3, 4, 5].map(i => {
+              const val = localMarks[i] ?? '';
+              const num = parseFloat(val);
+              const isValid = !isNaN(num) && num > 0 && num <= 100;
+              return (
+                <View key={i} style={styles.markItem}>
+                  <Text style={styles.markCourse}>Course {i + 1}</Text>
+                  {editingMarks ? (
+                    <TextInput
+                      style={styles.markInput}
+                      value={val}
+                      onChangeText={v => {
+                        const next = [...localMarks];
+                        next[i] = v;
+                        setLocalMarks(next);
+                      }}
+                      placeholder="00"
+                      placeholderTextColor={ED.muted}
+                      keyboardType="decimal-pad"
+                      maxLength={5}
+                    />
+                  ) : (
+                    <Text style={[styles.markValue, !isValid && styles.markValueEmpty]}>
+                      {isValid ? `${num}%` : '—'}
+                    </Text>
+                  )}
+                  {isValid && (
+                    <View style={styles.markBar}>
+                      <View style={[styles.markBarFill, { width: `${num}%` as any }]} />
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
         </View>
-      )}
 
-      {/* Quick links */}
-      <View style={[styles.section, styles.quickLinks]}>
-        <Pressable style={styles.quickLink} onPress={() => router.push('/scholarships')}>
-          <Feather name="award" size={16} color={ED.softInk} />
-          <Text style={styles.quickLinkText}>Scholarships</Text>
-          <Feather name="chevron-right" size={14} color={ED.muted} style={{ marginLeft: 'auto' }} />
-        </Pressable>
-        <Pressable style={[styles.quickLink, styles.quickLinkBorder]} onPress={() => router.push('/chats')}>
-          <Feather name="message-circle" size={16} color={ED.softInk} />
-          <Text style={styles.quickLinkText}>Chats</Text>
-          <Feather name="chevron-right" size={14} color={ED.muted} style={{ marginLeft: 'auto' }} />
-        </Pressable>
-      </View>
-    </ScrollView>
+        <View style={styles.divider} />
+
+        {/* Application summary */}
+        {appStats.total > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Applications</Text>
+            {[
+              { label: 'Shortlisted', count: appStats.shortlisted, color: ED.muted },
+              { label: 'Submitted / Supp sent', count: appStats.applied, color: ED.ink },
+              { label: 'Offers', count: appStats.offers, color: ED.success },
+            ].map(row => (
+              <View key={row.label} style={styles.appSummaryRow}>
+                <Text style={styles.appSummaryLabel}>{row.label}</Text>
+                <Text style={[styles.appSummaryCount, { color: row.color }]}>{row.count}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Quick links */}
+        <View style={[styles.section, styles.quickLinks]}>
+          <Pressable style={styles.quickLink} onPress={() => router.push('/scholarships')}>
+            <Feather name="award" size={16} color={ED.softInk} />
+            <Text style={styles.quickLinkText}>Scholarships</Text>
+            <Feather name="chevron-right" size={14} color={ED.muted} style={{ marginLeft: 'auto' }} />
+          </Pressable>
+          <Pressable style={[styles.quickLink, styles.quickLinkBorder]} onPress={() => router.push('/chats')}>
+            <Feather name="message-circle" size={16} color={ED.softInk} />
+            <Text style={styles.quickLinkText}>Chats</Text>
+            <Feather name="chevron-right" size={14} color={ED.muted} style={{ marginLeft: 'auto' }} />
+          </Pressable>
+        </View>
+      </ScrollView>
+
+      {showEditProfile && (
+        <EditProfileModal
+          profile={{ name: profile.name, school: profile.school, ouacRef: profile.ouacRef }}
+          onSave={handleSaveProfile}
+          onClose={() => setShowEditProfile(false)}
+        />
+      )}
+    </>
   );
 }
 
@@ -280,8 +356,8 @@ const styles = StyleSheet.create({
   sectionTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#8b7e62', textTransform: 'uppercase', letterSpacing: 1 },
   editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   editBtnText: { fontSize: 12, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
-  saveBtn: { backgroundColor: '#1a1612', paddingHorizontal: 14, paddingVertical: 5, borderRadius: 999 },
-  saveBtnText: { fontSize: 12, color: '#f5f1e8', fontFamily: 'Inter_500Medium' },
+  saveMarksBtn: { backgroundColor: '#1a1612', paddingHorizontal: 14, paddingVertical: 5, borderRadius: 999 },
+  saveMarksBtnText: { fontSize: 12, color: '#f5f1e8', fontFamily: 'Inter_500Medium' },
   marksGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   markItem: { width: '47%', backgroundColor: '#fbf8f1', borderWidth: 1, borderColor: '#e8e0cf', borderRadius: 10, padding: 12 },
   markCourse: { fontSize: 10, color: '#8b7e62', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 },
@@ -318,4 +394,52 @@ const styles = StyleSheet.create({
   },
   quickLinkBorder: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
   quickLinkText: { fontSize: 14, color: '#1a1612', fontFamily: 'Inter_500Medium', flex: 1 },
+  modalBg: {
+    flex: 1,
+    backgroundColor: 'rgba(26,22,18,0.45)',
+    justifyContent: 'flex-end',
+  },
+  modal: {
+    backgroundColor: '#fbf8f1',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: '#1a1612' },
+  modalLabel: {
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: '#8b7e62',
+    fontFamily: 'Inter_500Medium',
+    marginBottom: 8,
+  },
+  modalInput: {
+    backgroundColor: '#f5f1e8',
+    borderWidth: 1,
+    borderColor: '#e8e0cf',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    color: '#1a1612',
+    marginBottom: 16,
+  },
+  saveBtn: {
+    backgroundColor: '#1a1612',
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  saveBtnDisabled: { backgroundColor: '#d4c9b0' },
+  saveBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
 });

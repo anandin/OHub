@@ -22,7 +22,9 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 A Reddit-style mobile app for Ontario Grade 12 applicants. Aggregates university info, tracks applications, and guides students through the Ontario university admissions process.
 
-**Tech Stack:** Expo SDK 54, expo-router, AsyncStorage, @tanstack/react-query, Inter font, @expo/vector-icons (Feather)
+**Tech Stack:** Expo SDK 54, expo-router, AsyncStorage, Inter/Fraunces/JetBrainsMono fonts, @expo/vector-icons (Feather)
+
+**Design System:** oHub Editorial — paper=#f5f1e8, card=#fbf8f1, ink=#1a1612, muted=#8b7e62, rule=#e8e0cf, warn=#c2410c, success=#15803d. Fraunces (headings), Inter (body), JetBrainsMono (numerics).
 
 **Tab Navigation (5 tabs):**
 - `/(tabs)/index` — Home feed

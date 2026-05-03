@@ -23,54 +23,158 @@ const ED = {
   amber: '#fef3c7',
   amberBorder: '#fbbf24',
   amberText: '#7c4a03',
+  warn: '#c2410c',
   success: '#15803d',
 };
 
-const ESSAY_PROMPTS: Record<string, { school: string; form: string; question: string; limit: number; questionNum: string }> = {
+const ESSAY_PROMPTS: Record<string, {
+  school: string;
+  form: string;
+  question: string;
+  limit: number;
+  questionNum: string;
+}> = {
+  /* ── Waterloo AIF ── */
+  'waterloo-aif-1': {
+    school: 'Waterloo', form: 'AIF',
+    question: 'List your extracurricular activities, employment, volunteer experience, and academic achievements from Grade 9 to present. Include dates, hours per week, and your role.',
+    limit: 600, questionNum: 'Question 1 of 7',
+  },
+  'waterloo-aif-2': {
+    school: 'Waterloo', form: 'AIF',
+    question: 'Describe one of your most significant extracurricular activities or achievements and your role in it. What impact did it have and what did you learn?',
+    limit: 200, questionNum: 'Question 2 of 7',
+  },
+  'waterloo-aif-3': {
+    school: 'Waterloo', form: 'AIF',
+    question: 'Describe a situation where you worked as part of a team. What was your role, and what did you learn about working with others?',
+    limit: 200, questionNum: 'Question 3 of 7',
+  },
   'waterloo-aif-4': {
-    school: 'Waterloo',
-    form: 'AIF',
+    school: 'Waterloo', form: 'AIF',
     question: 'Describe an activity, project or accomplishment outside school that has been most meaningful to you. Why?',
-    limit: 200,
-    questionNum: 'Question 4 of 7',
+    limit: 200, questionNum: 'Question 4 of 7',
   },
+  'waterloo-aif-5': {
+    school: 'Waterloo', form: 'AIF',
+    question: 'Tell us about your career goals. How does your chosen program at Waterloo connect with these goals?',
+    limit: 200, questionNum: 'Question 5 of 7',
+  },
+  'waterloo-aif-6': {
+    school: 'Waterloo', form: 'AIF',
+    question: 'Describe a technical project you have worked on, inside or outside of school. What was your approach and what did you learn?',
+    limit: 200, questionNum: 'Question 6 of 7',
+  },
+  'waterloo-aif-7': {
+    school: 'Waterloo', form: 'AIF',
+    question: 'Describe a current issue or challenge in a field related to your program. What interests you about it?',
+    limit: 200, questionNum: 'Question 7 of 7',
+  },
+
+  /* ── Queen's PSE ── */
   'queens-pse-1': {
-    school: "Queen's",
-    form: 'PSE',
+    school: "Queen's", form: 'PSE',
     question: 'Tell us about yourself, your values, and what you hope to gain from your university experience.',
-    limit: 250,
-    questionNum: 'Question 1 of 3',
+    limit: 250, questionNum: 'Question 1 of 3',
   },
+  'queens-pse-2': {
+    school: "Queen's", form: 'PSE',
+    question: 'Describe a significant challenge you have faced and how you overcame it. What did the experience teach you?',
+    limit: 250, questionNum: 'Question 2 of 3',
+  },
+  'queens-pse-3': {
+    school: "Queen's", form: 'PSE',
+    question: 'Why did you choose this program at Queen\'s? How does it align with your interests and goals?',
+    limit: 250, questionNum: 'Question 3 of 3',
+  },
+
+  /* ── McMaster Health Sciences ── */
+  'mcmaster-health-1': {
+    school: 'McMaster', form: 'Health Sci Supp.',
+    question: 'Why are you interested in McMaster\'s Health Sciences program? Describe a specific experience that shaped your understanding of health, medicine, or people, and explain what it revealed about you.',
+    limit: 300, questionNum: 'Question 1 of 2',
+  },
+  'mcmaster-health-2': {
+    school: 'McMaster', form: 'Health Sci Supp.',
+    question: 'Describe how you learn best. Give a specific example of a time you took initiative to learn something deeply, beyond what was required.',
+    limit: 300, questionNum: 'Question 2 of 2',
+  },
+
+  /* ── University of Toronto ── */
+  'uoft-supp-1': {
+    school: 'U of T', form: 'Supplementary',
+    question: 'Describe your most significant non-academic achievement or experience and explain why it is meaningful to you. What does it say about who you are?',
+    limit: 350, questionNum: 'Question 1 of 2',
+  },
+  'uoft-supp-2': {
+    school: 'U of T', form: 'Supplementary',
+    question: 'What aspect of your chosen program or field of study are you most passionate about, and why? How have you pursued this interest?',
+    limit: 350, questionNum: 'Question 2 of 2',
+  },
+
+  /* ── Ivey AEO ── */
+  'ivey-aeo-1': {
+    school: 'Ivey', form: 'AEO Essay',
+    question: 'Describe a situation where you demonstrated leadership — formal or informal. What was the outcome, and what did you learn about your leadership style?',
+    limit: 300, questionNum: 'Question 1 of 2',
+  },
+  'ivey-aeo-2': {
+    school: 'Ivey', form: 'AEO Essay',
+    question: 'Why do you want to be a business leader? Describe a business problem or opportunity that excites you and explain your thinking.',
+    limit: 300, questionNum: 'Question 2 of 2',
+  },
+
+  /* ── Western ── */
   'western-supp-1': {
-    school: 'Western',
-    form: 'Supplementary',
+    school: 'Western', form: 'Supplementary',
     question: 'Describe a challenge you overcame and what you learned from it.',
-    limit: 300,
-    questionNum: 'Question 1 of 4',
+    limit: 300, questionNum: 'Question 1 of 3',
+  },
+  'western-supp-2': {
+    school: 'Western', form: 'Supplementary',
+    question: 'Describe your personal and professional goals. How does Western\'s program support them?',
+    limit: 300, questionNum: 'Question 2 of 3',
+  },
+  'western-supp-3': {
+    school: 'Western', form: 'Supplementary',
+    question: 'Describe your involvement in your school or community. What roles have you taken on and what impact have you made?',
+    limit: 300, questionNum: 'Question 3 of 3',
+  },
+
+  /* ── York / Schulich ── */
+  'yorku-supp-1': {
+    school: 'York (Schulich)', form: 'Supplementary',
+    question: 'Why do you want to study business at Schulich? Describe an experience that shaped your interest in business or entrepreneurship.',
+    limit: 300, questionNum: 'Question 1 of 1',
   },
 };
 
-const DEFAULT_PROMPT = ESSAY_PROMPTS['waterloo-aif-4'];
+const DEFAULT_ID = 'waterloo-aif-4';
 
-const SEED_TEXT = `Two summers ago I taught myself to weld. Not for school, not for an award — I wanted to build a metal frame for my mom's vegetable garden after the wooden one rotted out.
+const SEED_TEXT: Record<string, string> = {
+  'waterloo-aif-4': `Two summers ago I taught myself to weld. Not for school, not for an award — I wanted to build a metal frame for my mom's vegetable garden after the wooden one rotted out.
 
 The first frame was crooked. The second collapsed under tomato vines. By the third, I'd watched maybe forty hours of YouTube and burned a small hole through my dad's gardening glove.
 
-What stuck with me wasn't the welding. It was realizing I could just start something.`;
+What stuck with me wasn't the welding. It was realizing I could just start something.`,
+};
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(w => w.length > 0).length;
 }
 
-function getReadingLevel(wordCount: number): string {
-  if (wordCount < 50) return 'Too short';
-  if (wordCount < 100) return 'Getting there';
+function getReadingStatus(wordCount: number, limit: number): string {
+  if (wordCount === 0) return 'Start writing';
+  if (wordCount < limit * 0.3) return 'Too short';
+  if (wordCount < limit * 0.6) return 'Getting there';
+  if (wordCount > limit) return 'Over limit';
   return '~9th grade · Active voice ✓';
 }
 
 function getCoachTip(wordCount: number, limit: number): string | null {
   if (wordCount === 0) return 'Start with a specific moment or scene — not a general statement.';
-  if (wordCount < 80) return 'You have room. Try to ground this in one specific moment or memory.';
+  if (wordCount < 80) return 'You have room. Ground this in one specific moment or memory.';
+  if (wordCount > limit) return `You're ${wordCount - limit} words over. Cut sentences that repeat information you've already stated.`;
   if (wordCount > limit * 0.9) return `You're near the limit. Cut any sentence that doesn't add new information.`;
   return 'Strong opening. Try ending on a specific moment, not a generalization.';
 }
@@ -78,15 +182,16 @@ function getCoachTip(wordCount: number, limit: number): string | null {
 export default function EssayScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const prompt = (id && ESSAY_PROMPTS[id]) ?? DEFAULT_PROMPT;
+  const prompt = (id && ESSAY_PROMPTS[id]) ?? ESSAY_PROMPTS[DEFAULT_ID];
 
-  const [text, setText] = useState(SEED_TEXT);
-  const [lastSaved, setLastSaved] = useState('14:32');
+  const [text, setText] = useState(SEED_TEXT[id ?? DEFAULT_ID] ?? '');
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const wordCount = countWords(text);
   const overLimit = wordCount > prompt.limit;
   const tip = getCoachTip(wordCount, prompt.limit);
+  const readingStatus = getReadingStatus(wordCount, prompt.limit);
 
   const handleChange = (val: string) => {
     setText(val);
@@ -108,9 +213,13 @@ export default function EssayScreen() {
           <Pressable onPress={() => router.back()}>
             <Feather name="arrow-left" size={20} color={ED.ink} />
           </Pressable>
-          <View style={styles.autoSaveBadge}>
-            <Text style={styles.autoSaveText}>Auto-saved · {lastSaved}</Text>
-          </View>
+          {lastSaved ? (
+            <View style={styles.autoSaveBadge}>
+              <Text style={styles.autoSaveText}>Auto-saved · {lastSaved}</Text>
+            </View>
+          ) : (
+            <View style={{ flex: 1 }} />
+          )}
           <Pressable>
             <Feather name="more-horizontal" size={18} color={ED.muted} />
           </Pressable>
@@ -145,7 +254,9 @@ export default function EssayScreen() {
           <Text style={[styles.wordCount, overLimit && styles.wordCountOver]}>
             {wordCount} / {prompt.limit} words
           </Text>
-          <Text style={styles.readingLevel}>{getReadingLevel(wordCount)}</Text>
+          <Text style={[styles.readingLevel, overLimit && styles.wordCountOver]}>
+            {readingStatus}
+          </Text>
         </View>
 
         {tip && (
@@ -235,17 +346,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  wordCount: {
-    fontFamily: 'JetBrainsMono_400Regular',
-    fontSize: 11,
-    color: '#5c4a2f',
-  },
+  wordCount: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: '#5c4a2f' },
   wordCountOver: { color: '#c2410c' },
-  readingLevel: {
-    fontFamily: 'JetBrainsMono_400Regular',
-    fontSize: 11,
-    color: '#15803d',
-  },
+  readingLevel: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: '#15803d' },
   coachCard: {
     flexDirection: 'row',
     gap: 10,

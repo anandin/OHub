@@ -1,130 +1,136 @@
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
-  Linking,
   Platform,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import Colors from "@/constants/colors";
-import { useSavedPosts } from "@/context/SavedPostsContext";
-import { CATEGORY_CONFIG, Post, SAMPLE_POSTS } from "@/data/feed";
+import { useSubscriptions } from "@/context/SubscriptionsContext";
+import { CATEGORY_CONFIG, SAMPLE_POSTS } from "@/data/feed";
 import { REFRESH_BATCHES } from "@/data/feedRefreshBatches";
 import { getUniversityById } from "@/data/universities";
 
-function findPost(id: string): Post | undefined {
-  const all: Post[] = [
-    ...SAMPLE_POSTS,
-    ...REFRESH_BATCHES.flat(),
-  ];
-  return all.find((p) => p.id === id);
-}
+const ED = {
+  paper: '#f5f1e8',
+  card: '#fbf8f1',
+  ink: '#1a1612',
+  softInk: '#5c4a2f',
+  muted: '#8b7e62',
+  rule: '#e8e0cf',
+  pillBorder: '#d4c9b0',
+  warn: '#c2410c',
+  success: '#15803d',
+  successBg: '#ecfdf5',
+};
 
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const topInset = Platform.OS === "web" ? 67 : insets.top;
-  const { isSaved, isLiked, toggleSave, toggleLike } = useSavedPosts();
+  const topInset = Platform.OS === 'web' ? 20 : insets.top;
+  const { toggleSubscription, isSubscribed } = useSubscriptions();
 
-  const post = findPost(id);
+  const allPosts = [...SAMPLE_POSTS, ...REFRESH_BATCHES.flat()];
+  const post = allPosts.find(p => p.id === id);
+
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post?.likes ?? 0);
 
   if (!post) {
     return (
-      <View style={styles.notFound}>
-        <Text style={styles.notFoundText}>Post not found</Text>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backLink}>Go back</Text>
+      <View style={[styles.container, { paddingTop: topInset, alignItems: 'center', justifyContent: 'center' }]}>
+        <Text style={styles.notFoundText}>Post not found.</Text>
+        <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
+          <Text style={{ color: ED.muted, fontFamily: 'Inter_400Regular' }}>Go back</Text>
         </Pressable>
       </View>
     );
   }
 
   const uni = getUniversityById(post.universityId);
-  const saved = isSaved(post.id);
-  const liked = isLiked(post.id);
-  const categoryConfig = CATEGORY_CONFIG[post.category];
-  const displayLikes = liked ? post.likes + 1 : post.likes;
-
-  const formatCount = (n: number) =>
-    n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+  const catCfg = CATEGORY_CONFIG[post.category];
+  const following = isSubscribed(post.universityId);
 
   const handleLike = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    toggleLike(post.id);
+    setLiked(l => !l);
+    setLikeCount(n => liked ? n - 1 : n + 1);
   };
 
-  const handleSave = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    toggleSave(post.id);
+  const handleFollow = () => {
+    toggleSubscription(post.universityId);
   };
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `${post.title}\n\n${post.body.slice(0, 280)}${post.body.length > 280 ? '…' : ''}\n\n— via UniHub`,
+        title: post.title,
+      });
+    } catch {}
+  };
+
+  const formatCount = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
 
   return (
     <View style={[styles.container, { paddingTop: topInset }]}>
+      {/* Top bar */}
       <View style={styles.topBar}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <Feather name="arrow-left" size={20} color={Colors.light.text} />
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Feather name="arrow-left" size={20} color={ED.ink} />
         </Pressable>
-        <View style={styles.topBarActions}>
-          <Pressable style={styles.iconBtn} onPress={handleSave}>
-            <Feather
-              name="bookmark"
-              size={20}
-              color={saved ? Colors.light.primary : Colors.light.textSecondary}
-            />
-          </Pressable>
-          <Pressable style={styles.iconBtn}>
-            <Feather name="share-2" size={20} color={Colors.light.textSecondary} />
+        <View style={styles.topActions}>
+          <Pressable style={styles.iconBtn} onPress={handleShare}>
+            <Feather name="share" size={18} color={ED.ink} />
           </Pressable>
         </View>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.scrollContent,
-          Platform.OS === "web" && { paddingBottom: 34 },
-        ]}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        {/* University row */}
         {uni && (
-          <Pressable
-            style={styles.uniRow}
-            onPress={() =>
-              router.push({ pathname: "/university/[id]", params: { id: uni.id } })
-            }
-          >
+          <View style={styles.uniRow}>
             <View style={[styles.uniDot, { backgroundColor: uni.color }]} />
             <Text style={styles.uniName}>{uni.name}</Text>
-            <Feather name="chevron-right" size={14} color={Colors.light.textMuted} />
-          </Pressable>
+            <Pressable
+              style={[styles.followBtn, following && styles.followBtnActive]}
+              onPress={handleFollow}
+            >
+              <Text style={[styles.followBtnText, following && styles.followBtnTextActive]}>
+                {following ? 'Following' : '+ Follow'}
+              </Text>
+            </Pressable>
+          </View>
         )}
 
-        <View style={[styles.categoryBadge, { backgroundColor: categoryConfig.color + "15" }]}>
-          <Feather name={categoryConfig.icon as any} size={13} color={categoryConfig.color} />
-          <Text style={[styles.categoryText, { color: categoryConfig.color }]}>
-            {categoryConfig.label}
-          </Text>
+        {/* Category badge */}
+        <View style={[styles.catBadge, { backgroundColor: catCfg.color + '18' }]}>
+          <Feather name={catCfg.icon as any} size={12} color={catCfg.color} />
+          <Text style={[styles.catBadgeText, { color: catCfg.color }]}>{catCfg.label}</Text>
         </View>
 
+        {/* Title */}
         <Text style={styles.title}>{post.title}</Text>
 
+        {/* Meta */}
         <View style={styles.metaRow}>
-          <Text style={styles.author}>Posted by {post.author}</Text>
-          <Text style={styles.dot}>·</Text>
-          <Text style={styles.timeAgo}>{post.timeAgo}</Text>
+          <Text style={styles.metaAuthor}>Posted by {post.author}</Text>
+          <Text style={styles.metaSep}>·</Text>
+          <Text style={styles.metaTime}>{post.timeAgo}</Text>
         </View>
 
+        {/* Body */}
         <Text style={styles.body}>{post.body}</Text>
 
+        {/* Tags */}
         {post.tags.length > 0 && (
           <View style={styles.tagsRow}>
-            {post.tags.map((tag) => (
+            {post.tags.map(tag => (
               <View key={tag} style={styles.tag}>
                 <Text style={styles.tagText}>{tag}</Text>
               </View>
@@ -134,324 +140,184 @@ export default function PostDetailScreen() {
 
         <View style={styles.divider} />
 
+        {/* Actions — like + share only, no comments */}
         <View style={styles.actionsRow}>
-          {/* Like button */}
           <Pressable
-            style={[styles.actionBtn, liked && styles.likeActive]}
+            style={[styles.actionBtn, liked && styles.actionBtnLiked]}
             onPress={handleLike}
           >
-            <Feather
-              name="heart"
-              size={18}
-              color={liked ? Colors.light.likeColor : Colors.light.textSecondary}
-            />
-            <Text style={[styles.actionText, liked && styles.likeText]}>
-              {formatCount(displayLikes)} {displayLikes === 1 ? "like" : "likes"}
+            <Feather name="heart" size={16} color={liked ? ED.warn : ED.muted} />
+            <Text style={[styles.actionBtnText, liked && { color: ED.warn }]}>
+              {formatCount(likeCount)} {likeCount === 1 ? 'like' : 'likes'}
             </Text>
           </Pressable>
 
-          <View style={styles.commentCount}>
-            <Feather name="message-square" size={18} color={Colors.light.textSecondary} />
-            <Text style={styles.actionText}>{formatCount(post.comments)} comments</Text>
-          </View>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.sourceSection}>
-          <Text style={styles.sourceSectionTitle}>Source</Text>
-          <Pressable
-            style={styles.sourceLink}
-            onPress={() => post.sourceUrl && Linking.openURL(post.sourceUrl)}
-          >
-            <Feather name="globe" size={15} color={Colors.light.primary} />
-            <Text style={styles.sourceLinkText}>{post.source}</Text>
-            <Feather name="external-link" size={13} color={Colors.light.primary} />
+          <Pressable style={styles.actionBtn} onPress={handleShare}>
+            <Feather name="share" size={16} color={ED.muted} />
+            <Text style={styles.actionBtnText}>Share</Text>
           </Pressable>
         </View>
 
-        {uni && (
-          <Pressable
-            style={[styles.uniCard, { borderLeftColor: uni.color }]}
-            onPress={() =>
-              router.push({ pathname: "/university/[id]", params: { id: uni.id } })
-            }
-          >
-            <View style={styles.uniCardContent}>
-              <Text style={styles.uniCardEmoji}>{uni.logo}</Text>
-              <View style={styles.uniCardInfo}>
-                <Text style={styles.uniCardName}>{uni.name}</Text>
-                <Text style={styles.uniCardLocation}>{uni.location}</Text>
-              </View>
+        {/* Source */}
+        {post.source && (
+          <>
+            <View style={styles.divider} />
+            <View style={styles.sourceRow}>
+              <Text style={styles.sourceLabel}>Source</Text>
+              <Pressable
+                style={styles.sourceLink}
+                onPress={() => post.sourceUrl && require('react-native').Linking.openURL(post.sourceUrl)}
+              >
+                <Feather name="globe" size={13} color={ED.softInk} />
+                <Text style={styles.sourceLinkText}>{post.source}</Text>
+                {post.sourceUrl && <Feather name="external-link" size={12} color={ED.muted} />}
+              </Pressable>
             </View>
-            <View style={styles.viewUniBtn}>
-              <Text style={[styles.viewUniBtnText, { color: uni.color }]}>
-                View University
-              </Text>
-              <Feather name="chevron-right" size={14} color={uni.color} />
-            </View>
-          </Pressable>
+          </>
         )}
+
+        {/* University card */}
+        {uni && (
+          <>
+            <View style={styles.divider} />
+            <View style={[styles.uniCard, { borderLeftColor: uni.color }]}>
+              <View style={styles.uniCardLeft}>
+                <View style={[styles.uniCardDot, { backgroundColor: uni.color }]} />
+                <View>
+                  <Text style={styles.uniCardName}>{uni.name}</Text>
+                  <Text style={styles.uniCardLocation}>{uni.location}</Text>
+                </View>
+              </View>
+              <Pressable
+                style={[styles.followBtn, following && styles.followBtnActive]}
+                onPress={handleFollow}
+              >
+                <Text style={[styles.followBtnText, following && styles.followBtnTextActive]}>
+                  {following ? 'Following' : '+ Follow'}
+                </Text>
+              </Pressable>
+            </View>
+          </>
+        )}
+
+        <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-  },
-  notFound: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  notFoundText: {
-    fontSize: 18,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
-  },
-  backLink: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
-  },
+  container: { flex: 1, backgroundColor: '#f5f1e8' },
   topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingBottom: 8,
-    paddingTop: 4,
-    backgroundColor: Colors.light.background,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e8e0cf',
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.light.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  topBarActions: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.light.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 60,
-    gap: 12,
-  },
+  backBtn: { padding: 4 },
+  topActions: { flexDirection: 'row', gap: 4 },
+  iconBtn: { padding: 8 },
+  notFoundText: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612' },
+  content: { padding: 24, paddingBottom: 60, gap: 16 },
   uniRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    alignSelf: "flex-start",
-    backgroundColor: Colors.light.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  uniDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  uniName: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.textSecondary,
-  },
-  categoryBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  categoryText: {
-    fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
-  },
-  title: {
-    fontSize: 22,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
-    lineHeight: 30,
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    flexWrap: "wrap",
-  },
-  author: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.textSecondary,
-  },
-  dot: {
-    fontSize: 13,
-    color: Colors.light.textMuted,
-  },
-  timeAgo: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
-  },
-  body: {
-    fontSize: 16,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.text,
-    lineHeight: 26,
-  },
-  tagsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
-  tag: {
-    backgroundColor: Colors.light.primaryMuted,
+  uniDot: { width: 8, height: 8, borderRadius: 999 },
+  uniName: { flex: 1, fontSize: 13, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
+  followBtn: {
     paddingHorizontal: 12,
     paddingVertical: 5,
-    borderRadius: 20,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+    backgroundColor: 'transparent',
   },
-  tagText: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.primary,
+  followBtnActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
+  followBtnText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
+  followBtnTextActive: { color: '#f5f1e8' },
+  catBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.light.border,
-    marginVertical: 4,
+  catBadgeText: { fontSize: 10, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4, textTransform: 'uppercase' },
+  title: {
+    fontFamily: 'Fraunces_600SemiBold',
+    fontSize: 24,
+    lineHeight: 30,
+    color: '#1a1612',
   },
-  actionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flexWrap: "wrap",
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  metaAuthor: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
+  metaSep: { fontSize: 12, color: '#d4c9b0' },
+  metaTime: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#8b7e62' },
+  body: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 15,
+    color: '#1a1612',
+    lineHeight: 25,
   },
+  tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  tag: {
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: '#fbf8f1',
+  },
+  tagText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
+  divider: { height: 1, backgroundColor: '#e8e0cf' },
+  actionsRow: { flexDirection: 'row', gap: 10 },
   actionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: Colors.light.backgroundSecondary,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#e8e0cf',
+    backgroundColor: '#fbf8f1',
   },
-  likeActive: {
-    backgroundColor: "#FF2D5512",
-  },
-  actionText: {
-    fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.textSecondary,
-  },
-  likeText: {
-    color: Colors.light.likeColor,
-  },
-  commentCount: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: Colors.light.backgroundSecondary,
-  },
-  sourceSection: {
-    gap: 8,
-  },
-  sourceSectionTitle: {
-    fontSize: 13,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
+  actionBtnLiked: { borderColor: '#fca5a5', backgroundColor: '#fef3e2' },
+  actionBtnText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#8b7e62' },
+  sourceRow: { gap: 8 },
+  sourceLabel: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: '#8b7e62', fontFamily: 'Inter_500Medium' },
   sourceLink: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-    backgroundColor: Colors.light.primaryMuted,
+    backgroundColor: '#fbf8f1',
+    borderWidth: 1,
+    borderColor: '#e8e0cf',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  sourceLinkText: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.primary,
-  },
+  sourceLinkText: { flex: 1, fontSize: 13, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
   uniCard: {
-    backgroundColor: Colors.light.surface,
-    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fbf8f1',
+    borderRadius: 12,
     borderLeftWidth: 4,
+    borderWidth: 1,
+    borderColor: '#e8e0cf',
     padding: 14,
-    gap: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
   },
-  uniCardContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  uniCardEmoji: {
-    fontSize: 24,
-  },
-  uniCardInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  uniCardName: {
-    fontSize: 15,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
-  },
-  uniCardLocation: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
-  },
-  viewUniBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    alignSelf: "flex-start",
-  },
-  viewUniBtnText: {
-    fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
-  },
+  uniCardLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  uniCardDot: { width: 32, height: 32, borderRadius: 8 },
+  uniCardName: { fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#1a1612' },
+  uniCardLocation: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular', marginTop: 1 },
 });

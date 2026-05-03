@@ -1,8 +1,10 @@
+import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   FlatList,
   Platform,
   Pressable,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -24,8 +26,6 @@ const ED = {
   muted: '#8b7e62',
   rule: '#e8e0cf',
   warn: '#c2410c',
-  warnBg: '#fef3e2',
-  success: '#15803d',
   pillBorder: '#d4c9b0',
 };
 
@@ -34,14 +34,28 @@ function PostItem({ post }: { post: Post }) {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(post.likes);
   const catCfg = CATEGORY_CONFIG[post.category];
+  const { toggleSubscription, isSubscribed } = useSubscriptions();
+  const following = isSubscribed(post.universityId);
 
   const handleLike = () => {
     setLiked(l => !l);
     setLikes(n => liked ? n - 1 : n + 1);
   };
 
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `${post.title}\n\n${post.body.slice(0, 200)}…\n\n— via UniHub`,
+        title: post.title,
+      });
+    } catch {}
+  };
+
   return (
-    <View style={styles.postItem}>
+    <Pressable
+      style={styles.postItem}
+      onPress={() => router.push({ pathname: '/post/[id]', params: { id: post.id } })}
+    >
       {/* Meta row */}
       <View style={styles.postMeta}>
         <View style={[styles.uniDot, { backgroundColor: uni?.color ?? '#8b7e62' }]} />
@@ -50,10 +64,18 @@ function PostItem({ post }: { post: Post }) {
         <Text style={styles.postUni}>{uni?.shortName ?? 'Ontario'}</Text>
         <Text style={styles.postMetaSep}>·</Text>
         <Text style={styles.postTime}>{post.timeAgo}</Text>
-        {/* Category badge */}
         <View style={[styles.catBadge, { backgroundColor: catCfg.color + '18' }]}>
           <Text style={[styles.catBadgeText, { color: catCfg.color }]}>{catCfg.label}</Text>
         </View>
+        <Pressable
+          style={[styles.followPill, following && styles.followPillActive]}
+          onPress={e => { e.stopPropagation?.(); toggleSubscription(post.universityId); }}
+          hitSlop={8}
+        >
+          <Text style={[styles.followPillText, following && styles.followPillTextActive]}>
+            {following ? '✓' : '+'}
+          </Text>
+        </Pressable>
       </View>
 
       <Text style={styles.postTitle}>{post.title}</Text>
@@ -69,24 +91,25 @@ function PostItem({ post }: { post: Post }) {
           ))}
         </View>
       )}
+
+      {/* Actions — like + share only */}
       <View style={styles.postActions}>
-        <Pressable style={styles.actionBtn} onPress={handleLike}>
-          <Feather
-            name="heart"
-            size={14}
-            color={liked ? ED.warn : ED.muted}
-          />
+        <Pressable
+          style={styles.actionBtn}
+          onPress={e => { e.stopPropagation?.(); handleLike(); }}
+        >
+          <Feather name="heart" size={14} color={liked ? ED.warn : ED.muted} />
           <Text style={[styles.actionText, liked && { color: ED.warn }]}>{likes}</Text>
         </Pressable>
-        <Pressable style={styles.actionBtn}>
-          <Feather name="message-circle" size={14} color={ED.muted} />
-          <Text style={styles.actionText}>{post.comments}</Text>
-        </Pressable>
-        <Pressable style={styles.actionBtn}>
+        <Pressable
+          style={styles.actionBtn}
+          onPress={e => { e.stopPropagation?.(); handleShare(); }}
+        >
           <Feather name="share" size={14} color={ED.muted} />
+          <Text style={styles.actionText}>Share</Text>
         </Pressable>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -155,7 +178,7 @@ export default function PulseScreen() {
                 <Feather name="rss" size={28} color={ED.muted} style={{ marginBottom: 12 }} />
                 <Text style={styles.emptyTitle}>Follow schools to see their posts</Text>
                 <Text style={styles.emptyBody}>
-                  Visit university pages and tap Follow to build your feed.
+                  Tap the + on any post to follow that school.
                 </Text>
               </>
             ) : (
@@ -186,19 +209,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
-  title: {
-    fontFamily: 'Fraunces_600SemiBold',
-    fontSize: 30,
-    color: '#1a1612',
-    lineHeight: 32,
-  },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 30, color: '#1a1612', lineHeight: 32 },
   composeBtn: { padding: 4 },
-  tabRow: {
-    flexDirection: 'row',
-    gap: 6,
-    paddingHorizontal: 24,
-    paddingBottom: 16,
-  },
+  tabRow: { flexDirection: 'row', gap: 6, paddingHorizontal: 24, paddingBottom: 16 },
   tabPill: {
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -207,15 +220,8 @@ const styles = StyleSheet.create({
     borderColor: '#d4c9b0',
     backgroundColor: 'transparent',
   },
-  tabPillActive: {
-    backgroundColor: '#1a1612',
-    borderColor: '#1a1612',
-  },
-  tabLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter_500Medium',
-    color: '#1a1612',
-  },
+  tabPillActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
+  tabLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#1a1612' },
   tabLabelActive: { color: '#f5f1e8' },
   listContent: { paddingBottom: 100 },
   separator: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24 },
@@ -244,6 +250,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
+  followPill: {
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  followPillActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
+  followPillText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#5c4a2f', lineHeight: 14 },
+  followPillTextActive: { color: '#f5f1e8' },
   postTitle: {
     fontFamily: 'Fraunces_500Medium',
     fontSize: 17,

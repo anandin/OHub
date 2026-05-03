@@ -1,14 +1,17 @@
 import { router } from "expo-router";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
 
 import { useUser } from "@/context/UserContext";
 import { getUpcomingDeadlines } from "@/data/deadlines";
@@ -29,6 +32,8 @@ const ED = {
   successBg: '#ecfdf5',
 };
 
+type Priority = 'high' | 'med' | 'low';
+
 function issueNumber() {
   const start = new Date('2025-09-01');
   const now = new Date();
@@ -41,11 +46,90 @@ function formatDay() {
   return d.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
+function AddTaskModal({ onAdd, onClose }: {
+  onAdd: (label: string, est: string, priority: Priority) => void;
+  onClose: () => void;
+}) {
+  const [label, setLabel] = useState('');
+  const [est, setEst] = useState('');
+  const [priority, setPriority] = useState<Priority>('med');
+
+  const PRIORITIES: { id: Priority; label: string }[] = [
+    { id: 'high', label: 'High' },
+    { id: 'med',  label: 'Medium' },
+    { id: 'low',  label: 'Low' },
+  ];
+
+  return (
+    <Modal transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={styles.modalBg} onPress={onClose}>
+        <Pressable style={styles.modal} onPress={e => e.stopPropagation()}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add task</Text>
+            <Pressable onPress={onClose}>
+              <Feather name="x" size={18} color={ED.muted} />
+            </Pressable>
+          </View>
+
+          <Text style={styles.modalLabel}>What do you need to do?</Text>
+          <TextInput
+            style={styles.modalInput}
+            value={label}
+            onChangeText={setLabel}
+            placeholder="e.g. Finish Waterloo AIF Section 5"
+            placeholderTextColor={ED.muted}
+            autoFocus
+          />
+
+          <Text style={styles.modalLabel}>Estimated time (optional)</Text>
+          <TextInput
+            style={[styles.modalInput, { marginBottom: 16 }]}
+            value={est}
+            onChangeText={setEst}
+            placeholder="e.g. 20 min"
+            placeholderTextColor={ED.muted}
+          />
+
+          <Text style={styles.modalLabel}>Priority</Text>
+          <View style={styles.priorityRow}>
+            {PRIORITIES.map(p => (
+              <Pressable
+                key={p.id}
+                style={[styles.priorityChip, priority === p.id && styles.priorityChipActive]}
+                onPress={() => setPriority(p.id)}
+              >
+                <Text style={[styles.priorityChipText, priority === p.id && styles.priorityChipTextActive]}>
+                  {p.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Pressable
+            style={[styles.addBtn, !label.trim() && styles.addBtnDisabled]}
+            disabled={!label.trim()}
+            onPress={() => {
+              if (label.trim()) {
+                onAdd(label.trim(), est.trim(), priority);
+                onClose();
+              }
+            }}
+          >
+            <Text style={styles.addBtnText}>Add task</Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
 export default function TodayScreen() {
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 20 : insets.top;
-  const { profile, tasks, doneTasks, toggleTask } = useUser();
+  const { profile, tasks, doneTasks, toggleTask, addTask, deleteTask } = useUser();
   const { applications } = useApplications();
+  const [editingTasks, setEditingTasks] = useState(false);
+  const [showAddTask, setShowAddTask] = useState(false);
 
   const submitted = applications.filter(a => ['applied', 'supp_sent', 'offer', 'accepted'].includes(a.status)).length;
   const total = Math.max(applications.length, submitted);
@@ -61,113 +145,148 @@ export default function TodayScreen() {
     p === 'high' ? 'High priority' : p === 'med' ? 'Medium' : 'Low';
 
   return (
-    <ScrollView
-      style={[styles.container, { paddingTop: topInset }]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Date + Issue */}
-      <View style={styles.dateLine}>
-        <Text style={styles.dateText}>{formatDay()}</Text>
-        <Text style={styles.issueText}>Issue №{issueNumber()}</Text>
-      </View>
+    <>
+      <ScrollView
+        style={[styles.container, { paddingTop: topInset }]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Date + Issue */}
+        <View style={styles.dateLine}>
+          <Text style={styles.dateText}>{formatDay()}</Text>
+          <Text style={styles.issueText}>Issue №{issueNumber()}</Text>
+        </View>
 
-      {/* Hero countdown */}
-      <View style={styles.heroSection}>
-        {nextDeadline ? (
-          <>
-            <Text style={styles.heroCount}>{daysLeft} {daysLeft === 1 ? 'day' : 'days'}</Text>
-            <Text style={styles.heroSub}>
-              until {nextDeadline.title}.{'\n'}
-              <Text style={styles.heroSubBold}>
-                {total > 0 ? `${submitted}/${total} submitted.` : "Add your applications."}
+        {/* Hero countdown */}
+        <View style={styles.heroSection}>
+          {nextDeadline ? (
+            <>
+              <Text style={styles.heroCount}>{daysLeft} {daysLeft === 1 ? 'day' : 'days'}</Text>
+              <Text style={styles.heroSub}>
+                until {nextDeadline.title}.{'\n'}
+                <Text style={styles.heroSubBold}>
+                  {total > 0 ? `${submitted}/${total} submitted.` : "Add your applications."}
+                </Text>
               </Text>
-            </Text>
-            {total > 0 && (
-              <>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${progress}%` as any }]} />
-                </View>
-                <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>{submitted} submitted</Text>
-                  <Text style={styles.progressLabel}>{total - submitted} remaining</Text>
-                </View>
-              </>
-            )}
-          </>
-        ) : (
-          <>
-            <Text style={styles.heroCount}>You're on track.</Text>
-            <Text style={styles.heroSub}>No upcoming deadlines. Keep going.</Text>
-          </>
-        )}
-      </View>
+              {total > 0 && (
+                <>
+                  <View style={styles.progressTrack}>
+                    <View style={[styles.progressFill, { width: `${progress}%` as any }]} />
+                  </View>
+                  <View style={styles.progressRow}>
+                    <Text style={styles.progressLabel}>{submitted} submitted</Text>
+                    <Text style={styles.progressLabel}>{total - submitted} remaining</Text>
+                  </View>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <Text style={styles.heroCount}>You're on track.</Text>
+              <Text style={styles.heroSub}>No upcoming deadlines. Keep going.</Text>
+            </>
+          )}
+        </View>
 
-      <View style={styles.divider} />
+        <View style={styles.divider} />
 
-      {/* Today's plan */}
-      <View style={styles.section}>
-        <Text style={styles.eyebrow}>Your plan, today</Text>
-        {tasks.map((task, i) => {
-          const done = doneTasks.has(task.id);
-          return (
+        {/* Today's plan */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.eyebrow}>Your plan, today</Text>
             <Pressable
-              key={task.id}
-              style={[styles.taskRow, i > 0 && styles.taskRowBorder]}
-              onPress={() => toggleTask(task.id)}
+              onPress={() => setEditingTasks(e => !e)}
+              style={styles.editTasksBtn}
             >
-              <View style={[styles.checkbox, done && styles.checkboxDone]}>
-                {done && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <View style={styles.taskBody}>
-                <Text style={[styles.taskLabel, done && styles.taskLabelDone]}>{task.label}</Text>
-                <Text style={styles.taskMeta}>{task.est} · {priorityLabel(task.priority)}</Text>
-              </View>
+              <Text style={styles.editTasksBtnText}>{editingTasks ? 'Done' : 'Edit'}</Text>
             </Pressable>
-          );
-        })}
-      </View>
+          </View>
 
-      <View style={styles.divider} />
+          {tasks.map((task, i) => {
+            const done = doneTasks.has(task.id);
+            return (
+              <Pressable
+                key={task.id}
+                style={[styles.taskRow, i > 0 && styles.taskRowBorder]}
+                onPress={() => !editingTasks && toggleTask(task.id)}
+              >
+                {editingTasks ? (
+                  <Pressable onPress={() => deleteTask(task.id)} style={styles.deleteBtn} hitSlop={8}>
+                    <Feather name="trash-2" size={15} color={ED.warn} />
+                  </Pressable>
+                ) : (
+                  <View style={[styles.checkbox, done && styles.checkboxDone]}>
+                    {done && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                )}
+                <View style={styles.taskBody}>
+                  <Text style={[styles.taskLabel, done && !editingTasks && styles.taskLabelDone]}>
+                    {task.label}
+                  </Text>
+                  <Text style={styles.taskMeta}>{task.est} · {priorityLabel(task.priority)}</Text>
+                </View>
+              </Pressable>
+            );
+          })}
 
-      {/* Featured article */}
-      <View style={styles.section}>
-        <Text style={styles.eyebrow}>Read · {article.readTime}</Text>
-        <View style={styles.articleCard}>
-          <Text style={styles.articleTitle}>{article.title}</Text>
-          <Text style={styles.articleBlurb}>{article.blurb}</Text>
-          <View style={styles.tagRow}>
-            {article.tags.map(tag => (
-              <View key={tag} style={styles.pill}>
-                <Text style={styles.pillText}>{tag}</Text>
-              </View>
-            ))}
+          {tasks.length === 0 && (
+            <Text style={styles.emptyTasks}>No tasks yet. Add one below.</Text>
+          )}
+
+          <Pressable style={styles.addTaskBtn} onPress={() => setShowAddTask(true)}>
+            <Feather name="plus" size={14} color={ED.muted} />
+            <Text style={styles.addTaskBtnText}>Add task</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* Featured article */}
+        <View style={styles.section}>
+          <Text style={styles.eyebrow}>Read · {article.readTime}</Text>
+          <View style={styles.articleCard}>
+            <Text style={styles.articleTitle}>{article.title}</Text>
+            <Text style={styles.articleBlurb}>{article.blurb}</Text>
+            <View style={styles.tagRow}>
+              {article.tags.map(tag => (
+                <View key={tag} style={styles.pill}>
+                  <Text style={styles.pillText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* This week */}
-      <View style={[styles.section, { paddingBottom: 32 }]}>
-        <Text style={styles.eyebrow}>This week</Text>
-        {UPCOMING_EVENTS.slice(0, 3).map((event, i) => (
-          <View key={event.id} style={[styles.eventRow, i > 0 && styles.eventRowBorder]}>
-            <View style={styles.eventBody}>
-              <Text style={styles.eventName}>{event.name}</Text>
-              <Text style={styles.eventMeta}>{event.host} · {event.date}, {event.time}</Text>
+        {/* This week */}
+        <View style={[styles.section, { paddingBottom: 32 }]}>
+          <Text style={styles.eyebrow}>This week</Text>
+          {UPCOMING_EVENTS.slice(0, 3).map((event, i) => (
+            <View key={event.id} style={[styles.eventRow, i > 0 && styles.eventRowBorder]}>
+              <View style={styles.eventBody}>
+                <Text style={styles.eventName}>{event.name}</Text>
+                <Text style={styles.eventMeta}>{event.host} · {event.date}, {event.time}</Text>
+              </View>
+              {event.attending ? (
+                <View style={styles.goingBadge}>
+                  <Text style={styles.goingText}>Going</Text>
+                </View>
+              ) : (
+                <View style={styles.rsvpBadge}>
+                  <Text style={styles.rsvpText}>RSVP</Text>
+                </View>
+              )}
             </View>
-            {event.attending ? (
-              <View style={styles.goingBadge}>
-                <Text style={styles.goingText}>Going</Text>
-              </View>
-            ) : (
-              <View style={styles.rsvpBadge}>
-                <Text style={styles.rsvpText}>RSVP</Text>
-              </View>
-            )}
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+          ))}
+        </View>
+      </ScrollView>
+
+      {showAddTask && (
+        <AddTaskModal
+          onAdd={addTask}
+          onClose={() => setShowAddTask(false)}
+        />
+      )}
+    </>
   );
 }
 
@@ -231,25 +350,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 8,
   },
-  progressLabel: {
-    fontSize: 11,
-    color: '#8b7e62',
-    fontFamily: 'Inter_400Regular',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#e8e0cf',
-    marginHorizontal: 24,
-  },
+  progressLabel: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  divider: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24 },
   section: { paddingHorizontal: 24, paddingTop: 20 },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   eyebrow: {
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: '#8b7e62',
     fontFamily: 'Inter_500Medium',
-    marginBottom: 10,
   },
+  editTasksBtn: { paddingVertical: 2, paddingHorizontal: 4 },
+  editTasksBtnText: { fontSize: 12, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -273,6 +391,7 @@ const styles = StyleSheet.create({
     borderColor: '#1a1612',
   },
   checkmark: { color: '#f5f1e8', fontSize: 10, lineHeight: 12 },
+  deleteBtn: { marginTop: 1, flexShrink: 0 },
   taskBody: { flex: 1 },
   taskLabel: {
     fontSize: 14,
@@ -284,6 +403,22 @@ const styles = StyleSheet.create({
     color: '#8b7e62',
   },
   taskMeta: { fontSize: 11, color: '#8b7e62', marginTop: 2, fontFamily: 'Inter_400Regular' },
+  emptyTasks: {
+    fontSize: 13,
+    color: '#8b7e62',
+    fontFamily: 'Inter_400Regular',
+    paddingVertical: 8,
+  },
+  addTaskBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#e8e0cf',
+    marginTop: 2,
+  },
+  addTaskBtnText: { fontSize: 13, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
   articleCard: {
     backgroundColor: '#fbf8f1',
     borderWidth: 1,
@@ -291,6 +426,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 18,
     marginBottom: 4,
+    marginTop: 8,
   },
   articleTitle: {
     fontFamily: 'Fraunces_600SemiBold',
@@ -341,4 +477,63 @@ const styles = StyleSheet.create({
     backgroundColor: '#fbf8f1',
   },
   rsvpText: { fontSize: 11, color: '#1a1612', fontFamily: 'Inter_500Medium' },
+  modalBg: {
+    flex: 1,
+    backgroundColor: 'rgba(26,22,18,0.45)',
+    justifyContent: 'flex-end',
+  },
+  modal: {
+    backgroundColor: '#fbf8f1',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: '#1a1612' },
+  modalLabel: {
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: '#8b7e62',
+    fontFamily: 'Inter_500Medium',
+    marginBottom: 8,
+  },
+  modalInput: {
+    backgroundColor: '#f5f1e8',
+    borderWidth: 1,
+    borderColor: '#e8e0cf',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    color: '#1a1612',
+    marginBottom: 16,
+  },
+  priorityRow: { flexDirection: 'row', gap: 8, marginBottom: 24 },
+  priorityChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+    backgroundColor: 'transparent',
+  },
+  priorityChipActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
+  priorityChipText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#1a1612' },
+  priorityChipTextActive: { color: '#f5f1e8' },
+  addBtn: {
+    backgroundColor: '#1a1612',
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  addBtnDisabled: { backgroundColor: '#d4c9b0' },
+  addBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
 });
