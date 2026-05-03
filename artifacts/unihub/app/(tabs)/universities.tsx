@@ -10,11 +10,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
-import { Post, SAMPLE_POSTS } from "@/data/feed";
+import { Post, SAMPLE_POSTS, CATEGORY_CONFIG } from "@/data/feed";
 import { getUniversityById } from "@/data/universities";
 import { useSubscriptions } from "@/context/SubscriptionsContext";
 
-type FeedTab = 'following' | 'school' | 'all';
+type FeedTab = 'following' | 'trending' | 'all';
 
 const ED = {
   paper: '#f5f1e8',
@@ -33,21 +33,16 @@ function PostItem({ post }: { post: Post }) {
   const uni = getUniversityById(post.universityId);
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(post.likes);
+  const catCfg = CATEGORY_CONFIG[post.category];
 
   const handleLike = () => {
     setLiked(l => !l);
     setLikes(n => liked ? n - 1 : n + 1);
   };
 
-  const isTip = post.category === 'advice' || post.category === 'academic';
-
   return (
     <View style={styles.postItem}>
-      {isTip && (
-        <View style={styles.tipBadge}>
-          <Text style={styles.tipBadgeText}>oHub Tips</Text>
-        </View>
-      )}
+      {/* Meta row */}
       <View style={styles.postMeta}>
         <View style={[styles.uniDot, { backgroundColor: uni?.color ?? '#8b7e62' }]} />
         <Text style={styles.postAuthor}>{post.author}</Text>
@@ -55,7 +50,12 @@ function PostItem({ post }: { post: Post }) {
         <Text style={styles.postUni}>{uni?.shortName ?? 'Ontario'}</Text>
         <Text style={styles.postMetaSep}>·</Text>
         <Text style={styles.postTime}>{post.timeAgo}</Text>
+        {/* Category badge */}
+        <View style={[styles.catBadge, { backgroundColor: catCfg.color + '18' }]}>
+          <Text style={[styles.catBadgeText, { color: catCfg.color }]}>{catCfg.label}</Text>
+        </View>
       </View>
+
       <Text style={styles.postTitle}>{post.title}</Text>
       {post.body.length > 0 && (
         <Text style={styles.postBody} numberOfLines={3}>{post.body}</Text>
@@ -75,7 +75,6 @@ function PostItem({ post }: { post: Post }) {
             name="heart"
             size={14}
             color={liked ? ED.warn : ED.muted}
-            style={liked ? { fill: ED.warn } : undefined}
           />
           <Text style={[styles.actionText, liked && { color: ED.warn }]}>{likes}</Text>
         </Pressable>
@@ -98,15 +97,19 @@ export default function PulseScreen() {
   const [activeTab, setActiveTab] = useState<FeedTab>('all');
 
   const posts = useMemo(() => {
-    if (activeTab === 'following' && subscribed.length > 0) {
+    if (activeTab === 'following') {
+      if (subscribed.length === 0) return [];
       return SAMPLE_POSTS.filter(p => subscribed.includes(p.universityId));
+    }
+    if (activeTab === 'trending') {
+      return [...SAMPLE_POSTS].sort((a, b) => (b.likes + b.comments * 2) - (a.likes + a.comments * 2));
     }
     return SAMPLE_POSTS;
   }, [activeTab, subscribed]);
 
   const tabs: { id: FeedTab; label: string }[] = [
     { id: 'following', label: 'Following' },
-    { id: 'school', label: 'School' },
+    { id: 'trending', label: 'Trending' },
     { id: 'all', label: 'All' },
   ];
 
@@ -147,12 +150,17 @@ export default function PulseScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No posts yet</Text>
-            <Text style={styles.emptyBody}>
-              {activeTab === 'following'
-                ? 'Follow some schools to see their posts here.'
-                : 'The community feed is quiet right now.'}
-            </Text>
+            {activeTab === 'following' ? (
+              <>
+                <Feather name="rss" size={28} color={ED.muted} style={{ marginBottom: 12 }} />
+                <Text style={styles.emptyTitle}>Follow schools to see their posts</Text>
+                <Text style={styles.emptyBody}>
+                  Visit university pages and tap Follow to build your feed.
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.emptyTitle}>No posts yet</Text>
+            )}
           </View>
         }
       />
@@ -212,15 +220,6 @@ const styles = StyleSheet.create({
   listContent: { paddingBottom: 100 },
   separator: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24 },
   postItem: { paddingHorizontal: 24, paddingVertical: 18 },
-  tipBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#fef3e2',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    marginBottom: 8,
-  },
-  tipBadgeText: { fontSize: 10, color: '#9a3412', fontFamily: 'Inter_600SemiBold', letterSpacing: 0.5 },
   postMeta: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -233,6 +232,18 @@ const styles = StyleSheet.create({
   postUni: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#8b7e62' },
   postMetaSep: { fontSize: 12, color: '#d4c9b0' },
   postTime: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  catBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    marginLeft: 2,
+  },
+  catBadgeText: {
+    fontSize: 9,
+    fontFamily: 'Inter_600SemiBold',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
   postTitle: {
     fontFamily: 'Fraunces_500Medium',
     fontSize: 17,
@@ -261,6 +272,6 @@ const styles = StyleSheet.create({
   actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   actionText: { fontSize: 12, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
   emptyState: { padding: 48, alignItems: 'center' },
-  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612', marginBottom: 8 },
+  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612', marginBottom: 8, textAlign: 'center' },
   emptyBody: { fontSize: 13, color: '#8b7e62', textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular' },
 });

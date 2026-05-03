@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   FlatList,
   Platform,
@@ -32,6 +32,12 @@ const ED = {
 };
 
 type Tier = 'all' | 'reach' | 'target' | 'safety';
+
+const TIER_ORDER: Record<'reach' | 'target' | 'safety', number> = {
+  target: 0,
+  safety: 1,
+  reach: 2,
+};
 
 function parseAvg(grade: string): number {
   const m = grade.match(/(\d+)/);
@@ -113,7 +119,7 @@ export default function ProgramsScreen() {
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    return ALL_PROGRAMS.filter(p => {
+    const results = ALL_PROGRAMS.filter(p => {
       if (q) {
         const uni = getUniversityById(p.universityId);
         const matchName = p.name.toLowerCase().includes(q);
@@ -131,12 +137,15 @@ export default function ProgramsScreen() {
       }
       return true;
     });
+    // Sort: Target → Safety → Reach, then by cutoff descending within tier
+    return results.sort((a, b) => {
+      const ta = getTier(a.competitiveness, a.averageGrade, userAvg);
+      const tb = getTier(b.competitiveness, b.averageGrade, userAvg);
+      const od = TIER_ORDER[ta] - TIER_ORDER[tb];
+      if (od !== 0) return od;
+      return parseAvg(b.averageGrade) - parseAvg(a.averageGrade);
+    });
   }, [query, tier, userAvg]);
-
-  const getItemLayout = useCallback(
-    (_: any, index: number) => ({ length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index }),
-    [],
-  );
 
   const tierOptions: { id: Tier; label: string }[] = [
     { id: 'all', label: `All ${ALL_PROGRAMS.length.toLocaleString()}` },
@@ -197,7 +206,9 @@ export default function ProgramsScreen() {
         data={filtered}
         keyExtractor={p => p.id}
         renderItem={({ item }) => <ProgramRow program={item} userAvg={userAvg} />}
-        getItemLayout={getItemLayout}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={

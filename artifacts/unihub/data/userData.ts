@@ -26,7 +26,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   name: 'Priya Shah',
   school: 'Bayview Secondary, Richmond Hill',
   ouacRef: '2026-1093478',
-  avg: 92.4,
+  avg: 92.5,
   marks: ['95', '94', '93', '91', '90', '92'],
 };
 

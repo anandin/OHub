@@ -59,8 +59,8 @@ export default function YouScreen() {
   };
 
   const doneFraction = tasks.length > 0
-    ? `${doneTasks.size}/${tasks.length} done today`
-    : 'No tasks';
+    ? `${doneTasks.size}/${tasks.length}`
+    : '—';
 
   const handleSaveMarks = () => {
     updateMarks(localMarks);
@@ -112,7 +112,7 @@ export default function YouScreen() {
           <Text style={styles.statValue}>{appStats.total}</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Tasks today</Text>
+          <Text style={styles.statLabel}>Tasks done</Text>
           <Text style={styles.statValue}>{doneFraction}</Text>
         </View>
       </View>
