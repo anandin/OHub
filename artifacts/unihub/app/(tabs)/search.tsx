@@ -108,6 +108,7 @@ export default function YouScreen() {
   const { applications } = useApplications();
   const [editingMarks, setEditingMarks] = useState(false);
   const [localMarks, setLocalMarks] = useState<string[]>(profile.marks);
+  const [localCodes, setLocalCodes] = useState<string[]>(profile.courseCodes ?? ['', '', '', '', '', '']);
   const [showEditProfile, setShowEditProfile] = useState(false);
 
   const avg = parseAvg(localMarks);
@@ -125,6 +126,7 @@ export default function YouScreen() {
 
   const handleSaveMarks = () => {
     updateMarks(localMarks);
+    updateProfile({ courseCodes: localCodes });
     setEditingMarks(false);
   };
 
@@ -204,11 +206,30 @@ export default function YouScreen() {
           <View style={styles.marksGrid}>
             {[0, 1, 2, 3, 4, 5].map(i => {
               const val = localMarks[i] ?? '';
+              const code = localCodes[i] ?? '';
               const num = parseFloat(val);
               const isValid = !isNaN(num) && num > 0 && num <= 100;
               return (
                 <View key={i} style={styles.markItem}>
-                  <Text style={styles.markCourse}>Course {i + 1}</Text>
+                  {editingMarks ? (
+                    <TextInput
+                      style={styles.markCodeInput}
+                      value={code}
+                      onChangeText={v => {
+                        const next = [...localCodes];
+                        next[i] = v.toUpperCase();
+                        setLocalCodes(next);
+                      }}
+                      placeholder="MHF4U"
+                      placeholderTextColor={ED.muted}
+                      maxLength={6}
+                      autoCapitalize="characters"
+                    />
+                  ) : (
+                    <Text style={styles.markCourse}>
+                      {code.trim() ? code : `Course ${i + 1}`}
+                    </Text>
+                  )}
                   {editingMarks ? (
                     <TextInput
                       style={styles.markInput}
@@ -263,11 +284,6 @@ export default function YouScreen() {
           <Pressable style={styles.quickLink} onPress={() => router.push('/scholarships')}>
             <Feather name="award" size={16} color={ED.softInk} />
             <Text style={styles.quickLinkText}>Scholarships</Text>
-            <Feather name="chevron-right" size={14} color={ED.muted} style={{ marginLeft: 'auto' }} />
-          </Pressable>
-          <Pressable style={[styles.quickLink, styles.quickLinkBorder]} onPress={() => router.push('/chats')}>
-            <Feather name="message-circle" size={16} color={ED.softInk} />
-            <Text style={styles.quickLinkText}>Chats</Text>
             <Feather name="chevron-right" size={14} color={ED.muted} style={{ marginLeft: 'auto' }} />
           </Pressable>
         </View>
@@ -360,7 +376,17 @@ const styles = StyleSheet.create({
   saveMarksBtnText: { fontSize: 12, color: '#f5f1e8', fontFamily: 'Inter_500Medium' },
   marksGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   markItem: { width: '47%', backgroundColor: '#fbf8f1', borderWidth: 1, borderColor: '#e8e0cf', borderRadius: 10, padding: 12 },
-  markCourse: { fontSize: 10, color: '#8b7e62', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 },
+  markCourse: { fontSize: 10, color: '#8b7e62', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, minHeight: 16 },
+  markCodeInput: {
+    fontFamily: 'JetBrainsMono_400Regular',
+    fontSize: 11,
+    color: '#1a1612',
+    borderBottomWidth: 1,
+    borderBottomColor: '#d4c9b0',
+    paddingBottom: 2,
+    marginBottom: 4,
+    paddingTop: 0,
+  },
   markValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: '#1a1612' },
   markValueEmpty: { color: '#d4c9b0' },
   markInput: {

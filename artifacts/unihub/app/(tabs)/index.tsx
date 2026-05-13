@@ -244,7 +244,10 @@ export default function TodayScreen() {
         {/* Featured article */}
         <View style={styles.section}>
           <Text style={styles.eyebrow}>Read · {article.readTime}</Text>
-          <View style={styles.articleCard}>
+          <Pressable
+            style={styles.articleCard}
+            onPress={() => article.essayRoute && router.push(article.essayRoute as any)}
+          >
             <Text style={styles.articleTitle}>{article.title}</Text>
             <Text style={styles.articleBlurb}>{article.blurb}</Text>
             <View style={styles.tagRow}>
@@ -254,7 +257,11 @@ export default function TodayScreen() {
                 </View>
               ))}
             </View>
-          </View>
+            <View style={styles.articleReadMore}>
+              <Text style={styles.articleReadMoreText}>Open essay editor</Text>
+              <Feather name="arrow-right" size={12} color={ED.softInk} />
+            </View>
+          </Pressable>
         </View>
 
         {/* This week */}
@@ -427,6 +434,19 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 4,
     marginTop: 8,
+  },
+  articleReadMore: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 14,
+  },
+  articleReadMoreText: {
+    fontSize: 12,
+    fontFamily: 'Inter_600SemiBold',
+    color: '#5c4a2f',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   articleTitle: {
     fontFamily: 'Fraunces_600SemiBold',

@@ -29,7 +29,13 @@ const ED = {
   pillBorder: '#d4c9b0',
 };
 
-function PostItem({ post }: { post: Post }) {
+function PostItem({
+  post,
+  onTagPress,
+}: {
+  post: Post;
+  onTagPress: (tag: string) => void;
+}) {
   const uni = getUniversityById(post.universityId);
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(post.likes);
@@ -85,14 +91,19 @@ function PostItem({ post }: { post: Post }) {
       {post.tags && post.tags.length > 0 && (
         <View style={styles.tagRow}>
           {post.tags.slice(0, 3).map(tag => (
-            <View key={tag} style={styles.tag}>
+            <Pressable
+              key={tag}
+              style={styles.tag}
+              onPress={e => { e.stopPropagation?.(); onTagPress(tag); }}
+              hitSlop={4}
+            >
               <Text style={styles.tagText}>{tag}</Text>
-            </View>
+            </Pressable>
           ))}
         </View>
       )}
 
-      {/* Actions — like + share only */}
+      {/* Actions */}
       <View style={styles.postActions}>
         <Pressable
           style={styles.actionBtn}
@@ -118,17 +129,27 @@ export default function PulseScreen() {
   const topInset = Platform.OS === "web" ? 20 : insets.top;
   const { subscribed } = useSubscriptions();
   const [activeTab, setActiveTab] = useState<FeedTab>('all');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  const handleTagPress = (tag: string) => {
+    setActiveTag(prev => prev === tag ? null : tag);
+  };
 
   const posts = useMemo(() => {
+    let base: Post[];
     if (activeTab === 'following') {
-      if (subscribed.length === 0) return [];
-      return SAMPLE_POSTS.filter(p => subscribed.includes(p.universityId));
+      if (subscribed.length === 0) base = [];
+      else base = SAMPLE_POSTS.filter(p => subscribed.includes(p.universityId));
+    } else if (activeTab === 'trending') {
+      base = [...SAMPLE_POSTS].sort((a, b) => (b.likes + b.comments * 2) - (a.likes + a.comments * 2));
+    } else {
+      base = SAMPLE_POSTS;
     }
-    if (activeTab === 'trending') {
-      return [...SAMPLE_POSTS].sort((a, b) => (b.likes + b.comments * 2) - (a.likes + a.comments * 2));
+    if (activeTag) {
+      return base.filter(p => p.tags.includes(activeTag));
     }
-    return SAMPLE_POSTS;
-  }, [activeTab, subscribed]);
+    return base;
+  }, [activeTab, subscribed, activeTag]);
 
   const tabs: { id: FeedTab; label: string }[] = [
     { id: 'following', label: 'Following' },
@@ -144,9 +165,6 @@ export default function PulseScreen() {
           <Text style={styles.eyebrow}>Community</Text>
           <Text style={styles.title}>Pulse</Text>
         </View>
-        <Pressable style={styles.composeBtn}>
-          <Feather name="edit-2" size={18} color={ED.ink} />
-        </Pressable>
       </View>
 
       {/* Tab pills */}
@@ -164,16 +182,37 @@ export default function PulseScreen() {
         ))}
       </View>
 
+      {/* Active tag filter bar */}
+      {activeTag && (
+        <View style={styles.tagFilterBar}>
+          <Feather name="tag" size={12} color={ED.softInk} />
+          <Text style={styles.tagFilterLabel}>{activeTag}</Text>
+          <Pressable onPress={() => setActiveTag(null)} hitSlop={8} style={styles.tagFilterClear}>
+            <Feather name="x" size={13} color={ED.muted} />
+          </Pressable>
+        </View>
+      )}
+
       <FlatList
         data={posts}
         keyExtractor={p => p.id}
-        renderItem={({ item }) => <PostItem post={item} />}
+        renderItem={({ item }) => (
+          <PostItem post={item} onTagPress={handleTagPress} />
+        )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            {activeTab === 'following' ? (
+            {activeTag ? (
+              <>
+                <Feather name="tag" size={28} color={ED.muted} style={{ marginBottom: 12 }} />
+                <Text style={styles.emptyTitle}>No posts tagged "{activeTag}"</Text>
+                <Pressable onPress={() => setActiveTag(null)} style={styles.clearTagBtn}>
+                  <Text style={styles.clearTagBtnText}>Clear filter</Text>
+                </Pressable>
+              </>
+            ) : activeTab === 'following' ? (
               <>
                 <Feather name="rss" size={28} color={ED.muted} style={{ marginBottom: 12 }} />
                 <Text style={styles.emptyTitle}>Follow schools to see their posts</Text>
@@ -210,8 +249,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 30, color: '#1a1612', lineHeight: 32 },
-  composeBtn: { padding: 4 },
-  tabRow: { flexDirection: 'row', gap: 6, paddingHorizontal: 24, paddingBottom: 16 },
+  tabRow: { flexDirection: 'row', gap: 6, paddingHorizontal: 24, paddingBottom: 12 },
   tabPill: {
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -223,6 +261,20 @@ const styles = StyleSheet.create({
   tabPillActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
   tabLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#1a1612' },
   tabLabelActive: { color: '#f5f1e8' },
+  tagFilterBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 24,
+    marginBottom: 10,
+    backgroundColor: '#1a1612',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    alignSelf: 'flex-start',
+  },
+  tagFilterLabel: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
+  tagFilterClear: { marginLeft: 2 },
   listContent: { paddingBottom: 100 },
   separator: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24 },
   postItem: { paddingHorizontal: 24, paddingVertical: 18 },
@@ -293,4 +345,13 @@ const styles = StyleSheet.create({
   emptyState: { padding: 48, alignItems: 'center' },
   emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612', marginBottom: 8, textAlign: 'center' },
   emptyBody: { fontSize: 13, color: '#8b7e62', textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular' },
+  clearTagBtn: {
+    marginTop: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+  },
+  clearTagBtnText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#1a1612' },
 });

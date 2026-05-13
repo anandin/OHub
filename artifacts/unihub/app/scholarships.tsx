@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -50,10 +51,7 @@ export default function ScholarshipsScreen() {
     return true;
   });
 
-  const totalPotential = SCHOLARSHIPS.reduce((sum, s) => {
-    const num = parseInt(s.value.replace(/[$,]/g, ''));
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
+  const eligibleCount = SCHOLARSHIPS.filter(s => s.status === 'Eligible').length;
 
   const filters: { id: FilterTab; label: string }[] = [
     { id: 'all', label: 'All' },
@@ -76,12 +74,12 @@ export default function ScholarshipsScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {/* Total card */}
+        {/* Summary card */}
         <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>Potential aid</Text>
-          <Text style={styles.totalAmount}>${totalPotential.toLocaleString()}</Text>
+          <Text style={styles.totalLabel}>Awards tracked</Text>
+          <Text style={styles.totalAmount}>{SCHOLARSHIPS.length}</Text>
           <Text style={styles.totalSub}>
-            across {SCHOLARSHIPS.length} awards · {SCHOLARSHIPS.filter(s => s.status === 'Eligible').length} still actionable
+            {eligibleCount} still open to apply · tap any card to visit official page
           </Text>
         </View>
 
@@ -109,6 +107,8 @@ export default function ScholarshipsScreen() {
               <View style={styles.scholTop}>
                 <View style={styles.scholLeft}>
                   <Text style={styles.scholName}>{s.name}</Text>
+                  <Text style={styles.scholUni}>{s.university}</Text>
+                  <Text style={styles.scholDesc}>{s.description}</Text>
                   <Text style={styles.scholMeta}>
                     Deadline: {s.deadline} · Match {s.match}%
                   </Text>
@@ -120,6 +120,13 @@ export default function ScholarshipsScreen() {
                 <View style={[styles.statusPill, { backgroundColor: cfg.bg }]}>
                   <Text style={[styles.statusPillText, { color: cfg.color }]}>{cfg.label}</Text>
                 </View>
+                <Pressable
+                  style={styles.linkBtn}
+                  onPress={() => Linking.openURL(s.url)}
+                >
+                  <Feather name="external-link" size={12} color={ED.softInk} />
+                  <Text style={styles.linkBtnText}>Official page</Text>
+                </Pressable>
               </View>
 
               {/* Match bar */}
@@ -175,9 +182,9 @@ const styles = StyleSheet.create({
   },
   totalAmount: {
     fontFamily: 'Fraunces_600SemiBold',
-    fontSize: 40,
+    fontSize: 48,
     color: '#1a1612',
-    lineHeight: 44,
+    lineHeight: 52,
   },
   totalSub: { fontSize: 12, color: '#5c4a2f', marginTop: 6, fontFamily: 'Inter_400Regular' },
   filterRow: {
@@ -203,17 +210,43 @@ const styles = StyleSheet.create({
   scholLeft: { flex: 1 },
   scholName: {
     fontFamily: 'Fraunces_600SemiBold',
-    fontSize: 19,
-    lineHeight: 23,
+    fontSize: 18,
+    lineHeight: 22,
     color: '#1a1612',
   },
-  scholMeta: { fontSize: 12, color: '#5c4a2f', marginTop: 4, fontFamily: 'Inter_400Regular' },
-  scholValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 20, color: '#1a1612' },
-  scholBottom: { marginTop: 10 },
+  scholUni: {
+    fontSize: 11,
+    color: '#8b7e62',
+    fontFamily: 'Inter_500Medium',
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  scholDesc: {
+    fontSize: 12,
+    color: '#5c4a2f',
+    marginTop: 6,
+    lineHeight: 18,
+    fontFamily: 'Inter_400Regular',
+  },
+  scholMeta: { fontSize: 11, color: '#8b7e62', marginTop: 6, fontFamily: 'Inter_400Regular' },
+  scholValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18, color: '#1a1612', textAlign: 'right', flexShrink: 0 },
+  scholBottom: { marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
   statusPill: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   statusPillText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  linkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  linkBtnText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
   matchTrack: {
-    marginTop: 10,
+    marginTop: 12,
     height: 3,
     backgroundColor: '#e8e0cf',
     borderRadius: 999,
