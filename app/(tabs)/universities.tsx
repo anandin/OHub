@@ -201,6 +201,17 @@ export default function PulseScreen() {
         ))}
       </View>
 
+      {/* Pulse is a worked example, not a live feed. The posts carry relative
+          timestamps ("3h", "1d") because that is what a real feed looks like —
+          without this line those stamps read as recent activity, which is the
+          same kind of quiet fiction the app refuses to commit with marks. */}
+      <View style={styles.sampleNotice}>
+        <Feather name="info" size={12} color={c.muted} />
+        <Text style={styles.sampleNoticeText}>
+          Sample feed — example posts, not live university updates.
+        </Text>
+      </View>
+
       {/* Active tag filter bar */}
       {activeTag && (
         <View style={styles.tagFilterBar}>
@@ -261,6 +272,12 @@ export default function PulseScreen() {
 }
 
 const makeStyles = (c: Palette) => StyleSheet.create({
+  sampleNotice: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    paddingHorizontal: 16, paddingVertical: 9,
+    backgroundColor: c.card, borderBottomWidth: 1, borderBottomColor: c.rule,
+  },
+  sampleNoticeText: { fontSize: 12, color: c.muted, fontFamily: 'Inter_400Regular', flexShrink: 1 },
   container: { flex: 1, backgroundColor: c.paper },
   header: {
     flexDirection: 'row',
