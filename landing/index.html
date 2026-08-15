@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>oHub — the Ontario university application, in one place</title>
-<meta name="description" content="Every Ontario university program, your OUAC deadlines, and where you actually stand — worked out from the marks you enter, never from a number we made up. Free, private, no account.">
-<meta name="theme-color" content="#f4efe4" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#12100c" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Where you really stand at all 23 Ontario universities — worked out from the marks you enter, never from a number we made up. Free, private, no account.">
+<meta name="theme-color" content="#e8ede4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f120d" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="/favicon.ico">
 <link rel="preload" href="/spectral-400.woff2" as="font" type="font/woff2" crossorigin>
 
@@ -20,21 +20,22 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    oHub — landing
 
-   The display voice is Spectral, self-hosted (21 KB roman + 22 KB italic,
-   OFL). The page previously fell back to Georgia, which is the "closest
-   installed font" failure: an own-world page cannot borrow the platform's
-   serif and call it an identity. Instrument Serif and Fraunces were both
-   rejected — they sit on the same short list of faces every AI-generated
-   interface converges on. Spectral was drawn for screen reading, which is what
-   this page asks of it. Body text stays on the system UI stack deliberately:
-   it is the interface voice, not the display voice.
+   Image-forward layout: the product does the arguing, prose supports it. The
+   phone mockups are built in HTML rather than shipped as screenshots so they
+   stay legible at any density, respond to the layout, and cost nothing to
+   update when a screen changes.
 
-   The surface is not the warm cream this kind of page reaches for by reflex —
-   the detector names that as the default "tasteful" AI background, and it was
-   right. This is the pale green of an Ontario exam booklet, with the deep
-   green-black of printed ink and the red of a teacher's marking pen for the
-   one accent. The palette comes from the student's actual desk rather than
-   from a mood. Every pairing below is measured; the ratio sits beside it.
+   Fonts are self-hosted — the source design linked fonts.googleapis.com, which
+   this site's CSP (font-src 'self') blocks outright, so it would have silently
+   fallen back to a system serif in production. Spectral (OFL, 21 KB + 22 KB
+   italic) carries the display voice. The mockups use it too: the app itself
+   sets headings in Fraunces, but a 34 KB face to letter decorative captions at
+   12px is not a trade worth making, and at that size the two are hard to tell
+   apart. The mockups are a faithful reproduction, not a pixel-exact screenshot.
+
+   The surface is the pale green of an Ontario exam booklet, printed-ink
+   green-black, and a teacher's marking red for the single accent. Every
+   pairing is measured; the ratio sits beside it.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @font-face {
@@ -60,7 +61,20 @@
   --accent:  #a3301a;   /* marking red — on paper 5.9:1 */
   --on-accent: #f5f7f2; /* on accent —  6.5:1 */
   --sel:     #d8e3cf;
+  --shadow:  rgba(19,23,17,.20);
   --measure: 58ch;
+
+  /* The app's own palette, used only inside the phone mockups. A product shot
+     shows the product's colours, not the page's — so these stay fixed in both
+     themes, the way a photograph of a screen would. */
+  --app-paper: #f5f1e8;
+  --app-card:  #fbf8f1;
+  --app-ink:   #1a1612;
+  --app-soft:  #5c4a2f;
+  --app-muted: #6f6449;
+  --app-rule:  #e8e0cf;
+  --app-warn:  #b03a09;
+  --app-ok:    #12652f;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -74,13 +88,13 @@
     --rule:    #2a3025;
     --edge:    #414a3b;
     --accent:  #ef8a63;  /* on paper —  7.6:1 */
-    /* Dark ink on the light accent. The previous build used #fff here and
-       measured 2.3:1 — the detector caught it; the static palette audit had
-       not, because it never evaluated hover states. */
-    --on-accent: #131711; /* on accent — 7.3:1 */
+    --on-accent: #131711;/* on accent —  7.3:1 */
     --sel:     #2f3a26;
+    --shadow:  rgba(0,0,0,.55);
   }
 }
+
+*,*::before,*::after { box-sizing: border-box }
 html { -webkit-text-size-adjust: 100%; scrollbar-color: var(--edge) var(--paper) }
 
 body {
@@ -91,51 +105,38 @@ body {
   font-size: 17px;
   line-height: 1.62;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
-/* The surfaces nobody draws. Left at browser defaults they belong to no design
-   system, and they are the cheapest tell that a page was assembled. */
+/* The surfaces nobody draws. */
 ::selection { background: var(--sel); color: var(--ink) }
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: 2px;
-}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px }
 a { color: inherit; text-underline-offset: 0.22em; text-decoration-thickness: 1px }
 
 h1, h2, h3 {
   font-family: 'Spectral', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-  font-weight: 400;
-  margin: 0;
-  line-height: 1.04;
-  letter-spacing: -0.018em;
+  font-weight: 400; margin: 0; line-height: 1.05; letter-spacing: -0.018em;
 }
-
-p, .promises li { margin: 0; max-width: var(--measure) }
-.promises li { max-width: 62ch }
+p { margin: 0; max-width: var(--measure) }
 
 .skip {
   position: absolute; left: -9999px; top: 0; z-index: 99;
-  background: var(--ink); color: var(--paper);
-  padding: 14px 22px; border-radius: 0 0 6px 0;
+  background: var(--ink); color: var(--paper); padding: 14px 22px; border-radius: 0 0 6px 0;
 }
 .skip:focus { left: 0 }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
 
-.wrap { max-width: 1120px; margin: 0 auto; padding: 0 22px }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 22px }
+@media (min-width: 860px) { .wrap { padding: 0 40px } }
 
-/* ── masthead ─────────────────────────────────────────────────────────────
-   A rule under the masthead, not a card or a shadow. The page is set like a
-   printed page and the horizontal rule is its structural vocabulary. */
+/* ── masthead ───────────────────────────────────────────────────────────── */
 .masthead {
   display: flex; align-items: baseline; justify-content: space-between;
-  gap: 20px; padding: 26px 0 22px;
-  border-bottom: 1px solid var(--rule);
+  gap: 20px; padding: 26px 0 22px; border-bottom: 1px solid var(--rule);
 }
-.wordmark {
-  font-family: 'Spectral', Georgia, serif;
-  font-size: 26px; letter-spacing: -0.02em; text-decoration: none;
-}
+.wordmark { font-family: 'Spectral', Georgia, serif; font-size: 26px; letter-spacing: -0.02em; text-decoration: none }
 .wordmark em { font-style: italic; color: var(--accent) }
 .masthead nav { display: flex; align-items: center; gap: 4px }
 .masthead nav a {
@@ -143,101 +144,168 @@ p, .promises li { margin: 0; max-width: var(--measure) }
   font-size: 15px; color: var(--soft); text-decoration: none;
 }
 .masthead nav a:hover { color: var(--ink); text-decoration: underline }
+.masthead nav .go {
+  color: var(--on-accent); background: var(--ink); border-radius: 3px;
+  padding: 0 20px; font-weight: 550;
+}
+.masthead nav .go:hover { background: var(--accent); color: var(--on-accent); text-decoration: none }
 .wide-only { display: none }
-@media (min-width: 700px) { .wide-only { display: inline-flex } }
+@media (min-width: 760px) { .wide-only { display: inline-flex } }
 
-/* ── opening ───────────────────────────────────────────────────────────── */
-.opening { padding: 60px 0 48px }
-.opening h1 {
-  font-size: 48px;
-  max-width: 15ch;
+/* ── hero ───────────────────────────────────────────────────────────────── */
+.hero { display: flex; flex-wrap: wrap; align-items: center; gap: 48px 64px; padding: 52px 0 44px }
+.hero-copy { flex: 1 1 380px; min-width: 300px }
+.hero h1 { font-size: 46px; max-width: 14ch }
+.hero h1 em { font-style: italic; color: var(--accent) }
+.lede { font-size: 19px; line-height: 1.5; color: var(--soft); max-width: 40ch; margin-top: 24px }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; padding: 0; list-style: none }
+.chips li {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px; border: 1px solid var(--edge); border-radius: 999px;
+  font-size: 14px; background: var(--raised);
 }
-.opening h1 em { font-style: italic; color: var(--accent) }
+.chips b { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 400; color: var(--accent); font-variant-numeric: tabular-nums }
 
-.lede {
-  font-size: 19px;
-  color: var(--soft);
-  max-width: 42ch;
-  margin-top: 26px;
-}
-/* The counts live in the sentence rather than in a row of stat tiles. The
-   numbers are the same; a metric strip would just be furniture around them. */
-.lede b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums }
-
-.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 36px }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 30px }
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 54px; padding: 0 30px; border-radius: 3px;
-  font-size: 17px; font-weight: 550; text-decoration: none;
-  border: 1px solid transparent;
-  transition: background 140ms cubic-bezier(.2,.7,.3,1),
-              color 140ms cubic-bezier(.2,.7,.3,1);
+  font-size: 17px; font-weight: 550; text-decoration: none; border: 1px solid transparent;
+  transition: background 140ms cubic-bezier(.2,.7,.3,1), color 140ms cubic-bezier(.2,.7,.3,1);
 }
 .btn-primary { background: var(--ink); color: var(--paper) }
 .btn-primary:hover { background: var(--accent); color: var(--on-accent) }
 .btn-secondary { border-color: var(--edge); color: var(--ink) }
 .btn-secondary:hover { background: var(--raised) }
-.aside { font-size: 15px; color: var(--muted); margin-top: 22px }
+.aside { font-size: 15px; color: var(--muted); margin-top: 20px }
 
-/* ── editorial sections ────────────────────────────────────────────────────
-   Two columns: the claim on the left, the substance on the right. Replaces a
-   row of identical icon-heading-text cards, which is the one page scaffold
-   every generator reaches for and says nothing about this product. */
-section { padding: 56px 0; border-top: 1px solid var(--rule) }
-.spread { display: grid; gap: 24px }
-@media (min-width: 860px) {
-  .wrap { padding: 0 40px }
-  .spread { grid-template-columns: 22ch 1fr; gap: 56px }
-  .opening { padding: 104px 0 72px }
-  .opening h1 { font-size: 62px }
-  .lede { font-size: 21px }
-  section { padding: 88px 0 }
-  .spread > h2 { font-size: 37px }
-  .close { padding: 112px 0 }
-  .close h2 { font-size: 56px }
+/* ── phone mockups ──────────────────────────────────────────────────────── */
+.stage {
+  flex: 1 1 330px; min-width: 300px; display: flex; justify-content: center;
+  position: relative; isolation: isolate;
 }
-.spread > h2 { font-size: 31px; align-self: start }
+.phone {
+  position: relative; z-index: 1; width: 300px;
+  background: var(--app-ink); padding: 10px; border-radius: 42px;
+  box-shadow: 0 40px 80px -30px var(--shadow), 0 8px 22px -12px var(--shadow);
+}
+.phone-inner {
+  background: var(--app-paper); border-radius: 33px; overflow: hidden;
+  display: flex; flex-direction: column; min-height: 520px;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--app-ink);
+}
+.ghost {
+  position: absolute; width: 292px; height: 528px; border-radius: 38px;
+  background: var(--raised); border: 1px solid var(--rule);
+  transform: rotate(4deg) translateX(10px); z-index: 0;
+}
+.screen { padding: 16px 17px 12px; flex: 1 }
+.statusbar {
+  display: flex; justify-content: space-between; padding: 9px 20px 2px;
+  font-size: 12px; font-weight: 600; color: var(--app-ink);
+  font-variant-numeric: tabular-nums;
+}
+.m-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--app-muted); letter-spacing: .04em }
+.m-hero { font-family: 'Spectral', Georgia, serif; font-size: 30px; line-height: 1.06; margin: 12px 0 6px }
+.m-sub { font-size: 13px; color: var(--app-soft); line-height: 1.45 }
+.m-rule { height: 1px; background: var(--app-rule); margin: 14px 0 12px }
+.m-label { font-size: 11px; color: var(--app-muted); letter-spacing: .05em; margin-bottom: 9px }
+.m-task { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px solid var(--app-rule) }
+.m-task:first-of-type { border-top: 0 }
+.m-box { width: 15px; height: 15px; border: 1.5px solid var(--app-muted); border-radius: 3px; flex: none; margin-top: 2px }
+.m-task-t { font-size: 13px; font-weight: 500; line-height: 1.35 }
+.m-task-s { font-size: 11px; color: var(--app-muted) }
+.m-search {
+  display: flex; align-items: center; gap: 8px; border: 1px solid var(--app-rule);
+  background: var(--app-card); border-radius: 8px; padding: 9px 11px; font-size: 12px; color: var(--app-muted);
+}
+.m-chips { display: flex; gap: 6px; margin: 11px 0 12px; flex-wrap: wrap }
+.m-chip { font-size: 11px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--app-rule); color: var(--app-soft) }
+.m-chip.on { background: var(--app-ink); color: var(--app-paper); border-color: var(--app-ink) }
+.m-row { border-top: 1px solid var(--app-rule); padding: 11px 0 }
+.m-row-u { font-size: 11px; color: var(--app-muted) }
+.m-row-n { font-size: 14px; font-weight: 600; margin-top: 2px }
+.m-row-f { font-size: 11px; color: var(--app-muted) }
+.m-stats { display: flex; gap: 14px; margin-top: 8px }
+.m-stat { font-size: 11px; color: var(--app-muted) }
+.m-stat b { display: block; font-size: 13px; color: var(--app-ink); font-variant-numeric: tabular-nums }
+.m-tier { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; align-self: center }
+.m-tabs {
+  display: flex; justify-content: space-between; padding: 9px 14px 13px;
+  border-top: 1px solid var(--app-rule); background: var(--app-card);
+}
+.m-tab {
+  font-size: 11px; color: var(--app-muted); flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.m-tab.on { color: var(--app-ink); font-weight: 600 }
+.m-dot {
+  display: block; width: 15px; height: 15px; border-radius: 4px;
+  border: 1.5px solid currentColor; opacity: .55;
+}
 
-.entries { display: grid; gap: 34px }
-.entry h3 { font-size: 23px; margin-bottom: 7px }
-.entry p { color: var(--soft); font-size: 17px }
+/* ── sections ───────────────────────────────────────────────────────────── */
+section { padding: 56px 0; border-top: 1px solid var(--rule) }
+@media (min-width: 860px) { section { padding: 84px 0 } }
+.split { display: flex; flex-wrap: wrap; gap: 44px 64px; align-items: center }
+.split-copy { flex: 1 1 380px; min-width: 300px }
+.split h2 { font-size: 31px; max-width: 16ch }
+@media (min-width: 860px) { .split h2 { font-size: 38px } }
 
-.prose p + p { margin-top: 17px }
-.prose p { color: var(--soft) }
-.prose strong { color: var(--ink); font-weight: 600 }
+/* Numbered because the three are a sequence a student moves through, not a
+   decorative index. */
+.steps { list-style: none; margin: 28px 0 0; padding: 0; counter-reset: step }
+.steps li { display: flex; gap: 16px; padding: 18px 0; border-top: 1px solid var(--rule) }
+.steps li::before {
+  counter-increment: step; content: counter(step);
+  font-family: 'Spectral', Georgia, serif; font-size: 19px; color: var(--accent);
+  line-height: 1.5; flex: none; min-width: 1.2em;
+}
+.steps h3 { font-size: 20px; margin-bottom: 4px }
+.steps p { font-size: 16px; color: var(--soft) }
 
-/* ── the promise list ─────────────────────────────────────────────────────
-   Drawn SVG ticks, one stroke weight. Emoji and Unicode dingbats are not an
-   icon system: they render as someone else's artwork and change per platform. */
-.promises { list-style: none; margin: 0; padding: 0; display: grid; gap: 15px }
-.promises li { display: flex; gap: 13px; align-items: baseline; color: var(--soft) }
+/* ── the principle ──────────────────────────────────────────────────────── */
+.principle { text-align: center }
+.principle h2 {
+  font-size: 30px; max-width: 22ch; margin: 0 auto; line-height: 1.18;
+}
+@media (min-width: 860px) { .principle h2 { font-size: 40px } }
+.principle h2 em { font-style: italic; color: var(--accent) }
+.principle p { margin: 24px auto 0; color: var(--soft); max-width: 56ch }
+
+/* ── privacy ────────────────────────────────────────────────────────────── */
+.promises { list-style: none; margin: 26px 0 0; padding: 0; display: grid; gap: 15px }
+.promises li { display: flex; gap: 13px; align-items: baseline; color: var(--soft); max-width: 60ch }
 .promises svg { flex: none; width: 15px; height: 15px; color: var(--accent); translate: 0 2px }
 .promises b { color: var(--ink); font-weight: 600 }
 
-/* ── close ────────────────────────────────────────────────────────────── */
+/* ── close ──────────────────────────────────────────────────────────────── */
 .close { padding: 72px 0; border-top: 1px solid var(--rule) }
+@media (min-width: 860px) { .close { padding: 104px 0 } }
 .close h2 { font-size: 38px; max-width: 16ch }
-.close p { margin-top: 22px; color: var(--soft); font-size: 21px }
+@media (min-width: 860px) { .close h2 { font-size: 54px } }
+.close p { margin-top: 22px; color: var(--soft); font-size: 19px }
 
 footer { border-top: 1px solid var(--rule); padding: 30px 0 56px; font-size: 15px; color: var(--muted) }
-footer p { max-width: 48ch }
 .colophon { display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: space-between }
+.colophon p { max-width: 48ch }
 footer a { color: var(--soft) }
 
-/* One authored moment: the opening settles in as the page arrives. Everything
-   below the fold is static — a repeated scroll entrance on every section is
-   scattered effects, not motion design. */
+/* One authored moment: the hero settles in as the page arrives. The phones
+   drift only for people who have not asked for less motion. */
 @media (prefers-reduced-motion: no-preference) {
-  .opening > * { animation: settle 620ms cubic-bezier(.16,1,.3,1) backwards }
-  .opening h1     { animation-delay: 40ms }
-  .opening .lede  { animation-delay: 110ms }
-  .opening .actions { animation-delay: 170ms }
-  .opening .aside { animation-delay: 220ms }
+  .hero-copy > * { animation: settle 620ms cubic-bezier(.16,1,.3,1) backwards }
+  .hero h1      { animation-delay: 40ms }
+  .hero .lede   { animation-delay: 110ms }
+  .hero .chips  { animation-delay: 160ms }
+  .hero .actions{ animation-delay: 210ms }
+  .hero .aside  { animation-delay: 260ms }
+  .stage .phone { animation: settle 700ms cubic-bezier(.16,1,.3,1) 120ms backwards, drift 8s ease-in-out 900ms infinite }
 }
-@keyframes settle {
-  from { opacity: 0; transform: translateY(9px) }
-  to   { opacity: 1; transform: none }
-}
+@keyframes settle { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+@keyframes drift  { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
 </style>
 </head>
 <body>
@@ -247,113 +315,170 @@ footer a { color: var(--soft) }
   <header class="masthead">
     <a class="wordmark" href="/">o<em>Hub</em></a>
     <nav aria-label="Primary">
-      <a class="wide-only" href="#how">How it works</a>
+      <a class="wide-only" href="#inside">See inside</a>
       <a class="wide-only" href="#privacy">Privacy</a>
-      <a href="/today">Open oHub</a>
+      <a class="go" href="/today">Open oHub</a>
     </nav>
   </header>
 </div>
 
 <main id="main">
 
-  <div class="wrap opening">
-    <h1>Every Ontario program, <em>one honest picture.</em></h1>
-    <p class="lede">
-      All <b>1,406</b> undergraduate programs across all <b>23</b> Ontario
-      universities, your OUAC deadlines, and where you actually stand — worked
-      out from the marks you enter, never from a number we made up.
-    </p>
-    <div class="actions">
-      <a class="btn btn-primary" href="/today">Open oHub</a>
-      <a class="btn btn-secondary" href="#how">See how it works</a>
+  <div class="wrap hero">
+    <div class="hero-copy">
+      <h1>Every Ontario program. <em>One honest picture.</em></h1>
+      <p class="lede">
+        Where you really stand at all 23 universities — worked out from your
+        marks, never from a number we made up.
+      </p>
+      <ul class="chips">
+        <li><b>1,406</b> programs</li>
+        <li><b>23</b> universities</li>
+        <li>OUAC deadlines</li>
+        <li>Free &amp; private</li>
+      </ul>
+      <div class="actions">
+        <a class="btn btn-primary" href="/today">Open oHub</a>
+        <a class="btn btn-secondary" href="#inside">See it in action</a>
+      </div>
+      <p class="aside">No account. Everything you enter stays in your own browser.</p>
     </div>
-    <p class="aside">It is free to use, and everything you enter stays in your own browser.</p>
+
+    <!-- Decorative reproduction of the Today tab. Hidden from assistive tech:
+         a screen reader announcing "9:41 … 12 days … Finish Waterloo AIF" would
+         read a picture of the app as though it were page content. -->
+    <div class="stage">
+      <div class="ghost" aria-hidden="true"></div>
+      <div class="phone" aria-hidden="true">
+        <div class="phone-inner">
+          <div class="statusbar"><span>9:41</span><span>oHub</span></div>
+          <div class="screen">
+            <div class="m-meta"><span>SATURDAY, AUGUST 15</span><span>ISSUE №50</span></div>
+            <p class="m-hero">12 days</p>
+            <p class="m-sub">until the OUAC 101 deadline.<br><b>3/7 submitted.</b></p>
+            <div class="m-rule"></div>
+            <p class="m-label">YOUR PLAN, TODAY</p>
+            <div class="m-task"><span class="m-box"></span><span><span class="m-task-t">Finish Waterloo AIF — Section 3</span><br><span class="m-task-s">25 min · High priority</span></span></div>
+            <div class="m-task"><span class="m-box"></span><span><span class="m-task-t">Review Queen's PSE draft</span><br><span class="m-task-s">15 min · Medium</span></span></div>
+            <div class="m-task"><span class="m-box"></span><span><span class="m-task-t">Email teacher — ref letter</span><br><span class="m-task-s">5 min · Low</span></span></div>
+          </div>
+          <div class="m-tabs">
+            <span class="m-tab on"><span class="m-dot"></span>Today</span>
+            <span class="m-tab"><span class="m-dot"></span>Programs</span>
+            <span class="m-tab"><span class="m-dot"></span>Apply</span>
+            <span class="m-tab"><span class="m-dot"></span>Pulse</span>
+            <span class="m-tab"><span class="m-dot"></span>You</span>
+          </div>
+        </div>
+      </div>
+      <p class="sr-only">A phone showing the Today tab: a countdown to the next OUAC deadline, how many applications are submitted, and the day's task list.</p>
+    </div>
   </div>
 
-  <section id="how">
-    <div class="wrap spread">
-      <h2>What it does</h2>
-      <div class="entries">
-        <article class="entry">
-          <h3>Search every program</h3>
-          <p>
-            Admission averages, required Grade 12 courses, co-op, tuition, OUAC
-            codes, and whether a supplementary application is waiting for you —
-            for all 1,406 of them, in one search field.
-          </p>
-        </article>
-        <article class="entry">
-          <h3>See where you stand</h3>
-          <p>
-            Enter your top six marks once and every program sorts into Reach,
-            Target or Safety against your real average. Until you enter them it
-            shows the tier as unknown rather than estimating one.
-          </p>
-        </article>
-        <article class="entry">
-          <h3>Never miss a deadline</h3>
-          <p>
-            A live countdown to the next OUAC date, and a tracker that follows
-            each application from shortlisted through applied, supplementary
-            sent, and offer.
-          </p>
-        </article>
+  <section id="inside">
+    <div class="wrap split">
+      <div class="stage">
+        <div class="phone" aria-hidden="true">
+          <div class="phone-inner">
+            <div class="statusbar"><span>9:41</span><span>oHub</span></div>
+            <div class="screen">
+              <div class="m-meta"><span>DISCOVER</span><span>PROGRAMS</span></div>
+              <p class="m-hero" style="font-size:26px">Programs</p>
+              <div class="m-search"><span>Search Waterloo CS, Ivey…</span></div>
+              <div class="m-chips">
+                <span class="m-chip on">All 1,406</span>
+                <span class="m-chip">Reach</span>
+                <span class="m-chip">Target</span>
+                <span class="m-chip">Safety</span>
+              </div>
+              <p class="m-row-f" style="margin-bottom:4px">tiers from your 94% average</p>
+              <div class="m-row">
+                <p class="m-row-u">UWaterloo · Waterloo, ON</p>
+                <p class="m-row-n">Computer Science</p>
+                <p class="m-row-f">Faculty of Mathematics</p>
+                <div class="m-stats">
+                  <span class="m-stat">Cutoff<b>95%</b></span>
+                  <span class="m-stat">Your avg<b>94%</b></span>
+                  <span class="m-tier" style="background:#fef3e2; color:#9a3412">Reach</span>
+                </div>
+              </div>
+              <div class="m-row">
+                <p class="m-row-u">Queen's · Kingston, ON</p>
+                <p class="m-row-n">Commerce</p>
+                <p class="m-row-f">Smith School of Business</p>
+                <div class="m-stats">
+                  <span class="m-stat">Cutoff<b>88%</b></span>
+                  <span class="m-stat">Your avg<b>94%</b></span>
+                  <span class="m-tier" style="background:#ecfdf5; color:#14532d">Safety</span>
+                </div>
+              </div>
+            </div>
+            <div class="m-tabs">
+              <span class="m-tab"><span class="m-dot"></span>Today</span>
+              <span class="m-tab on"><span class="m-dot"></span>Programs</span>
+              <span class="m-tab"><span class="m-dot"></span>Apply</span>
+              <span class="m-tab"><span class="m-dot"></span>Pulse</span>
+              <span class="m-tab"><span class="m-dot"></span>You</span>
+            </div>
+          </div>
+        </div>
+        <p class="sr-only">A phone showing the Programs tab: a search field, filters for Reach, Target and Safety, and program rows listing each cutoff beside your own average.</p>
+      </div>
+
+      <div class="split-copy">
+        <h2>A reference tool, not a sales pitch.</h2>
+        <ol class="steps">
+          <li>
+            <div>
+              <h3>Search all 1,406 programs</h3>
+              <p>Cutoffs, required Grade 12 courses, co-op, tuition and OUAC codes — one search field.</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Reach · Target · Safety</h3>
+              <p>Enter your top six marks once. Every program sorts against your real average, and says so when it cannot.</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Track every deadline</h3>
+              <p>A countdown to the next OUAC date, and each application followed from shortlisted through to offer.</p>
+            </div>
+          </li>
+        </ol>
       </div>
     </div>
   </section>
 
   <section>
-    <div class="wrap spread">
-      <h2>Why the numbers hold</h2>
-      <div class="prose">
-        <p>
-          Most admission tools hand you a confident percentage no matter what
-          you've told them. That is worse than useless when you're choosing
-          where to spend four years — once a made-up number is on the screen it
-          is indistinguishable from a real one.
-        </p>
-        <p>
-          <strong>oHub refuses to do that.</strong> Until you enter your marks
-          it will not estimate them, and where a university has published no
-          cutoff it says as much rather than inventing one. Every figure traces
-          back to something you entered or something a university published,
-          and each program links out to the official page, because averages and
-          deadlines change.
-        </p>
-      </div>
+    <div class="wrap principle">
+      <h2>It never invents <em>a number for you.</em></h2>
+      <p>
+        No marks entered? oHub says unknown and asks — where other tools hand
+        you a confident percentage built on nothing. Every figure traces to
+        something you entered or a university published, and links out to the
+        official page.
+      </p>
     </div>
   </section>
 
   <section id="privacy">
-    <div class="wrap spread">
-      <h2>Your marks stay yours</h2>
-      <div>
-        <p style="color:var(--soft); margin-bottom:26px">
+    <div class="wrap split">
+      <div class="split-copy">
+        <h2>Your marks stay yours.</h2>
+        <p style="color:var(--soft); margin-top:20px">
           oHub asks for your name, school, OUAC reference and grades. That is
           sensitive, so it is built so none of it can reach us — there is no
           server for it to reach.
         </p>
+      </div>
+      <div class="split-copy">
         <ul class="promises">
-          <li>
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg>
-            <span><b>No account, ever.</b> No sign-up, no email, no password to forget.</span>
-          </li>
-          <li>
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg>
-            <span><b>Stored on your device only.</b> Everything lives in your own browser. There is no oHub database.</span>
-          </li>
-          <li>
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg>
-            <span><b>No tracking, no analytics.</b> Nobody is counting your clicks or selling your data.</span>
-          </li>
-          <li>
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg>
-            <span><b>Your OUAC reference is masked</b> on every screen except the one where you edit it.</span>
-          </li>
-          <li>
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg>
-            <span><b>Erase it all in one tap.</b> Settings has a delete control that actually deletes.</span>
-          </li>
+          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg><span><b>No account, ever.</b> No sign-up, no email, no password to forget.</span></li>
+          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg><span><b>Stored on your device only.</b> Everything lives in your own browser. There is no oHub database.</span></li>
+          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg><span><b>No tracking, no analytics.</b> Nobody is counting your clicks or selling your data.</span></li>
+          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg><span><b>Erase it all in one tap.</b> Settings has a delete control that actually deletes.</span></li>
         </ul>
       </div>
     </div>
@@ -363,7 +488,7 @@ footer a { color: var(--soft) }
     <h2>Start where you are.</h2>
     <p>
       Open it, search a program you're curious about, add your marks whenever
-      you feel like it. Nothing is required to get something out of it.
+      you feel like it.
     </p>
     <div class="actions">
       <a class="btn btn-primary" href="/today">Open oHub</a>
