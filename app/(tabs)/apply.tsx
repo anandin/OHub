@@ -1,4 +1,7 @@
 import { router } from "expo-router";
+import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import React, { useMemo, useState } from "react";
 import {
   FlatList,
@@ -24,17 +27,24 @@ import { getUpcomingDeadlines } from "@/data/deadlines";
 import { maskOuacRef } from "@/lib/privacy";
 import { ALL_PROGRAMS } from "@/data/programs";
 import { getUniversityById } from "@/data/universities";
-import { ED } from "@/constants/theme";
 
 
-const STATUS_ED: Record<AppStatus, { label: string; color: string; bg: string }> = {
-  shortlisted: { label: 'Shortlisted', color: ED.muted,        bg: '#f0ebe0'     },
-  applied:     { label: 'Submitted',   color: ED.ink,          bg: '#e8e2d4'     },
-  supp_sent:   { label: 'Supp. Sent',  color: '#7c4a03',       bg: '#fef3c7'     },
-  offer:       { label: 'Offer!',      color: ED.successText,  bg: ED.successBg  },
-  accepted:    { label: 'Accepted ✓',  color: ED.successText,  bg: ED.successBg  },
-  declined:    { label: 'Declined',    color: '#6f6449',       bg: '#f0ebe0'     },
-};
+/**
+ * Status colours depend on the active theme, so this is a function of the
+ * palette rather than a module constant. `#f0ebe0` and `#e8e2d4` were the only
+ * two surfaces here with no token; they are `rule`-adjacent tints and follow
+ * the theme now too.
+ */
+const statusStyles = (
+  c: Palette,
+): Record<AppStatus, { label: string; color: string; bg: string }> => ({
+  shortlisted: { label: 'Shortlisted', color: c.muted,       bg: c.rule       },
+  applied:     { label: 'Submitted',   color: c.ink,         bg: c.pillBorder },
+  supp_sent:   { label: 'Supp. Sent',  color: c.warnDark,    bg: c.amber      },
+  offer:       { label: 'Offer!',      color: c.successText, bg: c.successBg  },
+  accepted:    { label: 'Accepted \u2713', color: c.successText, bg: c.successBg },
+  declined:    { label: 'Declined',    color: c.muted,       bg: c.rule       },
+});
 
 const ALL_UNIVERSITIES = [
   { id: 'uoft',         label: 'University of Toronto'           },
@@ -71,9 +81,11 @@ function AppRow({
   onUpdateStatus: (id: string, status: AppStatus) => void;
   onRemove: (id: string) => void;
 }) {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const [expanded, setExpanded] = useState(false);
   const uni = getUniversityById(entry.universityId);
-  const status = STATUS_ED[entry.status];
+  const status = statusStyles(c)[entry.status];
 
   if (!uni) return null;
 
@@ -97,7 +109,7 @@ function AppRow({
         <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
           <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
         </View>
-        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color={ED.muted} />
+        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color={c.muted} />
       </Pressable>
 
       {expanded && (
@@ -105,7 +117,7 @@ function AppRow({
           <Text style={styles.expandedLabel}>Update status</Text>
           <View style={styles.statusGrid}>
             {APP_STATUS_ORDER.map(s => {
-              const cfg = STATUS_ED[s];
+              const cfg = statusStyles(c)[s];
               const active = entry.status === s;
               return (
                 <Pressable
@@ -129,7 +141,7 @@ function AppRow({
             accessibilityRole="button"
             accessibilityLabel={`Remove ${uni.shortName} from your applications`}
           >
-            <Feather name="trash-2" size={13} color={ED.muted} />
+            <Feather name="trash-2" size={13} color={c.muted} />
             <Text style={styles.removeBtnText}>Remove</Text>
           </Pressable>
         </View>
@@ -145,6 +157,8 @@ function AddApplicationModal({
   onAdd: (uniId: string, programName: string) => void;
   onClose: () => void;
 }) {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const [uniQuery, setUniQuery] = useState('');
   const [programQuery, setProgramQuery] = useState('');
   const [selectedUniId, setSelectedUniId] = useState('');
@@ -182,7 +196,7 @@ function AddApplicationModal({
             accessibilityRole="button"
             accessibilityLabel="Close"
           >
-            <Feather name="x" size={18} color={ED.muted} />
+            <Feather name="x" size={18} color={c.muted} />
           </Pressable>
         </View>
 
@@ -194,18 +208,18 @@ function AddApplicationModal({
           accessibilityRole="button"
           accessibilityLabel="Choose a university"
         >
-          <Feather name="search" size={14} color={ED.muted} style={{ marginRight: 8 }} />
+          <Feather name="search" size={14} color={c.muted} style={{ marginRight: 8 }} />
           {showUniSearch ? (
             <TextInput
               style={styles.searchFieldInput}
               value={uniQuery}
               onChangeText={setUniQuery}
               placeholder="Search universities…"
-              placeholderTextColor={ED.muted}
+              placeholderTextColor={c.muted}
               autoFocus
             />
           ) : (
-            <Text style={[styles.searchFieldText, !selectedUniId && { color: ED.muted }]}>
+            <Text style={[styles.searchFieldText, !selectedUniId && { color: c.muted }]}>
               {selectedUniLabel || 'Select a university…'}
             </Text>
           )}
@@ -247,18 +261,18 @@ function AddApplicationModal({
             setShowUniSearch(false);
           }}
         >
-          <Feather name="book-open" size={14} color={ED.muted} style={{ marginRight: 8 }} />
+          <Feather name="book-open" size={14} color={c.muted} style={{ marginRight: 8 }} />
           {showProgramSearch ? (
             <TextInput
               style={styles.searchFieldInput}
               value={programQuery}
               onChangeText={setProgramQuery}
               placeholder="Search programs…"
-              placeholderTextColor={ED.muted}
+              placeholderTextColor={c.muted}
               autoFocus
             />
           ) : (
-            <Text style={[styles.searchFieldText, !selectedProgram && { color: ED.muted }]}>
+            <Text style={[styles.searchFieldText, !selectedProgram && { color: c.muted }]}>
               {selectedProgram || (selectedUniId ? 'Search programs…' : 'Select a university first')}
             </Text>
           )}
@@ -272,7 +286,7 @@ function AddApplicationModal({
               keyboardShouldPersistTaps="always"
               ListEmptyComponent={
                 <View style={{ padding: 14 }}>
-                  <Text style={{ fontSize: 12, color: ED.muted, fontFamily: 'Inter_400Regular' }}>
+                  <Text style={{ fontSize: 12, color: c.muted, fontFamily: 'Inter_400Regular' }}>
                     {programQuery ? 'No programs found' : 'Type to search programs'}
                   </Text>
                 </View>
@@ -315,6 +329,8 @@ function AddApplicationModal({
 }
 
 export default function ApplyScreen() {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 20 : insets.top;
   const { profile } = useUser();
@@ -351,7 +367,7 @@ export default function ApplyScreen() {
             accessibilityRole="button"
             accessibilityLabel="Scholarships"
           >
-            <Feather name="award" size={16} color={ED.softInk} />
+            <Feather name="award" size={16} color={c.softInk} />
           </Pressable>
         </View>
 
@@ -394,14 +410,14 @@ export default function ApplyScreen() {
 
         {/* Add button */}
         <Pressable style={styles.addBtn} onPress={() => setShowAdd(true)}>
-          <Feather name="plus" size={16} color={ED.paper} />
+          <Feather name="plus" size={16} color={c.paper} />
           <Text style={styles.addBtnText}>Add application</Text>
         </Pressable>
 
         {/* Scholarships card */}
         <Pressable style={styles.scholCard} onPress={() => router.push('/scholarships')}>
           <View style={styles.scholCardIcon}>
-            <Feather name="award" size={18} color={ED.softInk} />
+            <Feather name="award" size={18} color={c.softInk} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.scholCardTitle}>Find scholarships</Text>
@@ -409,7 +425,7 @@ export default function ApplyScreen() {
               Search awards up to $120,000 — eligibility, deadlines and apply links
             </Text>
           </View>
-          <Feather name="chevron-right" size={16} color={ED.muted} />
+          <Feather name="chevron-right" size={16} color={c.muted} />
         </Pressable>
 
         {/* Deadlines */}
@@ -427,8 +443,8 @@ export default function ApplyScreen() {
                   </View>
                   <Text style={[
                     styles.deadlineDays,
-                    urgent && { color: ED.warn },
-                    passed && { color: ED.muted },
+                    urgent && { color: c.warn },
+                    passed && { color: c.muted },
                   ]}>
                     {passed ? 'Passed' : d.daysUntil === 0 ? 'Today' : `${d.daysUntil}d`}
                   </Text>
@@ -459,9 +475,9 @@ export default function ApplyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) => StyleSheet.create({
   iconBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  container: { flex: 1, backgroundColor: '#f5f1e8' },
+  container: { flex: 1, backgroundColor: c.paper },
   content: { paddingBottom: 100 },
   header: {
     flexDirection: 'row',
@@ -472,16 +488,16 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   ouacRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  ouacLabel: { fontSize: 10, color: '#6f6449', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 1 },
-  ouacRef: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: '#5c4a2f' },
-  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 28, color: '#1a1612', lineHeight: 30 },
+  ouacLabel: { fontSize: 10, color: c.muted, fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 1 },
+  ouacRef: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: c.softInk },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 28, color: c.ink, lineHeight: 30 },
   scholarshipsLink: { padding: 4 },
   summaryCard: {
     marginHorizontal: 24,
     marginBottom: 20,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 14,
     padding: 18,
   },
@@ -492,23 +508,23 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   summaryCount: { flexDirection: 'row', alignItems: 'baseline' },
-  summaryNum: { fontFamily: 'Fraunces_600SemiBold', fontSize: 40, color: '#1a1612', lineHeight: 44 },
-  summaryDen: { fontFamily: 'Fraunces_400Regular', fontSize: 28, color: '#6f6449' },
-  summaryCaption: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: '#6f6449', fontFamily: 'Inter_500Medium' },
-  progressTrack: { height: 5, backgroundColor: '#e8e0cf', borderRadius: 999, overflow: 'hidden', marginBottom: 10 },
-  progressFill: { height: '100%', backgroundColor: '#1a1612', borderRadius: 999 },
+  summaryNum: { fontFamily: 'Fraunces_600SemiBold', fontSize: 40, color: c.ink, lineHeight: 44 },
+  summaryDen: { fontFamily: 'Fraunces_400Regular', fontSize: 28, color: c.muted },
+  summaryCaption: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: c.muted, fontFamily: 'Inter_500Medium' },
+  progressTrack: { height: 5, backgroundColor: c.rule, borderRadius: 999, overflow: 'hidden', marginBottom: 10 },
+  progressFill: { height: '100%', backgroundColor: c.ink, borderRadius: 999 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  summaryNote: { fontSize: 11, color: '#5c4a2f', fontFamily: 'Inter_400Regular' },
+  summaryNote: { fontSize: 11, color: c.softInk, fontFamily: 'Inter_400Regular' },
   section: { paddingHorizontal: 24, marginBottom: 20 },
   sectionLabel: {
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 8,
   },
-  appRow: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
+  appRow: { borderTopWidth: 1, borderTopColor: c.rule },
   appRowMain: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -517,8 +533,8 @@ const styles = StyleSheet.create({
   },
   appUniDot: { width: 10, height: 10, borderRadius: 999, flexShrink: 0 },
   appInfo: { flex: 1 },
-  appUniName: { fontSize: 14, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  appProgramName: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular', marginTop: 1 },
+  appUniName: { fontSize: 14, fontFamily: 'Inter_500Medium', color: c.ink },
+  appProgramName: { fontSize: 11, color: c.muted, fontFamily: 'Inter_400Regular', marginTop: 1 },
   statusBadge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   statusText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
   appExpanded: { paddingBottom: 14, paddingLeft: 20 },
@@ -526,7 +542,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 8,
   },
@@ -536,14 +552,14 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     backgroundColor: 'transparent',
   },
-  statusOptionActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
-  statusOptionText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  statusOptionTextActive: { color: '#f5f1e8' },
+  statusOptionActive: { backgroundColor: c.ink, borderColor: c.ink },
+  statusOptionText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: c.ink },
+  statusOptionTextActive: { color: c.paper },
   removeBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  removeBtnText: { fontSize: 12, color: '#6f6449', fontFamily: 'Inter_400Regular' },
+  removeBtnText: { fontSize: 12, color: c.muted, fontFamily: 'Inter_400Regular' },
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -551,20 +567,20 @@ const styles = StyleSheet.create({
     gap: 8,
     marginHorizontal: 24,
     marginBottom: 24,
-    backgroundColor: '#1a1612',
+    backgroundColor: c.ink,
     borderRadius: 999,
     paddingVertical: 14,
   },
-  addBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
+  addBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: c.paper },
   scholCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginHorizontal: 24,
     marginBottom: 24,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 14,
     padding: 16,
   },
@@ -576,22 +592,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scholCardTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
-  scholCardSub: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular', marginTop: 2, lineHeight: 16 },
+  scholCardTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: c.ink },
+  scholCardSub: { fontSize: 11, color: c.muted, fontFamily: 'Inter_400Regular', marginTop: 2, lineHeight: 16 },
   deadlineRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
   },
-  deadlineRowBorder: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
+  deadlineRowBorder: { borderTopWidth: 1, borderTopColor: c.rule },
   deadlineInfo: { flex: 1, marginRight: 12 },
-  deadlineTitle: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  deadlineDesc: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular', marginTop: 2 },
-  deadlineDays: { fontFamily: 'JetBrainsMono_500Medium', fontSize: 13, color: '#1a1612' },
+  deadlineTitle: { fontSize: 13, fontFamily: 'Inter_500Medium', color: c.ink },
+  deadlineDesc: { fontSize: 11, color: c.muted, fontFamily: 'Inter_400Regular', marginTop: 2 },
+  deadlineDays: { fontFamily: 'JetBrainsMono_500Medium', fontSize: 13, color: c.ink },
   emptyState: { padding: 48, alignItems: 'center' },
-  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 20, color: '#1a1612', marginBottom: 8 },
-  emptyBody: { fontSize: 13, color: '#6f6449', textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular', maxWidth: 280 },
+  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 20, color: c.ink, marginBottom: 8 },
+  emptyBody: { fontSize: 13, color: c.muted, textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular', maxWidth: 280 },
   modalOverlay: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
@@ -599,7 +615,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modal: {
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -611,41 +627,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  modalTitle: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: '#1a1612' },
+  modalTitle: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: c.ink },
   modalLabel: {
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 6,
   },
   searchField: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f1e8',
+    backgroundColor: c.paper,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 11,
     marginBottom: 4,
   },
-  searchFieldFocused: { borderColor: '#1a1612' },
+  searchFieldFocused: { borderColor: c.ink },
   searchFieldDisabled: { opacity: 0.5 },
   searchFieldInput: {
     flex: 1,
     fontSize: 14,
     fontFamily: 'Inter_400Regular',
-    color: '#1a1612',
+    color: c.ink,
     padding: 0,
     margin: 0,
   },
-  searchFieldText: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: '#1a1612' },
+  searchFieldText: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular', color: c.ink },
   dropdownBox: {
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 10,
     marginBottom: 8,
     overflow: 'hidden',
@@ -656,17 +672,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0ebe0',
   },
-  dropdownItemActive: { backgroundColor: '#1a1612' },
-  dropdownItemText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  dropdownItemTextActive: { color: '#f5f1e8' },
-  dropdownItemSub: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#6f6449', marginTop: 2 },
+  dropdownItemActive: { backgroundColor: c.ink },
+  dropdownItemText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: c.ink },
+  dropdownItemTextActive: { color: c.paper },
+  dropdownItemSub: { fontSize: 11, fontFamily: 'Inter_400Regular', color: c.muted, marginTop: 2 },
   modalAddBtn: {
     marginTop: 16,
-    backgroundColor: '#1a1612',
+    backgroundColor: c.ink,
     borderRadius: 999,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  modalAddBtnDisabled: { backgroundColor: '#d4c9b0' },
-  modalAddBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
+  modalAddBtnDisabled: { backgroundColor: c.pillBorder },
+  modalAddBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: c.paper },
 });

@@ -1,4 +1,7 @@
 import { router } from "expo-router";
+import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import React, { useEffect, useState } from "react";
 import {
   Modal,
@@ -17,7 +20,6 @@ import { useUser } from "@/context/UserContext";
 import { useApplications } from "@/context/ApplicationsContext";
 import { computeAverage } from "@/lib/admissions";
 import { maskOuacRef } from "@/lib/privacy";
-import { ED } from "@/constants/theme";
 
 
 function EditProfileModal({ profile, onSave, onClose }: {
@@ -25,6 +27,8 @@ function EditProfileModal({ profile, onSave, onClose }: {
   onSave: (name: string, school: string, ouacRef: string) => void;
   onClose: () => void;
 }) {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const [name, setName] = useState(profile.name);
   const [school, setSchool] = useState(profile.school);
   const [ouacRef, setOuacRef] = useState(profile.ouacRef);
@@ -36,7 +40,7 @@ function EditProfileModal({ profile, onSave, onClose }: {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Edit profile</Text>
             <Pressable onPress={onClose}>
-              <Feather name="x" size={18} color={ED.muted} />
+              <Feather name="x" size={18} color={c.muted} />
             </Pressable>
           </View>
 
@@ -46,7 +50,7 @@ function EditProfileModal({ profile, onSave, onClose }: {
             value={name}
             onChangeText={setName}
             placeholder="Full name"
-            placeholderTextColor={ED.muted}
+            placeholderTextColor={c.muted}
             autoFocus
           />
 
@@ -56,7 +60,7 @@ function EditProfileModal({ profile, onSave, onClose }: {
             value={school}
             onChangeText={setSchool}
             placeholder="High school name"
-            placeholderTextColor={ED.muted}
+            placeholderTextColor={c.muted}
           />
 
           <Text style={styles.modalLabel}>OUAC Reference Number</Text>
@@ -65,7 +69,7 @@ function EditProfileModal({ profile, onSave, onClose }: {
             value={ouacRef}
             onChangeText={setOuacRef}
             placeholder="2026-0000000"
-            placeholderTextColor={ED.muted}
+            placeholderTextColor={c.muted}
             keyboardType="numbers-and-punctuation"
           />
 
@@ -86,6 +90,8 @@ function EditProfileModal({ profile, onSave, onClose }: {
 }
 
 export default function YouScreen() {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 20 : insets.top;
   const { profile, tasks, doneTasks, hasProfile, updateMarks, updateProfile } = useUser();
@@ -152,7 +158,7 @@ export default function YouScreen() {
             accessibilityRole="button"
             accessibilityLabel="Scholarships"
           >
-            <Feather name="award" size={18} color={ED.ink} />
+            <Feather name="award" size={18} color={c.ink} />
           </Pressable>
         </View>
 
@@ -182,7 +188,7 @@ export default function YouScreen() {
               <Text style={styles.ouacRef}>{maskOuacRef(profile.ouacRef)}</Text>
             </View>
           </View>
-          <Feather name="edit-2" size={14} color={ED.muted} />
+          <Feather name="edit-2" size={14} color={c.muted} />
         </Pressable>
 
         {/* Stats grid */}
@@ -223,7 +229,7 @@ export default function YouScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Edit top 6 marks"
               >
-                <Feather name="edit-2" size={13} color={ED.muted} />
+                <Feather name="edit-2" size={13} color={c.muted} />
                 <Text style={styles.editBtnText}>Edit</Text>
               </Pressable>
             )}
@@ -246,7 +252,7 @@ export default function YouScreen() {
                         setLocalCodes(next);
                       }}
                       placeholder="MHF4U"
-                      placeholderTextColor={ED.muted}
+                      placeholderTextColor={c.muted}
                       maxLength={6}
                       autoCapitalize="characters"
                     />
@@ -265,7 +271,7 @@ export default function YouScreen() {
                         setLocalMarks(next);
                       }}
                       placeholder="00"
-                      placeholderTextColor={ED.muted}
+                      placeholderTextColor={c.muted}
                       keyboardType="decimal-pad"
                       maxLength={5}
                     />
@@ -292,9 +298,9 @@ export default function YouScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Applications</Text>
             {[
-              { label: 'Shortlisted', count: appStats.shortlisted, color: ED.muted },
-              { label: 'Submitted / Supp sent', count: appStats.applied, color: ED.ink },
-              { label: 'Offers', count: appStats.offers, color: ED.success },
+              { label: 'Shortlisted', count: appStats.shortlisted, color: c.muted },
+              { label: 'Submitted / Supp sent', count: appStats.applied, color: c.ink },
+              { label: 'Offers', count: appStats.offers, color: c.success },
             ].map(row => (
               <View key={row.label} style={styles.appSummaryRow}>
                 <Text style={styles.appSummaryLabel}>{row.label}</Text>
@@ -312,9 +318,9 @@ export default function YouScreen() {
             accessibilityRole="button"
             accessibilityLabel="Scholarships"
           >
-            <Feather name="award" size={16} color={ED.softInk} />
+            <Feather name="award" size={16} color={c.softInk} />
             <Text style={styles.quickLinkText}>Scholarships</Text>
-            <Feather name="chevron-right" size={14} color={ED.muted} style={{ marginLeft: 'auto' }} />
+            <Feather name="chevron-right" size={14} color={c.muted} style={{ marginLeft: 'auto' }} />
           </Pressable>
           <Pressable
             style={[styles.quickLink, styles.quickLinkBorder]}
@@ -322,9 +328,9 @@ export default function YouScreen() {
             accessibilityRole="button"
             accessibilityLabel="Settings and privacy"
           >
-            <Feather name="shield" size={16} color={ED.softInk} />
+            <Feather name="shield" size={16} color={c.softInk} />
             <Text style={styles.quickLinkText}>Settings & privacy</Text>
-            <Feather name="chevron-right" size={14} color={ED.muted} style={{ marginLeft: 'auto' }} />
+            <Feather name="chevron-right" size={14} color={c.muted} style={{ marginLeft: 'auto' }} />
           </Pressable>
         </View>
       </ScrollView>
@@ -340,9 +346,9 @@ export default function YouScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f1e8' },
-  placeholderText: { color: ED.muted, fontStyle: 'italic' },
+const makeStyles = (c: Palette) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.paper },
+  placeholderText: { color: c.muted, fontStyle: 'italic' },
   content: { paddingBottom: 100 },
   header: {
     flexDirection: 'row',
@@ -356,11 +362,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
-  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 30, color: '#1a1612', lineHeight: 32 },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 30, color: c.ink, lineHeight: 32 },
   schBtn: { padding: 4 },
   profileCard: {
     flexDirection: 'row',
@@ -369,27 +375,27 @@ const styles = StyleSheet.create({
     marginHorizontal: 24,
     marginBottom: 16,
     padding: 18,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
   },
   avatarCircle: {
     width: 52,
     height: 52,
     borderRadius: 999,
-    backgroundColor: '#1a1612',
+    backgroundColor: c.ink,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  avatarInitials: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18, color: '#f5f1e8' },
+  avatarInitials: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18, color: c.paper },
   profileInfo: { flex: 1 },
-  profileName: { fontFamily: 'Inter_600SemiBold', fontSize: 16, color: '#1a1612' },
-  profileSchool: { fontSize: 12, color: '#6f6449', marginTop: 2, fontFamily: 'Inter_400Regular' },
+  profileName: { fontFamily: 'Inter_600SemiBold', fontSize: 16, color: c.ink },
+  profileSchool: { fontSize: 12, color: c.muted, marginTop: 2, fontFamily: 'Inter_400Regular' },
   ouacRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  ouacLabel: { fontSize: 10, color: '#6f6449', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8 },
-  ouacRef: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 12, color: '#5c4a2f' },
+  ouacLabel: { fontSize: 10, color: c.muted, fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8 },
+  ouacRef: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 12, color: c.softInk },
   statsGrid: {
     flexDirection: 'row',
     gap: 8,
@@ -398,59 +404,59 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
   },
-  statLabel: { fontSize: 9, color: '#6f6449', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, textAlign: 'center' },
-  statValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18, color: '#1a1612', textAlign: 'center' },
-  divider: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24, marginBottom: 20 },
+  statLabel: { fontSize: 9, color: c.muted, fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, textAlign: 'center' },
+  statValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18, color: c.ink, textAlign: 'center' },
+  divider: { height: 1, backgroundColor: c.rule, marginHorizontal: 24, marginBottom: 20 },
   section: { paddingHorizontal: 24, marginBottom: 20 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  sectionTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#6f6449', textTransform: 'uppercase', letterSpacing: 1 },
+  sectionTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: c.muted, textTransform: 'uppercase', letterSpacing: 1 },
   editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  editBtnText: { fontSize: 12, color: '#6f6449', fontFamily: 'Inter_400Regular' },
-  saveMarksBtn: { backgroundColor: '#1a1612', paddingHorizontal: 14, paddingVertical: 5, borderRadius: 999 },
-  saveMarksBtnText: { fontSize: 12, color: '#f5f1e8', fontFamily: 'Inter_500Medium' },
+  editBtnText: { fontSize: 12, color: c.muted, fontFamily: 'Inter_400Regular' },
+  saveMarksBtn: { backgroundColor: c.ink, paddingHorizontal: 14, paddingVertical: 5, borderRadius: 999 },
+  saveMarksBtnText: { fontSize: 12, color: c.paper, fontFamily: 'Inter_500Medium' },
   marksGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  markItem: { width: '47%', backgroundColor: '#fbf8f1', borderWidth: 1, borderColor: '#e8e0cf', borderRadius: 10, padding: 12 },
-  markCourse: { fontSize: 10, color: '#6f6449', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, minHeight: 16 },
+  markItem: { width: '47%', backgroundColor: c.card, borderWidth: 1, borderColor: c.rule, borderRadius: 10, padding: 12 },
+  markCourse: { fontSize: 10, color: c.muted, fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, minHeight: 16 },
   markCodeInput: {
     fontFamily: 'JetBrainsMono_400Regular',
     fontSize: 11,
-    color: '#1a1612',
+    color: c.ink,
     borderBottomWidth: 1,
-    borderBottomColor: '#d4c9b0',
+    borderBottomColor: c.pillBorder,
     paddingBottom: 2,
     marginBottom: 4,
     paddingTop: 0,
   },
-  markValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: '#1a1612' },
-  markValueEmpty: { color: '#d4c9b0' },
+  markValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: c.ink },
+  markValueEmpty: { color: c.pillBorder },
   markInput: {
     fontFamily: 'JetBrainsMono_400Regular',
     fontSize: 20,
-    color: '#1a1612',
+    color: c.ink,
     borderBottomWidth: 1,
-    borderBottomColor: '#d4c9b0',
+    borderBottomColor: c.pillBorder,
     paddingBottom: 2,
     paddingTop: 0,
     margin: 0,
   },
-  markBar: { height: 3, backgroundColor: '#e8e0cf', borderRadius: 999, marginTop: 8, overflow: 'hidden' },
-  markBarFill: { height: '100%', backgroundColor: '#1a1612', borderRadius: 999 },
+  markBar: { height: 3, backgroundColor: c.rule, borderRadius: 999, marginTop: 8, overflow: 'hidden' },
+  markBarFill: { height: '100%', backgroundColor: c.ink, borderRadius: 999 },
   appSummaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: '#e8e0cf',
+    borderTopColor: c.rule,
   },
-  appSummaryLabel: { fontSize: 13, color: '#1a1612', fontFamily: 'Inter_400Regular' },
+  appSummaryLabel: { fontSize: 13, color: c.ink, fontFamily: 'Inter_400Regular' },
   appSummaryCount: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18 },
   quickLinks: { gap: 0 },
   quickLink: {
@@ -459,15 +465,15 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 14,
   },
-  quickLinkBorder: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
-  quickLinkText: { fontSize: 14, color: '#1a1612', fontFamily: 'Inter_500Medium', flex: 1 },
+  quickLinkBorder: { borderTopWidth: 1, borderTopColor: c.rule },
+  quickLinkText: { fontSize: 14, color: c.ink, fontFamily: 'Inter_500Medium', flex: 1 },
   modalBg: {
     flex: 1,
     backgroundColor: 'rgba(26,22,18,0.45)',
     justifyContent: 'flex-end',
   },
   modal: {
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -479,34 +485,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  modalTitle: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: '#1a1612' },
+  modalTitle: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: c.ink },
   modalLabel: {
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 8,
   },
   modalInput: {
-    backgroundColor: '#f5f1e8',
+    backgroundColor: c.paper,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 14,
     fontFamily: 'Inter_400Regular',
-    color: '#1a1612',
+    color: c.ink,
     marginBottom: 16,
   },
   saveBtn: {
-    backgroundColor: '#1a1612',
+    backgroundColor: c.ink,
     borderRadius: 999,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 4,
   },
-  saveBtnDisabled: { backgroundColor: '#d4c9b0' },
-  saveBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
+  saveBtnDisabled: { backgroundColor: c.pillBorder },
+  saveBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: c.paper },
 });

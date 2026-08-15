@@ -35,6 +35,7 @@ export const StorageKeys = {
   tasksList: "@ohub_tasks_list",
   lastRefresh: "@ohub_last_refresh",
   extraPosts: "@ohub_extra_posts",
+  themePreference: "@ohub_theme_preference",
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];
@@ -50,6 +51,8 @@ const LEGACY_KEYS: Record<StorageKey, string> = {
   [StorageKeys.tasksList]: "@unihub_tasks_list",
   [StorageKeys.lastRefresh]: "@unihub_last_refresh",
   [StorageKeys.extraPosts]: "@unihub_extra_posts",
+  // No pre-1.0 equivalent; the theme control did not exist.
+  [StorageKeys.themePreference]: "",
 };
 
 /**
@@ -148,7 +151,7 @@ export async function remove(key: StorageKey): Promise<boolean> {
 /** Clear every oHub-owned key. Backs the "Erase my data" control in Settings. */
 export async function clearAll(): Promise<void> {
   const keys = Object.values(StorageKeys) as StorageKey[];
-  const legacy = Object.values(LEGACY_KEYS);
+  const legacy = Object.values(LEGACY_KEYS).filter(Boolean);
   try {
     await AsyncStorage.multiRemove([...keys, ...legacy]);
   } catch {

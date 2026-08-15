@@ -1,4 +1,6 @@
 import Feather from "@expo/vector-icons/Feather";
+import type { Palette } from "@/constants/theme";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
@@ -32,6 +34,7 @@ import { getUniversityById } from "@/data/universities";
 type DetailTab = "feed" | "programs" | "admissions" | "about";
 
 export default function UniversityDetailScreen() {
+  const styles = useThemedStyles(makeStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 67 : insets.top;
@@ -573,7 +576,7 @@ export default function UniversityDetailScreen() {
   return <View style={styles.container}>{renderContent()}</View>;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,

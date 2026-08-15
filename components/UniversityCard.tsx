@@ -1,4 +1,6 @@
 import Feather from "@expo/vector-icons/Feather";
+import type { Palette } from "@/constants/theme";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React from "react";
@@ -14,6 +16,7 @@ interface UniversityCardProps {
 }
 
 export function UniversityCard({ university, compact = false }: UniversityCardProps) {
+  const styles = useThemedStyles(makeStyles);
   const { isSubscribed, toggleSubscription } = useSubscriptions();
   const subscribed = isSubscribed(university.id);
 
@@ -123,7 +126,7 @@ export function UniversityCard({ university, compact = false }: UniversityCardPr
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) => StyleSheet.create({
   card: {
     backgroundColor: Colors.light.surface,
     borderRadius: 16,

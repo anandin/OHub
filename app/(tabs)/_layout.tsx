@@ -3,7 +3,7 @@ import Feather from "@expo/vector-icons/Feather";
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ED } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
 
 
 /**
@@ -14,6 +14,7 @@ import { ED } from "@/constants/theme";
 export const unstable_settings = { initialRouteName: "today" };
 
 export default function TabLayout() {
+  const c = usePalette();
   const safeAreaInsets = useSafeAreaInsets();
   const isWeb = Platform.OS === "web";
 
@@ -21,17 +22,17 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: ED.ink,
-        tabBarInactiveTintColor: ED.muted,
+        tabBarActiveTintColor: c.ink,
+        tabBarInactiveTintColor: c.muted,
         tabBarLabelStyle: {
           fontSize: 10,
           fontFamily: "Inter_500Medium",
           marginTop: -2,
         },
         tabBarStyle: {
-          backgroundColor: ED.card,
+          backgroundColor: c.card,
           borderTopWidth: 1,
-          borderTopColor: ED.rule,
+          borderTopColor: c.rule,
           elevation: 0,
           shadowOpacity: 0,
           paddingBottom: safeAreaInsets.bottom,
@@ -40,7 +41,7 @@ export default function TabLayout() {
           ...(isWeb ? { height: 84 } : {}),
         },
         tabBarBackground: () => (
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: ED.card }]} />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: c.card }]} />
         ),
       }}
     >

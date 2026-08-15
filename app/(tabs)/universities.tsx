@@ -1,4 +1,7 @@
 import { router } from "expo-router";
+import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import React, { useMemo, useState } from "react";
 import {
   FlatList,
@@ -16,7 +19,6 @@ import { getUniversityById } from "@/data/universities";
 import { useSavedPosts } from "@/context/SavedPostsContext";
 import { useSubscriptions } from "@/context/SubscriptionsContext";
 import { sharePost } from "@/lib/share";
-import { ED } from "@/constants/theme";
 
 type FeedTab = 'following' | 'trending' | 'all';
 
@@ -28,6 +30,8 @@ function PostItem({
   post: Post;
   onTagPress: (tag: string) => void;
 }) {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const uni = getUniversityById(post.universityId);
   const catCfg = CATEGORY_CONFIG[post.category];
   const { toggleSubscription, isSubscribed } = useSubscriptions();
@@ -64,7 +68,7 @@ function PostItem({
     >
       {/* Meta row */}
       <View style={styles.postMeta}>
-        <View style={[styles.uniDot, { backgroundColor: uni?.color ?? '#6f6449' }]} />
+        <View style={[styles.uniDot, { backgroundColor: uni?.color ?? c.muted }]} />
         <Text style={styles.postAuthor}>{post.author}</Text>
         <Text style={styles.postMetaSep}>·</Text>
         <Text style={styles.postUni}>{uni?.shortName ?? 'Ontario'}</Text>
@@ -117,8 +121,8 @@ function PostItem({
           accessibilityState={{ selected: liked }}
           accessibilityLabel={`${liked ? 'Unlike' : 'Like'} this post. ${likes} likes`}
         >
-          <Feather name="heart" size={14} color={liked ? ED.warn : ED.muted} />
-          <Text style={[styles.actionText, liked && { color: ED.warn }]}>{likes}</Text>
+          <Feather name="heart" size={14} color={liked ? c.warn : c.muted} />
+          <Text style={[styles.actionText, liked && { color: c.warn }]}>{likes}</Text>
         </Pressable>
         <Pressable
           style={styles.actionBtn}
@@ -126,7 +130,7 @@ function PostItem({
           accessibilityRole="button"
           accessibilityLabel="Share this post"
         >
-          <Feather name="share" size={14} color={ED.muted} />
+          <Feather name="share" size={14} color={c.muted} />
           <Text style={styles.actionText}>{shareNote ?? 'Share'}</Text>
         </Pressable>
       </View>
@@ -135,6 +139,8 @@ function PostItem({
 }
 
 export default function PulseScreen() {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 20 : insets.top;
   const { subscribed } = useSubscriptions();
@@ -198,7 +204,7 @@ export default function PulseScreen() {
       {/* Active tag filter bar */}
       {activeTag && (
         <View style={styles.tagFilterBar}>
-          <Feather name="tag" size={12} color={ED.softInk} />
+          <Feather name="tag" size={12} color={c.softInk} />
           <Text style={styles.tagFilterLabel}>{activeTag}</Text>
           <Pressable
             onPress={() => setActiveTag(null)}
@@ -207,7 +213,7 @@ export default function PulseScreen() {
             accessibilityRole="button"
             accessibilityLabel="Clear the tag filter"
           >
-            <Feather name="x" size={13} color={ED.muted} />
+            <Feather name="x" size={13} color={c.muted} />
           </Pressable>
         </View>
       )}
@@ -225,7 +231,7 @@ export default function PulseScreen() {
           <View style={styles.emptyState}>
             {activeTag ? (
               <>
-                <Feather name="tag" size={28} color={ED.muted} style={{ marginBottom: 12 }} />
+                <Feather name="tag" size={28} color={c.muted} style={{ marginBottom: 12 }} />
                 <Text style={styles.emptyTitle}>No posts tagged &ldquo;{activeTag}&rdquo;</Text>
                 <Pressable
                   onPress={() => setActiveTag(null)}
@@ -238,7 +244,7 @@ export default function PulseScreen() {
               </>
             ) : activeTab === 'following' ? (
               <>
-                <Feather name="rss" size={28} color={ED.muted} style={{ marginBottom: 12 }} />
+                <Feather name="rss" size={28} color={c.muted} style={{ marginBottom: 12 }} />
                 <Text style={styles.emptyTitle}>Follow schools to see their posts</Text>
                 <Text style={styles.emptyBody}>
                   Tap the + on any post to follow that school.
@@ -254,8 +260,8 @@ export default function PulseScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f1e8' },
+const makeStyles = (c: Palette) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.paper },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -268,39 +274,39 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
-  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 30, color: '#1a1612', lineHeight: 32 },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 30, color: c.ink, lineHeight: 32 },
   tabRow: { flexDirection: 'row', gap: 6, paddingHorizontal: 24, paddingBottom: 12 },
   tabPill: {
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     backgroundColor: 'transparent',
   },
-  tabPillActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
-  tabLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  tabLabelActive: { color: '#f5f1e8' },
+  tabPillActive: { backgroundColor: c.ink, borderColor: c.ink },
+  tabLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', color: c.ink },
+  tabLabelActive: { color: c.paper },
   tagFilterBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     marginHorizontal: 24,
     marginBottom: 10,
-    backgroundColor: '#1a1612',
+    backgroundColor: c.ink,
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 8,
     alignSelf: 'flex-start',
   },
-  tagFilterLabel: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
+  tagFilterLabel: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: c.paper },
   tagFilterClear: { marginLeft: 2 },
   listContent: { paddingBottom: 100 },
-  separator: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24 },
+  separator: { height: 1, backgroundColor: c.rule, marginHorizontal: 24 },
   postItem: { paddingHorizontal: 24, paddingVertical: 18 },
   postMeta: {
     flexDirection: 'row',
@@ -310,10 +316,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   uniDot: { width: 7, height: 7, borderRadius: 999 },
-  postAuthor: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
-  postUni: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#6f6449' },
-  postMetaSep: { fontSize: 12, color: '#d4c9b0' },
-  postTime: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular' },
+  postAuthor: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: c.ink },
+  postUni: { fontSize: 12, fontFamily: 'Inter_400Regular', color: c.muted },
+  postMetaSep: { fontSize: 12, color: c.pillBorder },
+  postTime: { fontSize: 11, color: c.muted, fontFamily: 'Inter_400Regular' },
   catBadge: {
     borderRadius: 999,
     paddingHorizontal: 7,
@@ -331,51 +337,51 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 4,
   },
-  followPillActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
-  followPillText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#5c4a2f', lineHeight: 14 },
-  followPillTextActive: { color: '#f5f1e8' },
+  followPillActive: { backgroundColor: c.ink, borderColor: c.ink },
+  followPillText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: c.softInk, lineHeight: 14 },
+  followPillTextActive: { color: c.paper },
   postTitle: {
     fontFamily: 'Fraunces_500Medium',
     fontSize: 17,
     lineHeight: 22,
-    color: '#1a1612',
+    color: c.ink,
     marginBottom: 6,
   },
   postBody: {
     fontSize: 13,
     fontFamily: 'Inter_400Regular',
-    color: '#5c4a2f',
+    color: c.softInk,
     lineHeight: 20,
     marginBottom: 8,
   },
   tagRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 12 },
   tag: {
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
   },
-  tagText: { fontSize: 10, color: '#5c4a2f', fontFamily: 'Inter_500Medium' },
+  tagText: { fontSize: 10, color: c.softInk, fontFamily: 'Inter_500Medium' },
   postActions: { flexDirection: 'row', gap: 16, alignItems: 'center' },
   actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  actionText: { fontSize: 12, color: '#6f6449', fontFamily: 'Inter_400Regular' },
+  actionText: { fontSize: 12, color: c.muted, fontFamily: 'Inter_400Regular' },
   emptyState: { padding: 48, alignItems: 'center' },
-  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612', marginBottom: 8, textAlign: 'center' },
-  emptyBody: { fontSize: 13, color: '#6f6449', textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular' },
+  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: c.ink, marginBottom: 8, textAlign: 'center' },
+  emptyBody: { fontSize: 13, color: c.muted, textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular' },
   clearTagBtn: {
     marginTop: 12,
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
   },
-  clearTagBtnText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#1a1612' },
+  clearTagBtnText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: c.ink },
 });

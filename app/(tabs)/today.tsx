@@ -1,4 +1,7 @@
 import { router } from "expo-router";
+import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import React, { useMemo, useState } from "react";
 import {
   Modal,
@@ -17,7 +20,6 @@ import { useUser } from "@/context/UserContext";
 import { getUpcomingDeadlines } from "@/data/deadlines";
 import { FEATURED_ARTICLES, UPCOMING_EVENTS } from "@/data/userData";
 import { useApplications } from "@/context/ApplicationsContext";
-import { ED } from "@/constants/theme";
 
 
 type Priority = 'high' | 'med' | 'low';
@@ -38,6 +40,8 @@ function AddTaskModal({ onAdd, onClose }: {
   onAdd: (label: string, est: string, priority: Priority) => void;
   onClose: () => void;
 }) {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const [label, setLabel] = useState('');
   const [est, setEst] = useState('');
   const [priority, setPriority] = useState<Priority>('med');
@@ -60,7 +64,7 @@ function AddTaskModal({ onAdd, onClose }: {
               accessibilityRole="button"
               accessibilityLabel="Close add task"
             >
-              <Feather name="x" size={18} color={ED.muted} />
+              <Feather name="x" size={18} color={c.muted} />
             </Pressable>
           </View>
 
@@ -70,7 +74,7 @@ function AddTaskModal({ onAdd, onClose }: {
             value={label}
             onChangeText={setLabel}
             placeholder="e.g. Finish Waterloo AIF Section 5"
-            placeholderTextColor={ED.muted}
+            placeholderTextColor={c.muted}
             autoFocus
           />
 
@@ -80,7 +84,7 @@ function AddTaskModal({ onAdd, onClose }: {
             value={est}
             onChangeText={setEst}
             placeholder="e.g. 20 min"
-            placeholderTextColor={ED.muted}
+            placeholderTextColor={c.muted}
           />
 
           <Text style={styles.modalLabel}>Priority</Text>
@@ -120,6 +124,8 @@ function AddTaskModal({ onAdd, onClose }: {
 }
 
 export default function TodayScreen() {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 20 : insets.top;
   const { profile, tasks, doneTasks, toggleTask, addTask, deleteTask } = useUser();
@@ -223,7 +229,7 @@ export default function TodayScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={`Delete task: ${task.label}`}
                   >
-                    <Feather name="trash-2" size={15} color={ED.warn} />
+                    <Feather name="trash-2" size={15} color={c.warn} />
                   </Pressable>
                 ) : (
                   <View style={[styles.checkbox, done && styles.checkboxDone]}>
@@ -250,7 +256,7 @@ export default function TodayScreen() {
             accessibilityRole="button"
             accessibilityLabel="Add a task"
           >
-            <Feather name="plus" size={14} color={ED.muted} />
+            <Feather name="plus" size={14} color={c.muted} />
             <Text style={styles.addTaskBtnText}>Add task</Text>
           </Pressable>
         </View>
@@ -278,7 +284,7 @@ export default function TodayScreen() {
             </View>
             <View style={styles.articleReadMore}>
               <Text style={styles.articleReadMoreText}>Open essay editor</Text>
-              <Feather name="arrow-right" size={12} color={ED.softInk} />
+              <Feather name="arrow-right" size={12} color={c.softInk} />
             </View>
           </Pressable>
         </View>
@@ -316,9 +322,9 @@ export default function TodayScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) => StyleSheet.create({
   iconBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  container: { flex: 1, backgroundColor: '#f5f1e8' },
+  container: { flex: 1, backgroundColor: c.paper },
   content: { paddingBottom: 100 },
   dateLine: {
     flexDirection: 'row',
@@ -332,14 +338,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
   },
   issueText: {
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'JetBrainsMono_400Regular',
   },
   heroSection: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 },
@@ -347,29 +353,29 @@ const styles = StyleSheet.create({
     fontFamily: 'Fraunces_600SemiBold',
     fontSize: 44,
     lineHeight: 48,
-    color: '#1a1612',
+    color: c.ink,
   },
   heroSub: {
     fontFamily: 'Fraunces_400Regular',
     fontSize: 22,
     lineHeight: 28,
-    color: '#5c4a2f',
+    color: c.softInk,
     marginTop: 6,
   },
   heroSubBold: {
     fontFamily: 'Fraunces_600SemiBold',
-    color: '#1a1612',
+    color: c.ink,
   },
   progressTrack: {
     marginTop: 14,
     height: 6,
-    backgroundColor: '#e8e0cf',
+    backgroundColor: c.rule,
     borderRadius: 999,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#1a1612',
+    backgroundColor: c.ink,
     borderRadius: 999,
   },
   progressRow: {
@@ -377,8 +383,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 8,
   },
-  progressLabel: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular' },
-  divider: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24 },
+  progressLabel: { fontSize: 11, color: c.muted, fontFamily: 'Inter_400Regular' },
+  divider: { height: 1, backgroundColor: c.rule, marginHorizontal: 24 },
   section: { paddingHorizontal: 24, paddingTop: 20 },
   sectionHeader: {
     flexDirection: 'row',
@@ -390,18 +396,18 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
   },
   editTasksBtn: { paddingVertical: 2, paddingHorizontal: 4 },
-  editTasksBtnText: { fontSize: 12, color: '#6f6449', fontFamily: 'Inter_400Regular' },
+  editTasksBtnText: { fontSize: 12, color: c.muted, fontFamily: 'Inter_400Regular' },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
     paddingVertical: 12,
   },
-  taskRowBorder: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
+  taskRowBorder: { borderTopWidth: 1, borderTopColor: c.rule },
   checkbox: {
     width: 18,
     height: 18,
@@ -414,25 +420,25 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   checkboxDone: {
-    backgroundColor: '#1a1612',
-    borderColor: '#1a1612',
+    backgroundColor: c.ink,
+    borderColor: c.ink,
   },
-  checkmark: { color: '#f5f1e8', fontSize: 10, lineHeight: 12 },
+  checkmark: { color: c.paper, fontSize: 10, lineHeight: 12 },
   deleteBtn: { marginTop: 1, flexShrink: 0 },
   taskBody: { flex: 1 },
   taskLabel: {
     fontSize: 14,
     fontFamily: 'Inter_500Medium',
-    color: '#1a1612',
+    color: c.ink,
   },
   taskLabelDone: {
     textDecorationLine: 'line-through',
-    color: '#6f6449',
+    color: c.muted,
   },
-  taskMeta: { fontSize: 11, color: '#6f6449', marginTop: 2, fontFamily: 'Inter_400Regular' },
+  taskMeta: { fontSize: 11, color: c.muted, marginTop: 2, fontFamily: 'Inter_400Regular' },
   emptyTasks: {
     fontSize: 13,
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_400Regular',
     paddingVertical: 8,
   },
@@ -442,14 +448,14 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: '#e8e0cf',
+    borderTopColor: c.rule,
     marginTop: 2,
   },
-  addTaskBtnText: { fontSize: 13, color: '#6f6449', fontFamily: 'Inter_400Regular' },
+  addTaskBtnText: { fontSize: 13, color: c.muted, fontFamily: 'Inter_400Regular' },
   articleCard: {
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 14,
     padding: 18,
     marginBottom: 4,
@@ -464,7 +470,7 @@ const styles = StyleSheet.create({
   articleReadMoreText: {
     fontSize: 12,
     fontFamily: 'Inter_600SemiBold',
-    color: '#5c4a2f',
+    color: c.softInk,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
@@ -472,11 +478,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Fraunces_600SemiBold',
     fontSize: 20,
     lineHeight: 24,
-    color: '#1a1612',
+    color: c.ink,
   },
   articleBlurb: {
     fontSize: 13,
-    color: '#5c4a2f',
+    color: c.softInk,
     marginTop: 10,
     lineHeight: 20,
     fontFamily: 'Inter_400Regular',
@@ -484,46 +490,46 @@ const styles = StyleSheet.create({
   tagRow: { flexDirection: 'row', gap: 6, marginTop: 14, flexWrap: 'wrap' },
   pill: {
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
   },
-  pillText: { fontSize: 11, color: '#1a1612', fontFamily: 'Inter_500Medium' },
+  pillText: { fontSize: 11, color: c.ink, fontFamily: 'Inter_500Medium' },
   eventRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
   },
-  eventRowBorder: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
+  eventRowBorder: { borderTopWidth: 1, borderTopColor: c.rule },
   eventBody: { flex: 1 },
-  eventName: { fontSize: 14, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  eventMeta: { fontSize: 11, color: '#6f6449', marginTop: 2, fontFamily: 'Inter_400Regular' },
+  eventName: { fontSize: 14, fontFamily: 'Inter_500Medium', color: c.ink },
+  eventMeta: { fontSize: 11, color: c.muted, marginTop: 2, fontFamily: 'Inter_400Regular' },
   goingBadge: {
-    backgroundColor: '#ecfdf5',
+    backgroundColor: c.successBg,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  goingText: { fontSize: 11, color: '#14532d', fontFamily: 'Inter_500Medium' },
+  goingText: { fontSize: 11, color: c.successText, fontFamily: 'Inter_500Medium' },
   rsvpBadge: {
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
   },
-  rsvpText: { fontSize: 11, color: '#1a1612', fontFamily: 'Inter_500Medium' },
+  rsvpText: { fontSize: 11, color: c.ink, fontFamily: 'Inter_500Medium' },
   modalBg: {
     flex: 1,
     backgroundColor: 'rgba(26,22,18,0.45)',
     justifyContent: 'flex-end',
   },
   modal: {
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -535,25 +541,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  modalTitle: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: '#1a1612' },
+  modalTitle: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: c.ink },
   modalLabel: {
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 8,
   },
   modalInput: {
-    backgroundColor: '#f5f1e8',
+    backgroundColor: c.paper,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 14,
     fontFamily: 'Inter_400Regular',
-    color: '#1a1612',
+    color: c.ink,
     marginBottom: 16,
   },
   priorityRow: { flexDirection: 'row', gap: 8, marginBottom: 24 },
@@ -562,18 +568,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     backgroundColor: 'transparent',
   },
-  priorityChipActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
-  priorityChipText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  priorityChipTextActive: { color: '#f5f1e8' },
+  priorityChipActive: { backgroundColor: c.ink, borderColor: c.ink },
+  priorityChipText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: c.ink },
+  priorityChipTextActive: { color: c.paper },
   addBtn: {
-    backgroundColor: '#1a1612',
+    backgroundColor: c.ink,
     borderRadius: 999,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  addBtnDisabled: { backgroundColor: '#d4c9b0' },
-  addBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
+  addBtnDisabled: { backgroundColor: c.pillBorder },
+  addBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: c.paper },
 });

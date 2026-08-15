@@ -23,6 +23,7 @@ import { JetBrainsMono_500Medium } from "@expo-google-fonts/jetbrains-mono/500Me
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ED } from "@/constants/colors";
+import { ThemeProvider, usePalette } from "@/context/ThemeContext";
 import { ApplicationsProvider } from "@/context/ApplicationsContext";
 import { SavedPostsProvider } from "@/context/SavedPostsContext";
 import { SubscriptionsProvider } from "@/context/SubscriptionsContext";
@@ -46,10 +47,14 @@ const queryClient = new QueryClient({
  * first paint is a blank white rectangle on the app's paper-coloured shell.
  */
 function AppLoading() {
+  const c = usePalette();
   return (
-    <View style={styles.loading} accessibilityRole="progressbar">
-      <Text style={styles.loadingMark}>oHub</Text>
-      <ActivityIndicator color={ED.muted} accessibilityLabel="Loading oHub" />
+    <View
+      style={[styles.loading, { backgroundColor: c.paper }]}
+      accessibilityRole="progressbar"
+    >
+      <Text style={[styles.loadingMark, { color: c.ink }]}>oHub</Text>
+      <ActivityIndicator color={c.muted} accessibilityLabel="Loading oHub" />
     </View>
   );
 }
@@ -69,7 +74,7 @@ function RootLayoutNav() {
   );
 }
 
-export default function RootLayout() {
+function ThemedApp() {
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -95,24 +100,37 @@ export default function RootLayout() {
   if (!ready) return <AppLoading />;
 
   return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <UserProvider>
+          <SubscriptionsProvider>
+            <SavedPostsProvider>
+              <ApplicationsProvider>
+                <GestureHandlerRootView style={styles.root}>
+                  <KeyboardProvider>
+                    <RootLayoutNav />
+                  </KeyboardProvider>
+                </GestureHandlerRootView>
+              </ApplicationsProvider>
+            </SavedPostsProvider>
+          </SubscriptionsProvider>
+        </UserProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+}
+
+/**
+ * `ThemeProvider` sits above everything that reads the palette — including the
+ * font-loading screen, which is the very first thing painted and would
+ * otherwise flash a light background at a student in dark mode.
+ */
+export default function RootLayout() {
+  return (
     <SafeAreaProvider>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <UserProvider>
-            <SubscriptionsProvider>
-              <SavedPostsProvider>
-                <ApplicationsProvider>
-                  <GestureHandlerRootView style={styles.root}>
-                    <KeyboardProvider>
-                      <RootLayoutNav />
-                    </KeyboardProvider>
-                  </GestureHandlerRootView>
-                </ApplicationsProvider>
-              </SavedPostsProvider>
-            </SubscriptionsProvider>
-          </UserProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
+      <ThemeProvider>
+        <ThemedApp />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

@@ -1,4 +1,7 @@
 import Feather from "@expo/vector-icons/Feather";
+import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -23,7 +26,6 @@ import {
 import { ALL_PROGRAMS } from "@/data/programs";
 import { getAdviceForProgram, SOURCE_TYPE_CONFIG } from "@/data/suppAdvice";
 import { getUniversityById } from "@/data/universities";
-import { ED } from "@/constants/theme";
 
 
 
@@ -38,6 +40,8 @@ const ESSAY_ROUTES: Record<string, string> = {
 };
 
 export default function ProgramDetailScreen() {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === 'web' ? 20 : insets.top;
@@ -52,7 +56,7 @@ export default function ProgramDetailScreen() {
       <View style={[styles.container, { paddingTop: topInset, alignItems: 'center', justifyContent: 'center' }]}>
         <Text style={styles.notFoundText}>Program not found.</Text>
         <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
-          <Text style={{ color: ED.muted, fontFamily: 'Inter_400Regular' }}>Go back</Text>
+          <Text style={{ color: c.muted, fontFamily: 'Inter_400Regular' }}>Go back</Text>
         </Pressable>
       </View>
     );
@@ -81,7 +85,7 @@ export default function ProgramDetailScreen() {
       {/* Header bar */}
       <View style={styles.topBar}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Feather name="arrow-left" size={20} color={ED.ink} />
+          <Feather name="arrow-left" size={20} color={c.ink} />
         </Pressable>
         <Text style={styles.topBarLabel} numberOfLines={1}>{program.name}</Text>
         <View style={{ width: 36 }} />
@@ -115,8 +119,8 @@ export default function ProgramDetailScreen() {
               style={[
                 styles.statVal,
                 userAvg !== null && cutoff !== null
-                  ? { color: userAvg >= cutoff ? ED.success : ED.warn }
-                  : { color: ED.muted },
+                  ? { color: userAvg >= cutoff ? c.success : c.warn }
+                  : { color: c.muted },
               ]}
             >
               {formatAverage(userAvg)}
@@ -140,24 +144,24 @@ export default function ProgramDetailScreen() {
         <View style={styles.badgesRow}>
           {program.hasCoOp && (
             <View style={styles.badge}>
-              <Feather name="briefcase" size={11} color={ED.softInk} />
+              <Feather name="briefcase" size={11} color={c.softInk} />
               <Text style={styles.badgeText}>Co-op available</Text>
             </View>
           )}
           {program.suppRequired && (
-            <View style={[styles.badge, { borderColor: '#fca5a5', backgroundColor: ED.warnBg }]}>
-              <Feather name="file-text" size={11} color="#9a3412" />
-              <Text style={[styles.badgeText, { color: '#9a3412' }]}>Supp. required</Text>
+            <View style={[styles.badge, { borderColor: '#fca5a5', backgroundColor: c.warnBg }]}>
+              <Feather name="file-text" size={11} color={c.warnText} />
+              <Text style={[styles.badgeText, { color: c.warnText }]}>Supp. required</Text>
             </View>
           )}
           {program.intakeSize && (
             <View style={styles.badge}>
-              <Feather name="users" size={11} color={ED.softInk} />
+              <Feather name="users" size={11} color={c.softInk} />
               <Text style={styles.badgeText}>{program.intakeSize} intake</Text>
             </View>
           )}
           <View style={styles.badge}>
-            <Feather name="hash" size={11} color={ED.softInk} />
+            <Feather name="hash" size={11} color={c.softInk} />
             <Text style={styles.badgeText}>{program.ouacCode}</Text>
           </View>
         </View>
@@ -174,7 +178,7 @@ export default function ProgramDetailScreen() {
         {program.suppRequired && program.suppDescription && (
           <View style={styles.suppBox}>
             <View style={styles.suppBoxHeader}>
-              <Feather name="alert-circle" size={14} color="#9a3412" />
+              <Feather name="alert-circle" size={14} color={c.warnText} />
               <Text style={styles.suppBoxTitle}>Supplementary application required</Text>
             </View>
             <Text style={styles.suppBoxBody}>{program.suppDescription}</Text>
@@ -183,7 +187,7 @@ export default function ProgramDetailScreen() {
                 style={styles.essayShortcut}
                 onPress={() => router.push({ pathname: '/essay/[id]', params: { id: essayRoute } })}
               >
-                <Feather name="edit-3" size={13} color={ED.ink} />
+                <Feather name="edit-3" size={13} color={c.ink} />
                 <Text style={styles.essayShortcutText}>Draft your response in oHub</Text>
               </Pressable>
             )}
@@ -195,10 +199,10 @@ export default function ProgramDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Required Grade 12 courses</Text>
             <View style={styles.chipRow}>
-              {program.requiredCourses.map(c => (
-                <View key={c} style={styles.chip}>
-                  <Feather name="check" size={10} color={ED.success} />
-                  <Text style={styles.chipText}>{c}</Text>
+              {program.requiredCourses.map(course => (
+                <View key={course} style={styles.chip}>
+                  <Feather name="check" size={10} color={c.success} />
+                  <Text style={styles.chipText}>{course}</Text>
                 </View>
               ))}
             </View>
@@ -223,9 +227,9 @@ export default function ProgramDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Career paths</Text>
             <View style={styles.chipRow}>
-              {program.careerPaths.map(c => (
-                <View key={c} style={[styles.chip, { borderColor: '#86efac', backgroundColor: ED.successBg }]}>
-                  <Text style={[styles.chipText, { color: ED.success }]}>{c}</Text>
+              {program.careerPaths.map(career => (
+                <View key={career} style={[styles.chip, { backgroundColor: c.successBg }]}>
+                  <Text style={[styles.chipText, { color: c.success }]}>{career}</Text>
                 </View>
               ))}
             </View>
@@ -243,7 +247,7 @@ export default function ProgramDetailScreen() {
                 <Text style={styles.essayCardTitle}>Draft your essay</Text>
                 <Text style={styles.essayCardSub}>Open the essay editor for {uni?.shortName ?? program.universityId}</Text>
               </View>
-              <Feather name="arrow-right" size={16} color={ED.ink} />
+              <Feather name="arrow-right" size={16} color={c.ink} />
             </Pressable>
           </View>
         )}
@@ -257,7 +261,7 @@ export default function ProgramDetailScreen() {
             accessibilityLabel="Apply via OUAC"
             accessibilityHint="Opens ouac.on.ca in a new tab"
           >
-            <Feather name="external-link" size={14} color={ED.paper} />
+            <Feather name="external-link" size={14} color={c.paper} />
             <Text style={styles.ouacBtnText}>Apply via OUAC</Text>
           </Pressable>
         </View>
@@ -281,14 +285,14 @@ export default function ProgramDetailScreen() {
                       <Feather name={srcCfg.icon as any} size={11} color={srcCfg.color} />
                       <Text style={[styles.srcBadgeText, { color: srcCfg.color }]}>{srcCfg.label}</Text>
                     </View>
-                    <Feather name={isOpen ? 'chevron-up' : 'chevron-down'} size={15} color={ED.muted} />
+                    <Feather name={isOpen ? 'chevron-up' : 'chevron-down'} size={15} color={c.muted} />
                   </View>
                   <Text style={styles.adviceCardTitle}>{card.title}</Text>
                   {isOpen && (
                     <>
                       <Text style={styles.adviceCardBody}>{card.content}</Text>
                       <View style={styles.adviceSource}>
-                        <Feather name="link" size={11} color={ED.muted} />
+                        <Feather name="link" size={11} color={c.muted} />
                         <Text style={styles.adviceSourceText} numberOfLines={1}>{card.source}</Text>
                         {card.sourceUrl && (
                           <Pressable
@@ -327,7 +331,7 @@ export default function ProgramDetailScreen() {
           <Feather
             name={tracked ? 'check' : 'plus'}
             size={16}
-            color={tracked ? ED.ink : ED.paper}
+            color={tracked ? c.ink : c.paper}
           />
           <Text style={[styles.ctaBtnText, tracked && styles.ctaBtnTextTracked]}>
             {tracked
@@ -340,8 +344,8 @@ export default function ProgramDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f1e8' },
+const makeStyles = (c: Palette) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.paper },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -350,18 +354,18 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e8e0cf',
+    borderBottomColor: c.rule,
   },
   backBtn: { padding: 4, width: 36 },
   topBarLabel: {
     flex: 1,
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
-    color: '#1a1612',
+    color: c.ink,
     textAlign: 'center',
     marginHorizontal: 8,
   },
-  notFoundText: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612' },
+  notFoundText: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: c.ink },
   content: { paddingBottom: 60 },
   hero: {
     flexDirection: 'row',
@@ -383,25 +387,25 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 4,
   },
   heroProgram: {
     fontFamily: 'Fraunces_600SemiBold',
     fontSize: 22,
-    color: '#1a1612',
+    color: c.ink,
     lineHeight: 26,
     marginBottom: 4,
   },
-  heroMeta: { fontSize: 12, color: '#5c4a2f', fontFamily: 'Inter_400Regular' },
+  heroMeta: { fontSize: 12, color: c.softInk, fontFamily: 'Inter_400Regular' },
   statsCard: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 24,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 12,
     paddingVertical: 14,
     marginBottom: 12,
@@ -411,12 +415,12 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 4,
   },
-  statVal: { fontFamily: 'Fraunces_600SemiBold', fontSize: 15, color: '#1a1612' },
-  statDivider: { width: 1, height: 30, backgroundColor: '#e8e0cf' },
+  statVal: { fontFamily: 'Fraunces_600SemiBold', fontSize: 15, color: c.ink },
+  statDivider: { width: 1, height: 30, backgroundColor: c.rule },
   tierPill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
   tierPillText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
   badgesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 24, marginBottom: 16 },
@@ -428,89 +432,89 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
-    backgroundColor: '#fbf8f1',
+    borderColor: c.pillBorder,
+    backgroundColor: c.card,
   },
-  badgeText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
-  divider: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24, marginBottom: 20 },
+  badgeText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: c.softInk },
+  divider: { height: 1, backgroundColor: c.rule, marginHorizontal: 24, marginBottom: 20 },
   section: { paddingHorizontal: 24, marginBottom: 20 },
   sectionTitle: {
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 10,
   },
-  bodyText: { fontFamily: 'Inter_400Regular', fontSize: 14, color: '#1a1612', lineHeight: 22 },
+  bodyText: { fontFamily: 'Inter_400Regular', fontSize: 14, color: c.ink, lineHeight: 22 },
   suppBox: {
     marginHorizontal: 24,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#fca5a5',
-    backgroundColor: '#fef3e2',
+    backgroundColor: c.warnBg,
     padding: 16,
     marginBottom: 20,
   },
   suppBoxHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  suppBoxTitle: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#9a3412' },
-  suppBoxBody: { fontSize: 13, color: '#7c4a03', fontFamily: 'Inter_400Regular', lineHeight: 20, marginBottom: 12 },
+  suppBoxTitle: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: c.warnText },
+  suppBoxBody: { fontSize: 13, color: c.warnDark, fontFamily: 'Inter_400Regular', lineHeight: 20, marginBottom: 12 },
   essayShortcut: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 8,
     alignSelf: 'flex-start',
   },
-  essayShortcutText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#1a1612' },
+  essayShortcutText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: c.ink },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
   },
-  chipText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
+  chipText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: c.softInk },
   bulletRow: { flexDirection: 'row', gap: 8, marginBottom: 8, alignItems: 'flex-start' },
-  bulletDot: { fontSize: 7, color: '#6f6449', marginTop: 7 },
-  bulletText: { flex: 1, fontSize: 14, color: '#1a1612', fontFamily: 'Inter_400Regular', lineHeight: 22 },
+  bulletDot: { fontSize: 7, color: c.muted, marginTop: 7 },
+  bulletText: { flex: 1, fontSize: 14, color: c.ink, fontFamily: 'Inter_400Regular', lineHeight: 22 },
   essayCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 12,
     padding: 16,
   },
-  essayCardTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#1a1612', marginBottom: 2 },
-  essayCardSub: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular' },
+  essayCardTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: c.ink, marginBottom: 2 },
+  essayCardSub: { fontSize: 11, color: c.muted, fontFamily: 'Inter_400Regular' },
   ouacBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#1a1612',
+    backgroundColor: c.ink,
     borderRadius: 999,
     paddingVertical: 13,
   },
-  ouacBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
-  adviceSubtitle: { fontSize: 12, color: '#6f6449', fontFamily: 'Inter_400Regular', marginBottom: 12, marginTop: -4 },
+  ouacBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: c.paper },
+  adviceSubtitle: { fontSize: 12, color: c.muted, fontFamily: 'Inter_400Regular', marginBottom: 12, marginTop: -4 },
   adviceCard: {
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
@@ -525,11 +529,11 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   srcBadgeText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
-  adviceCardTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 15, color: '#1a1612', lineHeight: 20 },
+  adviceCardTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 15, color: c.ink, lineHeight: 20 },
   adviceCardBody: {
     fontSize: 13,
     fontFamily: 'Inter_400Regular',
-    color: '#5c4a2f',
+    color: c.softInk,
     lineHeight: 21,
     marginTop: 8,
     marginBottom: 10,
@@ -538,23 +542,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#f5f1e8',
+    backgroundColor: c.paper,
     borderRadius: 8,
     padding: 8,
     marginBottom: 8,
   },
-  adviceSourceText: { flex: 1, fontSize: 11, fontFamily: 'Inter_400Regular', color: '#6f6449' },
-  adviceOpenLink: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#1a1612', flexShrink: 0 },
+  adviceSourceText: { flex: 1, fontSize: 11, fontFamily: 'Inter_400Regular', color: c.muted },
+  adviceOpenLink: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: c.ink, flexShrink: 0 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tag: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
-    backgroundColor: '#f5f1e8',
+    borderColor: c.pillBorder,
+    backgroundColor: c.paper,
   },
-  tagText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: '#6f6449' },
+  tagText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: c.muted },
   cta: {
     position: 'absolute',
     bottom: 0,
@@ -562,24 +566,24 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 24,
     paddingTop: 12,
-    backgroundColor: '#f5f1e8',
+    backgroundColor: c.paper,
     borderTopWidth: 1,
-    borderTopColor: '#e8e0cf',
+    borderTopColor: c.rule,
   },
   ctaBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#1a1612',
+    backgroundColor: c.ink,
     borderRadius: 999,
     paddingVertical: 14,
   },
   ctaBtnTracked: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: '#1a1612',
+    borderColor: c.ink,
   },
-  ctaBtnText: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
-  ctaBtnTextTracked: { color: '#1a1612' },
+  ctaBtnText: { fontSize: 15, fontFamily: 'Inter_600SemiBold', color: c.paper },
+  ctaBtnTextTracked: { color: c.ink },
 });

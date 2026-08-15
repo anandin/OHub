@@ -95,9 +95,14 @@ whole data model, and the privacy story follows from it.
 | `privacy.ts` | Masks OUAC references for display; strips control and bidi characters from stored text. |
 | `share.ts` | Native share sheet, Web Share API, or clipboard — in that order. |
 
-Design tokens live in `constants/theme.ts` — one contrast-measured palette for
-light and dark, plus the type scale and spacing. Every colour pairing there
-carries its measured WCAG ratio in a comment.
+Design tokens live in `constants/theme.ts` — contrast-measured palettes for
+light and dark, plus the type scale and spacing. Every colour pairing carries
+its measured WCAG ratio in a comment.
+
+Dark mode follows the device by default and can be overridden in Settings;
+the choice persists. Screens build their styles from the active palette via
+`useThemedStyles`, so switching theme rebuilds each sheet once rather than on
+every render.
 
 The first two are enforced by ESLint rules in `eslint.config.js`, so the
 boundaries can't quietly erode. If you need the raw API, you're probably adding

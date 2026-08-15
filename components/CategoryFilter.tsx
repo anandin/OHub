@@ -1,4 +1,6 @@
 import Feather from "@expo/vector-icons/Feather";
+import type { Palette } from "@/constants/theme";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 
@@ -26,6 +28,7 @@ interface CategoryFilterProps {
 }
 
 export function CategoryFilter({ selected, onSelect }: CategoryFilterProps) {
+  const styles = useThemedStyles(makeStyles);
   return (
     <ScrollView
       horizontal
@@ -77,7 +80,7 @@ export function CategoryFilter({ selected, onSelect }: CategoryFilterProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) => StyleSheet.create({
   container: {
     paddingHorizontal: 12,
     paddingVertical: 8,

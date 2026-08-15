@@ -1,4 +1,7 @@
 import { router } from "expo-router";
+import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import React, { useMemo, useState } from "react";
 import {
   FlatList,
@@ -10,7 +13,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ED } from "@/constants/theme";
 
 import { ALL_PROGRAMS, Program } from "@/data/programs";
 import { getUniversityById } from "@/data/universities";
@@ -29,6 +31,8 @@ type TierFilter = 'all' | 'reach' | 'target' | 'safety';
 const ITEM_HEIGHT = 148;
 
 function ProgramRow({ program, userAvg }: { program: Program; userAvg: number | null }) {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const uni = getUniversityById(program.universityId);
   if (!uni) return null;
   const tier = classifyTier(program.competitiveness, program.averageGrade, userAvg);
@@ -64,8 +68,8 @@ function ProgramRow({ program, userAvg }: { program: Program; userAvg: number | 
             style={[
               styles.statNum,
               userAvg !== null && cutoff !== null
-                ? { color: userAvg >= cutoff ? ED.success : ED.warn }
-                : { color: ED.muted },
+                ? { color: userAvg >= cutoff ? c.success : c.warn }
+                : { color: c.muted },
             ]}
           >
             {formatAverage(userAvg)}
@@ -84,6 +88,8 @@ function ProgramRow({ program, userAvg }: { program: Program; userAvg: number | 
 }
 
 export default function ProgramsScreen() {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 20 : insets.top;
   const { profile } = useUser();
@@ -145,7 +151,7 @@ export default function ProgramsScreen() {
             value={query}
             onChangeText={setQuery}
             placeholder="Search Waterloo CS, Ivey, Health Sci…"
-            placeholderTextColor={ED.muted}
+            placeholderTextColor={c.muted}
             style={styles.searchInput}
           />
           {query.length > 0 && (
@@ -203,39 +209,39 @@ export default function ProgramsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f1e8' },
+const makeStyles = (c: Palette) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.paper },
   header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
   eyebrow: {
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
-  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 30, color: '#1a1612', lineHeight: 32 },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 30, color: c.ink, lineHeight: 32 },
   searchWrap: { paddingHorizontal: 24, paddingBottom: 12 },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 999,
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
-  searchIcon: { fontSize: 16, color: '#6f6449' },
+  searchIcon: { fontSize: 16, color: c.muted },
   searchInput: {
     flex: 1,
     fontSize: 14,
     fontFamily: 'Inter_400Regular',
-    color: '#1a1612',
+    color: c.ink,
     padding: 0,
   },
-  clearBtn: { fontSize: 12, color: '#6f6449', padding: 4 },
+  clearBtn: { fontSize: 12, color: c.muted, padding: 4 },
   chipRow: {
     flexDirection: 'row',
     gap: 6,
@@ -247,17 +253,17 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     backgroundColor: 'transparent',
   },
-  chipActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
-  chipText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  chipTextActive: { color: '#f5f1e8' },
+  chipActive: { backgroundColor: c.ink, borderColor: c.ink },
+  chipText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: c.ink },
+  chipTextActive: { color: c.paper },
   countLabel: {
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     paddingHorizontal: 24,
     paddingBottom: 6,
@@ -267,7 +273,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e8e0cf',
+    borderTopColor: c.rule,
     minHeight: ITEM_HEIGHT,
     justifyContent: 'space-between',
   },
@@ -277,7 +283,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 3,
   },
@@ -285,9 +291,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Fraunces_600SemiBold',
     fontSize: 18,
     lineHeight: 22,
-    color: '#1a1612',
+    color: c.ink,
   },
-  programFaculty: { fontSize: 11, color: '#5c4a2f', fontFamily: 'Inter_400Regular', marginTop: 2 },
+  programFaculty: { fontSize: 11, color: c.softInk, fontFamily: 'Inter_400Regular', marginTop: 2 },
   uniBadge: {
     width: 40,
     height: 40,
@@ -308,14 +314,14 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 3,
   },
   statNum: {
     fontFamily: 'Fraunces_600SemiBold',
     fontSize: 16,
-    color: '#1a1612',
+    color: c.ink,
   },
   tierBadge: {
     borderRadius: 999,
@@ -323,8 +329,8 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   tierLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
-  statDivider: { width: 1, height: 28, backgroundColor: '#e8e0cf' },
+  statDivider: { width: 1, height: 28, backgroundColor: c.rule },
   empty: { padding: 48, alignItems: 'center' },
-  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612', marginBottom: 4 },
-  emptyBody: { fontSize: 13, color: '#6f6449', fontFamily: 'Inter_400Regular' },
+  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: c.ink, marginBottom: 4 },
+  emptyBody: { fontSize: 13, color: c.muted, fontFamily: 'Inter_400Regular' },
 });
