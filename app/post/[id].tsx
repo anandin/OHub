@@ -18,7 +18,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { displayHost, openExternalUrl } from "@/lib/safeLink";
 import { useSubscriptions } from "@/context/SubscriptionsContext";
 import { CATEGORY_CONFIG, SAMPLE_POSTS } from "@/data/feed";
-import { REFRESH_BATCHES } from "@/data/feedRefreshBatches";
 import { getUniversityById } from "@/data/universities";
 
 
@@ -30,7 +29,7 @@ export default function PostDetailScreen() {
   const topInset = Platform.OS === 'web' ? 20 : insets.top;
   const { toggleSubscription, isSubscribed } = useSubscriptions();
 
-  const allPosts = [...SAMPLE_POSTS, ...REFRESH_BATCHES.flat()];
+  const allPosts = SAMPLE_POSTS;
   const post = allPosts.find(p => p.id === id);
 
   const [liked, setLiked] = useState(false);
