@@ -46,6 +46,15 @@ assertions that only apply there:
 E2E_BASE_URL=https://<deployment-url> pnpm run test:e2e
 ```
 
+Preview deployments sit behind Vercel Authentication. Pass a `_vercel_share`
+token, or the project's Protection Bypass for Automation secret, and the suite
+will authenticate itself first:
+
+```bash
+E2E_BASE_URL=https://<preview-url> E2E_SHARE_TOKEN=<token> pnpm run test:e2e
+E2E_BASE_URL=https://<preview-url> E2E_BYPASS_SECRET=<secret> pnpm run test:e2e
+```
+
 ## Deploying
 
 Vercel builds `pnpm run build` and serves `dist/`. All of it is configured in

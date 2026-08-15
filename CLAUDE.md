@@ -75,4 +75,22 @@ keep in sync. If you change the CSP, run the E2E suite against the preview URL:
 E2E_BASE_URL=https://<preview-url> pnpm run test:e2e
 ```
 
-The header assertions in `e2e/security-headers.spec.ts` only run there.
+`e2e/security-headers.spec.ts` only runs there. It is HTTP-only by design — no
+browser — because that is the layer where a broken `vercel.json` shows up, and
+it must stay verifiable on hosts where a browser cannot reach the network.
+
+Note what the local preview server does **not** prove: `scripts/serve-dist.mjs`
+implements its own SPA fallback, so a broken `rewrites` rule in `vercel.json`
+passes locally and 404s every deep link in production. That exact bug shipped
+once. The deep-link assertions in `security-headers.spec.ts` are the guard, and
+they only run against a deployment.
+
+For a protected preview, pass credentials so the suite can get past Vercel
+Authentication:
+
+```bash
+E2E_BASE_URL=https://<preview-url> \
+E2E_SHARE_TOKEN=<_vercel_share token> pnpm run test:e2e
+# or, with Protection Bypass for Automation enabled:
+E2E_BASE_URL=... E2E_BYPASS_SECRET=<secret> pnpm run test:e2e
+```
