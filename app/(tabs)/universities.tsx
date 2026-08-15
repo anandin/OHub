@@ -1,0 +1,357 @@
+import { router } from "expo-router";
+import React, { useMemo, useState } from "react";
+import {
+  FlatList,
+  Platform,
+  Pressable,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Feather from "@expo/vector-icons/Feather";
+
+import { Post, SAMPLE_POSTS, CATEGORY_CONFIG } from "@/data/feed";
+import { getUniversityById } from "@/data/universities";
+import { useSubscriptions } from "@/context/SubscriptionsContext";
+
+type FeedTab = 'following' | 'trending' | 'all';
+
+const ED = {
+  paper: '#f5f1e8',
+  card: '#fbf8f1',
+  ink: '#1a1612',
+  softInk: '#5c4a2f',
+  muted: '#8b7e62',
+  rule: '#e8e0cf',
+  warn: '#c2410c',
+  pillBorder: '#d4c9b0',
+};
+
+function PostItem({
+  post,
+  onTagPress,
+}: {
+  post: Post;
+  onTagPress: (tag: string) => void;
+}) {
+  const uni = getUniversityById(post.universityId);
+  const [liked, setLiked] = useState(false);
+  const [likes, setLikes] = useState(post.likes);
+  const catCfg = CATEGORY_CONFIG[post.category];
+  const { toggleSubscription, isSubscribed } = useSubscriptions();
+  const following = isSubscribed(post.universityId);
+
+  const handleLike = () => {
+    setLiked(l => !l);
+    setLikes(n => liked ? n - 1 : n + 1);
+  };
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `${post.title}\n\n${post.body.slice(0, 200)}…\n\n— via UniHub`,
+        title: post.title,
+      });
+    } catch {}
+  };
+
+  return (
+    <Pressable
+      style={styles.postItem}
+      onPress={() => router.push({ pathname: '/post/[id]', params: { id: post.id } })}
+    >
+      {/* Meta row */}
+      <View style={styles.postMeta}>
+        <View style={[styles.uniDot, { backgroundColor: uni?.color ?? '#8b7e62' }]} />
+        <Text style={styles.postAuthor}>{post.author}</Text>
+        <Text style={styles.postMetaSep}>·</Text>
+        <Text style={styles.postUni}>{uni?.shortName ?? 'Ontario'}</Text>
+        <Text style={styles.postMetaSep}>·</Text>
+        <Text style={styles.postTime}>{post.timeAgo}</Text>
+        <View style={[styles.catBadge, { backgroundColor: catCfg.color + '18' }]}>
+          <Text style={[styles.catBadgeText, { color: catCfg.color }]}>{catCfg.label}</Text>
+        </View>
+        <Pressable
+          style={[styles.followPill, following && styles.followPillActive]}
+          onPress={e => { e.stopPropagation?.(); toggleSubscription(post.universityId); }}
+          hitSlop={8}
+        >
+          <Text style={[styles.followPillText, following && styles.followPillTextActive]}>
+            {following ? '✓' : '+'}
+          </Text>
+        </Pressable>
+      </View>
+
+      <Text style={styles.postTitle}>{post.title}</Text>
+      {post.body.length > 0 && (
+        <Text style={styles.postBody} numberOfLines={3}>{post.body}</Text>
+      )}
+      {post.tags && post.tags.length > 0 && (
+        <View style={styles.tagRow}>
+          {post.tags.slice(0, 3).map(tag => (
+            <Pressable
+              key={tag}
+              style={styles.tag}
+              onPress={e => { e.stopPropagation?.(); onTagPress(tag); }}
+              hitSlop={4}
+            >
+              <Text style={styles.tagText}>{tag}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
+      {/* Actions */}
+      <View style={styles.postActions}>
+        <Pressable
+          style={styles.actionBtn}
+          onPress={e => { e.stopPropagation?.(); handleLike(); }}
+        >
+          <Feather name="heart" size={14} color={liked ? ED.warn : ED.muted} />
+          <Text style={[styles.actionText, liked && { color: ED.warn }]}>{likes}</Text>
+        </Pressable>
+        <Pressable
+          style={styles.actionBtn}
+          onPress={e => { e.stopPropagation?.(); handleShare(); }}
+        >
+          <Feather name="share" size={14} color={ED.muted} />
+          <Text style={styles.actionText}>Share</Text>
+        </Pressable>
+      </View>
+    </Pressable>
+  );
+}
+
+export default function PulseScreen() {
+  const insets = useSafeAreaInsets();
+  const topInset = Platform.OS === "web" ? 20 : insets.top;
+  const { subscribed } = useSubscriptions();
+  const [activeTab, setActiveTab] = useState<FeedTab>('all');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  const handleTagPress = (tag: string) => {
+    setActiveTag(prev => prev === tag ? null : tag);
+  };
+
+  const posts = useMemo(() => {
+    let base: Post[];
+    if (activeTab === 'following') {
+      if (subscribed.length === 0) base = [];
+      else base = SAMPLE_POSTS.filter(p => subscribed.includes(p.universityId));
+    } else if (activeTab === 'trending') {
+      base = [...SAMPLE_POSTS].sort((a, b) => (b.likes + b.comments * 2) - (a.likes + a.comments * 2));
+    } else {
+      base = SAMPLE_POSTS;
+    }
+    if (activeTag) {
+      return base.filter(p => p.tags.includes(activeTag));
+    }
+    return base;
+  }, [activeTab, subscribed, activeTag]);
+
+  const tabs: { id: FeedTab; label: string }[] = [
+    { id: 'following', label: 'Following' },
+    { id: 'trending', label: 'Trending' },
+    { id: 'all', label: 'All' },
+  ];
+
+  return (
+    <View style={[styles.container, { paddingTop: topInset }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.eyebrow}>Community</Text>
+          <Text style={styles.title}>Pulse</Text>
+        </View>
+      </View>
+
+      {/* Tab pills */}
+      <View style={styles.tabRow}>
+        {tabs.map(tab => (
+          <Pressable
+            key={tab.id}
+            style={[styles.tabPill, activeTab === tab.id && styles.tabPillActive]}
+            onPress={() => setActiveTab(tab.id)}
+          >
+            <Text style={[styles.tabLabel, activeTab === tab.id && styles.tabLabelActive]}>
+              {tab.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Active tag filter bar */}
+      {activeTag && (
+        <View style={styles.tagFilterBar}>
+          <Feather name="tag" size={12} color={ED.softInk} />
+          <Text style={styles.tagFilterLabel}>{activeTag}</Text>
+          <Pressable onPress={() => setActiveTag(null)} hitSlop={8} style={styles.tagFilterClear}>
+            <Feather name="x" size={13} color={ED.muted} />
+          </Pressable>
+        </View>
+      )}
+
+      <FlatList
+        data={posts}
+        keyExtractor={p => p.id}
+        renderItem={({ item }) => (
+          <PostItem post={item} onTagPress={handleTagPress} />
+        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            {activeTag ? (
+              <>
+                <Feather name="tag" size={28} color={ED.muted} style={{ marginBottom: 12 }} />
+                <Text style={styles.emptyTitle}>No posts tagged &ldquo;{activeTag}&rdquo;</Text>
+                <Pressable onPress={() => setActiveTag(null)} style={styles.clearTagBtn}>
+                  <Text style={styles.clearTagBtnText}>Clear filter</Text>
+                </Pressable>
+              </>
+            ) : activeTab === 'following' ? (
+              <>
+                <Feather name="rss" size={28} color={ED.muted} style={{ marginBottom: 12 }} />
+                <Text style={styles.emptyTitle}>Follow schools to see their posts</Text>
+                <Text style={styles.emptyBody}>
+                  Tap the + on any post to follow that school.
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.emptyTitle}>No posts yet</Text>
+            )}
+          </View>
+        }
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f5f1e8' },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  eyebrow: {
+    fontSize: 10,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    color: '#8b7e62',
+    fontFamily: 'Inter_500Medium',
+    marginBottom: 2,
+  },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 30, color: '#1a1612', lineHeight: 32 },
+  tabRow: { flexDirection: 'row', gap: 6, paddingHorizontal: 24, paddingBottom: 12 },
+  tabPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+    backgroundColor: 'transparent',
+  },
+  tabPillActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
+  tabLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#1a1612' },
+  tabLabelActive: { color: '#f5f1e8' },
+  tagFilterBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 24,
+    marginBottom: 10,
+    backgroundColor: '#1a1612',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    alignSelf: 'flex-start',
+  },
+  tagFilterLabel: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
+  tagFilterClear: { marginLeft: 2 },
+  listContent: { paddingBottom: 100 },
+  separator: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24 },
+  postItem: { paddingHorizontal: 24, paddingVertical: 18 },
+  postMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 8,
+    flexWrap: 'wrap',
+  },
+  uniDot: { width: 7, height: 7, borderRadius: 999 },
+  postAuthor: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
+  postUni: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#8b7e62' },
+  postMetaSep: { fontSize: 12, color: '#d4c9b0' },
+  postTime: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  catBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    marginLeft: 2,
+  },
+  catBadgeText: {
+    fontSize: 9,
+    fontFamily: 'Inter_600SemiBold',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  followPill: {
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  followPillActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
+  followPillText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#5c4a2f', lineHeight: 14 },
+  followPillTextActive: { color: '#f5f1e8' },
+  postTitle: {
+    fontFamily: 'Fraunces_500Medium',
+    fontSize: 17,
+    lineHeight: 22,
+    color: '#1a1612',
+    marginBottom: 6,
+  },
+  postBody: {
+    fontSize: 13,
+    fontFamily: 'Inter_400Regular',
+    color: '#5c4a2f',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  tagRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 12 },
+  tag: {
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: '#fbf8f1',
+  },
+  tagText: { fontSize: 10, color: '#5c4a2f', fontFamily: 'Inter_500Medium' },
+  postActions: { flexDirection: 'row', gap: 16, alignItems: 'center' },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  actionText: { fontSize: 12, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  emptyState: { padding: 48, alignItems: 'center' },
+  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612', marginBottom: 8, textAlign: 'center' },
+  emptyBody: { fontSize: 13, color: '#8b7e62', textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular' },
+  clearTagBtn: {
+    marginTop: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#d4c9b0',
+  },
+  clearTagBtnText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#1a1612' },
+});
