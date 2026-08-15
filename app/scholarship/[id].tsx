@@ -13,19 +13,8 @@ import Feather from "@expo/vector-icons/Feather";
 
 import { displayHost, openExternalUrl } from "@/lib/safeLink";
 import { getScholarshipById } from "@/data/scholarships";
+import { ED } from "@/constants/theme";
 
-const ED = {
-  paper: '#f5f1e8',
-  card: '#fbf8f1',
-  ink: '#1a1612',
-  softInk: '#5c4a2f',
-  muted: '#8b7e62',
-  rule: '#e8e0cf',
-  pillBorder: '#d4c9b0',
-  success: '#15803d',
-  successText: '#14532d',
-  successBg: '#ecfdf5',
-};
 
 function FactRow({ icon, label, value }: { icon: keyof typeof Feather.glyphMap; label: string; value: string }) {
   return (
@@ -175,7 +164,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 4,
   },
@@ -194,7 +183,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 4,
   },
@@ -219,7 +208,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 8,
   },
@@ -237,7 +226,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
@@ -247,12 +236,12 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 999,
-    backgroundColor: '#8b7e62',
+    backgroundColor: '#6f6449',
     marginTop: 7,
     flexShrink: 0,
   },
   bulletText: { flex: 1, fontSize: 13, color: '#5c4a2f', lineHeight: 20, fontFamily: 'Inter_400Regular' },
-  sourceNote: { fontSize: 11, color: '#8b7e62', lineHeight: 17, fontFamily: 'Inter_400Regular' },
+  sourceNote: { fontSize: 11, color: '#6f6449', lineHeight: 17, fontFamily: 'Inter_400Regular' },
   applyBar: {
     position: 'absolute',
     left: 0, right: 0, bottom: 0,
@@ -274,7 +263,7 @@ const styles = StyleSheet.create({
   applyBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
   applyBarSource: {
     fontSize: 10,
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'JetBrainsMono_400Regular',
     textAlign: 'center',
     marginTop: 6,

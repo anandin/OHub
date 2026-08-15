@@ -56,6 +56,25 @@ almost always to use the module — not to add a disable comment.
 7. **Personal data is masked on screen.** OUAC references show the last four
    digits (`maskOuacRef`) everywhere except the field that edits them.
 
+8. **Colours come from `constants/theme.ts`, and they are measured.** Every
+   token there carries its WCAG contrast ratio against the surface it sits on.
+   Body text needs 4.5:1. Do not add a hex literal to a screen — eleven screens
+   used to carry their own copy of the palette, and four tokens had drifted
+   below AA before anyone measured them.
+
+## Routing, and why `/` is not the app
+
+`/` is the static marketing page (`landing/index.html`). `scripts/postbuild-landing.mjs`
+renames the Expo shell to `dist/app.html` after the export and copies the landing
+page into `dist/`; `vercel.json` rewrites everything unmatched to `/app.html`.
+Because Vercel applies rewrites *after* the filesystem check, `/` is served
+directly and never reaches the SPA.
+
+This is why the home tab is `/today` and not the tabs-group index: the router
+must not need to own `/`. If you add a route, remember the app is entered at
+`/today`, and `postbuild-landing.mjs` fails the build if the landing page stops
+linking there.
+
 ## Where things live
 
 - `lib/` holds the invariants — read those five files before changing behaviour

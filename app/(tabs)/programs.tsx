@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ED } from "@/constants/theme";
 
 import { ALL_PROGRAMS, Program } from "@/data/programs";
 import { getUniversityById } from "@/data/universities";
@@ -22,21 +23,6 @@ import {
   TIER_ORDER,
 } from "@/lib/admissions";
 
-const ED = {
-  paper: '#f5f1e8',
-  card: '#fbf8f1',
-  ink: '#1a1612',
-  softInk: '#5c4a2f',
-  muted: '#8b7e62',
-  rule: '#e8e0cf',
-  pillBorder: '#d4c9b0',
-  warn: '#c2410c',
-  warnText: '#9a3412',
-  warnBg: '#fef3e2',
-  success: '#15803d',
-  successText: '#14532d',
-  successBg: '#ecfdf5',
-};
 
 type TierFilter = 'all' | 'reach' | 'target' | 'safety';
 
@@ -224,7 +210,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
@@ -241,7 +227,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
-  searchIcon: { fontSize: 16, color: '#8b7e62' },
+  searchIcon: { fontSize: 16, color: '#6f6449' },
   searchInput: {
     flex: 1,
     fontSize: 14,
@@ -249,7 +235,7 @@ const styles = StyleSheet.create({
     color: '#1a1612',
     padding: 0,
   },
-  clearBtn: { fontSize: 12, color: '#8b7e62', padding: 4 },
+  clearBtn: { fontSize: 12, color: '#6f6449', padding: 4 },
   chipRow: {
     flexDirection: 'row',
     gap: 6,
@@ -271,7 +257,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     paddingHorizontal: 24,
     paddingBottom: 6,
@@ -291,7 +277,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 3,
   },
@@ -322,7 +308,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 3,
   },
@@ -340,5 +326,5 @@ const styles = StyleSheet.create({
   statDivider: { width: 1, height: 28, backgroundColor: '#e8e0cf' },
   empty: { padding: 48, alignItems: 'center' },
   emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612', marginBottom: 4 },
-  emptyBody: { fontSize: 13, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  emptyBody: { fontSize: 13, color: '#6f6449', fontFamily: 'Inter_400Regular' },
 });

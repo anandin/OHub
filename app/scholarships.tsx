@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ED } from "@/constants/theme";
 import { openExternalUrl } from "@/lib/safeLink";
 import Feather from "@expo/vector-icons/Feather";
 
@@ -19,17 +20,6 @@ import {
   ScholarshipCategory,
 } from "@/data/scholarships";
 
-const ED = {
-  paper: '#f5f1e8',
-  card: '#fbf8f1',
-  ink: '#1a1612',
-  softInk: '#5c4a2f',
-  muted: '#8b7e62',
-  rule: '#e8e0cf',
-  pillBorder: '#d4c9b0',
-  warn: '#c2410c',
-  success: '#15803d',
-};
 
 type FilterTab = 'all' | ScholarshipCategory | 'auto';
 type SortMode = 'value' | 'az';
@@ -215,7 +205,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
@@ -266,7 +256,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
   },
   sortBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
@@ -283,7 +273,7 @@ const styles = StyleSheet.create({
   },
   rowProvider: {
     fontSize: 11,
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginTop: 2,
     textTransform: 'uppercase',
@@ -317,12 +307,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  rowMetaText: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  rowMetaText: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular' },
   emptyState: { padding: 40, alignItems: 'center' },
   emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612', marginBottom: 6 },
   emptyBody: {
     fontSize: 13,
-    color: '#8b7e62',
+    color: '#6f6449',
     textAlign: 'center',
     lineHeight: 20,
     fontFamily: 'Inter_400Regular',
@@ -341,7 +331,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 6,
   },
@@ -359,5 +349,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   sourceName: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
-  sourceBlurb: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular', marginTop: 2 },
+  sourceBlurb: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular', marginTop: 2 },
 });

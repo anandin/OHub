@@ -3,14 +3,15 @@ import Feather from "@expo/vector-icons/Feather";
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ED } from "@/constants/theme";
 
-const ED = {
-  paper: '#f5f1e8',
-  card: '#fbf8f1',
-  ink: '#1a1612',
-  muted: '#8b7e62',
-  rule: '#e8e0cf',
-};
+
+/**
+ * `/` belongs to the static marketing page, so the app's home tab lives at
+ * `/today` rather than at the group index. Expo Router needs to be told which
+ * route to open when the group itself is entered.
+ */
+export const unstable_settings = { initialRouteName: "today" };
 
 export default function TabLayout() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -44,7 +45,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="today"
         options={{
           title: "Today",
           tabBarIcon: ({ color }) => (

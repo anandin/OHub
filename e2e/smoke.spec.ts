@@ -19,11 +19,52 @@ function watchConsole(page: Page): string[] {
   return errors;
 }
 
-async function gotoApp(page: Page, path = "/") {
+async function gotoApp(page: Page, path = "/today") {
   await page.goto(path, { waitUntil: "domcontentloaded" });
   // The Expo bundle mounts into #root; wait for real content, not just HTML.
   await expect(page.locator("#root")).not.toBeEmpty({ timeout: 30_000 });
 }
+
+test.describe("landing page", () => {
+  test("`/` serves the marketing page, not the app bundle", async ({ page }) => {
+    const errors = watchConsole(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    await expect(page).toHaveTitle(/oHub/i);
+    await expect(
+      page.getByRole("heading", { level: 1 }),
+    ).toContainText(/every ontario program/i);
+
+    // The pitch must not cost a visitor the 3.5 MB app bundle.
+    const appBundles = await page
+      .locator('script[src*="/_expo/static/js/web/"]')
+      .count();
+    expect(appBundles).toBe(0);
+
+    expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
+  });
+
+  test("every call to action reaches the app", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const ctas = page.locator('a[href="/today"]');
+    expect(await ctas.count()).toBeGreaterThan(0);
+
+    await ctas.first().click();
+    await expect(page.locator("#root")).not.toBeEmpty({ timeout: 30_000 });
+  });
+
+  test("states the privacy promise the app has to keep", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("body")).toContainText(/no account/i);
+    await expect(page.locator("body")).toContainText(/stored on your device/i);
+  });
+
+  test("has a skip link for keyboard users", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator('a.skip[href="#main"]')).toHaveCount(1);
+  });
+});
 
 test.describe("boot", () => {
   test("loads without console errors and renders the shell", async ({ page }) => {
@@ -142,7 +183,7 @@ test.describe("privacy", () => {
     await page.getByText(/yes, erase it all/i).click();
     await expect(page.locator("#root")).toContainText(/fresh start/i);
 
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await gotoApp(page);
     await page.getByText("You", { exact: true }).first().click();
     await expect(page.locator("#root")).toContainText(/add your name/i);
     await expect(page.locator("#root")).not.toContainText("Erase Me");

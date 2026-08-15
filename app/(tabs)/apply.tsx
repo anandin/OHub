@@ -24,22 +24,8 @@ import { getUpcomingDeadlines } from "@/data/deadlines";
 import { maskOuacRef } from "@/lib/privacy";
 import { ALL_PROGRAMS } from "@/data/programs";
 import { getUniversityById } from "@/data/universities";
+import { ED } from "@/constants/theme";
 
-const ED = {
-  paper: '#f5f1e8',
-  card: '#fbf8f1',
-  ink: '#1a1612',
-  softInk: '#5c4a2f',
-  muted: '#8b7e62',
-  rule: '#e8e0cf',
-  pillBorder: '#d4c9b0',
-  warn: '#c2410c',
-  warnText: '#9a3412',
-  warnBg: '#fef3e2',
-  success: '#15803d',
-  successText: '#14532d',
-  successBg: '#ecfdf5',
-};
 
 const STATUS_ED: Record<AppStatus, { label: string; color: string; bg: string }> = {
   shortlisted: { label: 'Shortlisted', color: ED.muted,        bg: '#f0ebe0'     },
@@ -47,7 +33,7 @@ const STATUS_ED: Record<AppStatus, { label: string; color: string; bg: string }>
   supp_sent:   { label: 'Supp. Sent',  color: '#7c4a03',       bg: '#fef3c7'     },
   offer:       { label: 'Offer!',      color: ED.successText,  bg: ED.successBg  },
   accepted:    { label: 'Accepted ✓',  color: ED.successText,  bg: ED.successBg  },
-  declined:    { label: 'Declined',    color: '#8b7e62',       bg: '#f0ebe0'     },
+  declined:    { label: 'Declined',    color: '#6f6449',       bg: '#f0ebe0'     },
 };
 
 const ALL_UNIVERSITIES = [
@@ -486,7 +472,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   ouacRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  ouacLabel: { fontSize: 10, color: '#8b7e62', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 1 },
+  ouacLabel: { fontSize: 10, color: '#6f6449', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 1 },
   ouacRef: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: '#5c4a2f' },
   title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 28, color: '#1a1612', lineHeight: 30 },
   scholarshipsLink: { padding: 4 },
@@ -507,8 +493,8 @@ const styles = StyleSheet.create({
   },
   summaryCount: { flexDirection: 'row', alignItems: 'baseline' },
   summaryNum: { fontFamily: 'Fraunces_600SemiBold', fontSize: 40, color: '#1a1612', lineHeight: 44 },
-  summaryDen: { fontFamily: 'Fraunces_400Regular', fontSize: 28, color: '#8b7e62' },
-  summaryCaption: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: '#8b7e62', fontFamily: 'Inter_500Medium' },
+  summaryDen: { fontFamily: 'Fraunces_400Regular', fontSize: 28, color: '#6f6449' },
+  summaryCaption: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: '#6f6449', fontFamily: 'Inter_500Medium' },
   progressTrack: { height: 5, backgroundColor: '#e8e0cf', borderRadius: 999, overflow: 'hidden', marginBottom: 10 },
   progressFill: { height: '100%', backgroundColor: '#1a1612', borderRadius: 999 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -518,7 +504,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 8,
   },
@@ -532,7 +518,7 @@ const styles = StyleSheet.create({
   appUniDot: { width: 10, height: 10, borderRadius: 999, flexShrink: 0 },
   appInfo: { flex: 1 },
   appUniName: { fontSize: 14, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  appProgramName: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular', marginTop: 1 },
+  appProgramName: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular', marginTop: 1 },
   statusBadge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   statusText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
   appExpanded: { paddingBottom: 14, paddingLeft: 20 },
@@ -540,7 +526,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 8,
   },
@@ -557,7 +543,7 @@ const styles = StyleSheet.create({
   statusOptionText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: '#1a1612' },
   statusOptionTextActive: { color: '#f5f1e8' },
   removeBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  removeBtnText: { fontSize: 12, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  removeBtnText: { fontSize: 12, color: '#6f6449', fontFamily: 'Inter_400Regular' },
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -591,7 +577,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scholCardTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
-  scholCardSub: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular', marginTop: 2, lineHeight: 16 },
+  scholCardSub: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular', marginTop: 2, lineHeight: 16 },
   deadlineRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -601,11 +587,11 @@ const styles = StyleSheet.create({
   deadlineRowBorder: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
   deadlineInfo: { flex: 1, marginRight: 12 },
   deadlineTitle: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  deadlineDesc: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular', marginTop: 2 },
+  deadlineDesc: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular', marginTop: 2 },
   deadlineDays: { fontFamily: 'JetBrainsMono_500Medium', fontSize: 13, color: '#1a1612' },
   emptyState: { padding: 48, alignItems: 'center' },
   emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 20, color: '#1a1612', marginBottom: 8 },
-  emptyBody: { fontSize: 13, color: '#8b7e62', textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular', maxWidth: 280 },
+  emptyBody: { fontSize: 13, color: '#6f6449', textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular', maxWidth: 280 },
   modalOverlay: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
@@ -630,7 +616,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 6,
   },
@@ -673,7 +659,7 @@ const styles = StyleSheet.create({
   dropdownItemActive: { backgroundColor: '#1a1612' },
   dropdownItemText: { fontSize: 13, fontFamily: 'Inter_500Medium', color: '#1a1612' },
   dropdownItemTextActive: { color: '#f5f1e8' },
-  dropdownItemSub: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#8b7e62', marginTop: 2 },
+  dropdownItemSub: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#6f6449', marginTop: 2 },
   modalAddBtn: {
     marginTop: 16,
     backgroundColor: '#1a1612',

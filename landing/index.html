@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>oHub — the Ontario university application, in one place</title>
+<meta name="description" content="Every Ontario university program, your OUAC deadlines, and honest Reach / Target / Safety tiers based on your actual marks. Free, private, and built by a Grade 12 student.">
+<meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14110d" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/favicon.ico">
+<link rel="canonical" href="https://ohub.vercel.app/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="oHub — the Ontario university application, in one place">
+<meta property="og:description" content="1,406 Ontario programs, OUAC deadlines, and honest admission tiers based on your actual marks. Free and private.">
+<meta property="og:locale" content="en_CA">
+<meta name="twitter:card" content="summary_large_image">
+
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+   oHub Editorial — the same tokens the app uses (constants/theme.ts).
+   Every colour pairing here is measured; ratios are noted beside each one.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --paper:#f5f1e8; --card:#fbf8f1; --ink:#1a1612;      /* ink/paper  15.96:1 */
+  --soft:#5c4a2f;                                       /* soft/paper  7.53:1 */
+  --muted:#6f6449;                                      /* muted/paper 5.18:1 */
+  --rule:#e8e0cf; --pill:#d4c9b0;
+  --accent:#b03a09;                                     /* accent/paper 5.39:1 */
+  --accent-bg:#fef3e2; --accent-text:#9a3412;
+  --success:#12652f;                                    /* success/paper 6.36:1 */
+  --success-bg:#ecfdf5;
+  --shadow:rgba(26,22,18,.07);
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"JetBrains Mono",Menlo,Consolas,monospace;
+}
+/* Students use this at night. The dark palette is a re-render of the warm
+   editorial idea on near-black brown, not a mechanical inversion. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:#14110d; --card:#1e1a14; --ink:#f4efe3;     /* 16.40:1 */
+    --soft:#d6cbb4;                                      /* 11.71:1 */
+    --muted:#a99a7d;                                     /*  6.82:1 */
+    --rule:#332c22; --pill:#4a4034;
+    --accent:#fb923c;                                    /*  8.32:1 */
+    --accent-bg:#2a1a0e; --accent-text:#fdba74;
+    --success:#4ade80; --success-bg:#0f2418;
+    --shadow:rgba(0,0,0,.4);
+  }
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;margin:0;line-height:1.15}
+p{margin:0}
+a{color:inherit}
+
+/* Keyboard users must always be able to see where they are. */
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+.skip{
+  position:absolute;left:-9999px;top:0;z-index:99;
+  background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:0 0 8px 0;
+}
+.skip:focus{left:0}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.eyebrow{
+  font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;margin:0 0 12px
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+header{border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(--paper);z-index:10}
+.bar{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
+.brand{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:-.03em;text-decoration:none}
+.brand span{color:var(--accent)}
+.nav{display:flex;align-items:center;gap:8px}
+.nav a{
+  display:inline-flex;align-items:center;min-height:44px;padding:0 14px;
+  font-size:15px;font-weight:500;text-decoration:none;color:var(--soft);border-radius:8px
+}
+.nav a:hover{background:var(--card);color:var(--ink)}
+.nav .cta{background:var(--ink);color:var(--paper);padding:0 20px}
+.nav .cta:hover{background:var(--accent);color:#fff}
+@media (max-width:640px){.nav .hide-sm{display:none}}
+
+/* ── hero ───────────────────────────────────────────────────────────────── */
+.hero{padding:88px 0 72px;border-bottom:1px solid var(--rule)}
+.hero h1{font-size:clamp(38px,7vw,68px)}
+.hero .lede{
+  font-size:clamp(18px,2.2vw,21px);color:var(--soft);
+  max-width:44ch;margin-top:24px
+}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:52px;padding:0 28px;border-radius:10px;
+  font-size:16px;font-weight:600;text-decoration:none;
+  border:1px solid transparent;transition:transform .12s ease,background .12s ease
+}
+.btn-primary{background:var(--ink);color:var(--paper)}
+.btn-primary:hover{background:var(--accent);color:#fff}
+.btn-secondary{border-color:var(--pill);color:var(--ink)}
+.btn-secondary:hover{background:var(--card)}
+.btn:active{transform:translateY(1px)}
+.reassure{margin-top:20px;font-size:14px;color:var(--muted)}
+
+.figures{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:1px;margin-top:56px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:14px;overflow:hidden
+}
+.figure{background:var(--paper);padding:22px 20px}
+.figure dt{font-size:13px;color:var(--muted);margin-bottom:6px}
+.figure dd{margin:0;font-family:var(--mono);font-size:26px;font-weight:500;letter-spacing:-.02em}
+
+/* ── sections ───────────────────────────────────────────────────────────── */
+section{padding:80px 0;border-bottom:1px solid var(--rule)}
+.section-head{max-width:56ch;margin-bottom:48px}
+.section-head h2{font-size:clamp(28px,4vw,40px)}
+.section-head p{margin-top:16px;color:var(--soft);font-size:18px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.card{
+  background:var(--card);border:1px solid var(--rule);border-radius:14px;
+  padding:28px;box-shadow:0 1px 3px var(--shadow)
+}
+.card h3{font-size:20px;margin-bottom:10px}
+.card p{color:var(--soft);font-size:15.5px}
+.card .icon{
+  width:40px;height:40px;border-radius:10px;background:var(--accent-bg);
+  display:grid;place-items:center;margin-bottom:18px;font-size:19px
+}
+
+/* ── honesty callout ────────────────────────────────────────────────────── */
+.callout{
+  background:var(--card);border:1px solid var(--rule);
+  border-left:4px solid var(--accent);border-radius:0 14px 14px 0;padding:32px
+}
+.callout h2{font-size:clamp(24px,3.4vw,32px);margin-bottom:16px}
+.callout p{color:var(--soft);max-width:62ch}
+.callout p + p{margin-top:14px}
+
+/* ── privacy list ───────────────────────────────────────────────────────── */
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.checks li{display:flex;gap:12px;align-items:flex-start;color:var(--soft)}
+.checks .tick{
+  flex:0 0 22px;height:22px;border-radius:50%;background:var(--success-bg);
+  color:var(--success);display:grid;place-items:center;font-size:12px;font-weight:700;margin-top:2px
+}
+
+/* ── final CTA ──────────────────────────────────────────────────────────── */
+.final{text-align:center;padding:96px 0}
+.final h2{font-size:clamp(30px,4.6vw,46px)}
+.final p{margin:18px auto 0;max-width:48ch;color:var(--soft);font-size:18px}
+.final .actions{justify-content:center}
+
+footer{padding:44px 0 64px;font-size:14px;color:var(--muted)}
+.foot{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center}
+footer a{color:var(--soft)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="/">o<span>Hub</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a class="hide-sm" href="#how">How it works</a>
+      <a class="hide-sm" href="#privacy">Privacy</a>
+      <a class="cta" href="/today">Open oHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <div class="wrap hero">
+    <p class="eyebrow">For Ontario Grade 12 applicants</p>
+    <h1>Every Ontario program,<br>one honest picture.</h1>
+    <p class="lede">
+      1,406 programs, your OUAC deadlines, and where you actually stand —
+      worked out from the marks you enter, never from a number we made up.
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href="/today">Open oHub — it's free</a>
+      <a class="btn btn-secondary" href="#how">See how it works</a>
+    </div>
+    <p class="reassure">No account. No email. Nothing leaves your device.</p>
+
+    <dl class="figures">
+      <div class="figure"><dt>Programs</dt><dd>1,406</dd></div>
+      <div class="figure"><dt>Universities</dt><dd>23</dd></div>
+      <div class="figure"><dt>Scholarships</dt><dd>21</dd></div>
+      <div class="figure"><dt>Cost</dt><dd>$0</dd></div>
+    </dl>
+  </div>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">How it works</p>
+        <h2>Three things, done properly.</h2>
+        <p>
+          Applying to university in Ontario means juggling OUAC, a dozen program
+          pages and a supplementary form you found out about last week. oHub puts
+          the parts that matter in one place.
+        </p>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <div class="icon" aria-hidden="true">📚</div>
+          <h3>Search every program</h3>
+          <p>
+            All 1,406 undergraduate programs across all 23 Ontario universities —
+            admission averages, required Grade 12 courses, co-op, tuition, OUAC
+            codes and whether a supplementary application is waiting for you.
+          </p>
+        </article>
+        <article class="card">
+          <div class="icon" aria-hidden="true">🎯</div>
+          <h3>See where you stand</h3>
+          <p>
+            Enter your top six marks once and every program sorts into Reach,
+            Target or Safety against your real average. Haven't entered marks?
+            It says so, instead of guessing.
+          </p>
+        </article>
+        <article class="card">
+          <div class="icon" aria-hidden="true">🗓️</div>
+          <h3>Never miss a deadline</h3>
+          <p>
+            A live countdown to the next OUAC date, plus a tracker that follows
+            each application from shortlisted through applied, supplementary
+            sent, and offer.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="callout">
+        <p class="eyebrow">Why you can trust the numbers</p>
+        <h2>It will tell you when it doesn't know.</h2>
+        <p>
+          Most admission tools will hand you a confident percentage no matter what
+          you've told them. That is worse than useless when you are choosing where
+          to spend the next four years — a made-up number is indistinguishable from
+          a real one once it's on screen.
+        </p>
+        <p>
+          oHub refuses to do that. If you haven't entered your marks, it doesn't
+          estimate them. If a university hasn't published a cutoff, it says so
+          rather than inventing one. Every figure you see traces back to something
+          you entered or something a university published — and each program links
+          out to the official page, because averages and deadlines change.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Privacy</p>
+        <h2>Your marks are nobody else's business.</h2>
+        <p>
+          oHub asks for your name, school, OUAC reference and grades. That is
+          sensitive, so the app is built so that none of it can reach us — there is
+          no server for it to reach.
+        </p>
+      </div>
+      <ul class="checks">
+        <li><span class="tick" aria-hidden="true">✓</span><span><strong>No account, ever.</strong> No sign-up, no email, no password to forget.</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span><strong>Stored on your device only.</strong> Everything lives in your own browser. There is no oHub database.</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span><strong>No tracking or analytics.</strong> Nobody is counting your clicks or selling your data.</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span><strong>Your OUAC reference is masked</strong> on every screen except the one where you edit it.</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span><strong>Erase it all in one tap.</strong> Settings has a delete control that actually deletes.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="wrap final">
+    <h2>Start where you are.</h2>
+    <p>
+      Open it, search a program you're curious about, and add your marks whenever
+      you feel like it. Nothing is required to get value out of it.
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href="/today">Open oHub</a>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <p>Built by Adhvaith Anand for Ontario applicants.</p>
+    <p>
+      Not affiliated with OUAC or any university.
+      Always confirm dates on the <a href="https://www.ouac.on.ca" rel="noopener noreferrer">official OUAC site</a>.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

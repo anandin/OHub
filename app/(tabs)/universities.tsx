@@ -16,19 +16,10 @@ import { getUniversityById } from "@/data/universities";
 import { useSavedPosts } from "@/context/SavedPostsContext";
 import { useSubscriptions } from "@/context/SubscriptionsContext";
 import { sharePost } from "@/lib/share";
+import { ED } from "@/constants/theme";
 
 type FeedTab = 'following' | 'trending' | 'all';
 
-const ED = {
-  paper: '#f5f1e8',
-  card: '#fbf8f1',
-  ink: '#1a1612',
-  softInk: '#5c4a2f',
-  muted: '#8b7e62',
-  rule: '#e8e0cf',
-  warn: '#c2410c',
-  pillBorder: '#d4c9b0',
-};
 
 function PostItem({
   post,
@@ -73,7 +64,7 @@ function PostItem({
     >
       {/* Meta row */}
       <View style={styles.postMeta}>
-        <View style={[styles.uniDot, { backgroundColor: uni?.color ?? '#8b7e62' }]} />
+        <View style={[styles.uniDot, { backgroundColor: uni?.color ?? '#6f6449' }]} />
         <Text style={styles.postAuthor}>{post.author}</Text>
         <Text style={styles.postMetaSep}>·</Text>
         <Text style={styles.postUni}>{uni?.shortName ?? 'Ontario'}</Text>
@@ -277,7 +268,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
@@ -320,9 +311,9 @@ const styles = StyleSheet.create({
   },
   uniDot: { width: 7, height: 7, borderRadius: 999 },
   postAuthor: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
-  postUni: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#8b7e62' },
+  postUni: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#6f6449' },
   postMetaSep: { fontSize: 12, color: '#d4c9b0' },
-  postTime: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  postTime: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular' },
   catBadge: {
     borderRadius: 999,
     paddingHorizontal: 7,
@@ -374,10 +365,10 @@ const styles = StyleSheet.create({
   tagText: { fontSize: 10, color: '#5c4a2f', fontFamily: 'Inter_500Medium' },
   postActions: { flexDirection: 'row', gap: 16, alignItems: 'center' },
   actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  actionText: { fontSize: 12, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  actionText: { fontSize: 12, color: '#6f6449', fontFamily: 'Inter_400Regular' },
   emptyState: { padding: 48, alignItems: 'center' },
   emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612', marginBottom: 8, textAlign: 'center' },
-  emptyBody: { fontSize: 13, color: '#8b7e62', textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular' },
+  emptyBody: { fontSize: 13, color: '#6f6449', textAlign: 'center', lineHeight: 20, fontFamily: 'Inter_400Regular' },
   clearTagBtn: {
     marginTop: 12,
     paddingHorizontal: 18,

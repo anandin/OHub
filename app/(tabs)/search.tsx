@@ -17,20 +17,8 @@ import { useUser } from "@/context/UserContext";
 import { useApplications } from "@/context/ApplicationsContext";
 import { computeAverage } from "@/lib/admissions";
 import { maskOuacRef } from "@/lib/privacy";
+import { ED } from "@/constants/theme";
 
-const ED = {
-  paper: '#f5f1e8',
-  card: '#fbf8f1',
-  ink: '#1a1612',
-  softInk: '#5c4a2f',
-  muted: '#8b7e62',
-  rule: '#e8e0cf',
-  pillBorder: '#d4c9b0',
-  success: '#15803d',
-  successBg: '#ecfdf5',
-  warn: '#c2410c',
-  warnBg: '#fef3e2',
-};
 
 function EditProfileModal({ profile, onSave, onClose }: {
   profile: { name: string; school: string; ouacRef: string };
@@ -368,7 +356,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
@@ -398,9 +386,9 @@ const styles = StyleSheet.create({
   avatarInitials: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18, color: '#f5f1e8' },
   profileInfo: { flex: 1 },
   profileName: { fontFamily: 'Inter_600SemiBold', fontSize: 16, color: '#1a1612' },
-  profileSchool: { fontSize: 12, color: '#8b7e62', marginTop: 2, fontFamily: 'Inter_400Regular' },
+  profileSchool: { fontSize: 12, color: '#6f6449', marginTop: 2, fontFamily: 'Inter_400Regular' },
   ouacRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  ouacLabel: { fontSize: 10, color: '#8b7e62', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8 },
+  ouacLabel: { fontSize: 10, color: '#6f6449', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8 },
   ouacRef: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 12, color: '#5c4a2f' },
   statsGrid: {
     flexDirection: 'row',
@@ -417,19 +405,19 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
   },
-  statLabel: { fontSize: 9, color: '#8b7e62', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, textAlign: 'center' },
+  statLabel: { fontSize: 9, color: '#6f6449', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, textAlign: 'center' },
   statValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18, color: '#1a1612', textAlign: 'center' },
   divider: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24, marginBottom: 20 },
   section: { paddingHorizontal: 24, marginBottom: 20 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  sectionTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#8b7e62', textTransform: 'uppercase', letterSpacing: 1 },
+  sectionTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#6f6449', textTransform: 'uppercase', letterSpacing: 1 },
   editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  editBtnText: { fontSize: 12, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  editBtnText: { fontSize: 12, color: '#6f6449', fontFamily: 'Inter_400Regular' },
   saveMarksBtn: { backgroundColor: '#1a1612', paddingHorizontal: 14, paddingVertical: 5, borderRadius: 999 },
   saveMarksBtnText: { fontSize: 12, color: '#f5f1e8', fontFamily: 'Inter_500Medium' },
   marksGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   markItem: { width: '47%', backgroundColor: '#fbf8f1', borderWidth: 1, borderColor: '#e8e0cf', borderRadius: 10, padding: 12 },
-  markCourse: { fontSize: 10, color: '#8b7e62', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, minHeight: 16 },
+  markCourse: { fontSize: 10, color: '#6f6449', fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, minHeight: 16 },
   markCodeInput: {
     fontFamily: 'JetBrainsMono_400Regular',
     fontSize: 11,
@@ -496,7 +484,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 8,
   },

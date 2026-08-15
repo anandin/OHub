@@ -17,20 +17,8 @@ import { useUser } from "@/context/UserContext";
 import { getUpcomingDeadlines } from "@/data/deadlines";
 import { FEATURED_ARTICLES, UPCOMING_EVENTS } from "@/data/userData";
 import { useApplications } from "@/context/ApplicationsContext";
+import { ED } from "@/constants/theme";
 
-const ED = {
-  paper: '#f5f1e8',
-  card: '#fbf8f1',
-  ink: '#1a1612',
-  softInk: '#5c4a2f',
-  muted: '#8b7e62',
-  rule: '#e8e0cf',
-  pillBorder: '#d4c9b0',
-  warn: '#c2410c',
-  warnBg: '#fef3e2',
-  success: '#15803d',
-  successBg: '#ecfdf5',
-};
 
 type Priority = 'high' | 'med' | 'low';
 
@@ -344,14 +332,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
   },
   issueText: {
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'JetBrainsMono_400Regular',
   },
   heroSection: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 },
@@ -389,7 +377,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 8,
   },
-  progressLabel: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  progressLabel: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular' },
   divider: { height: 1, backgroundColor: '#e8e0cf', marginHorizontal: 24 },
   section: { paddingHorizontal: 24, paddingTop: 20 },
   sectionHeader: {
@@ -402,11 +390,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
   },
   editTasksBtn: { paddingVertical: 2, paddingHorizontal: 4 },
-  editTasksBtnText: { fontSize: 12, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  editTasksBtnText: { fontSize: 12, color: '#6f6449', fontFamily: 'Inter_400Regular' },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -439,12 +427,12 @@ const styles = StyleSheet.create({
   },
   taskLabelDone: {
     textDecorationLine: 'line-through',
-    color: '#8b7e62',
+    color: '#6f6449',
   },
-  taskMeta: { fontSize: 11, color: '#8b7e62', marginTop: 2, fontFamily: 'Inter_400Regular' },
+  taskMeta: { fontSize: 11, color: '#6f6449', marginTop: 2, fontFamily: 'Inter_400Regular' },
   emptyTasks: {
     fontSize: 13,
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_400Regular',
     paddingVertical: 8,
   },
@@ -457,7 +445,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#e8e0cf',
     marginTop: 2,
   },
-  addTaskBtnText: { fontSize: 13, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  addTaskBtnText: { fontSize: 13, color: '#6f6449', fontFamily: 'Inter_400Regular' },
   articleCard: {
     backgroundColor: '#fbf8f1',
     borderWidth: 1,
@@ -512,7 +500,7 @@ const styles = StyleSheet.create({
   eventRowBorder: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
   eventBody: { flex: 1 },
   eventName: { fontSize: 14, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  eventMeta: { fontSize: 11, color: '#8b7e62', marginTop: 2, fontFamily: 'Inter_400Regular' },
+  eventMeta: { fontSize: 11, color: '#6f6449', marginTop: 2, fontFamily: 'Inter_400Regular' },
   goingBadge: {
     backgroundColor: '#ecfdf5',
     borderRadius: 999,
@@ -552,7 +540,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 8,
   },
