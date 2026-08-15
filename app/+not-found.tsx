@@ -1,7 +1,10 @@
 import { Link, Stack } from "expo-router";
+import type { Palette } from "@/constants/theme";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import { StyleSheet, Text, View } from "react-native";
 
 export default function NotFoundScreen() {
+  const styles = useThemedStyles(makeStyles);
   return (
     <>
       <Stack.Screen options={{ title: "Oops!" }} />
@@ -16,7 +19,7 @@ export default function NotFoundScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) => StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",

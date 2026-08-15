@@ -1,4 +1,6 @@
 import Feather from "@expo/vector-icons/Feather";
+import type { Palette } from "@/constants/theme";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import React from "react";
 import {
   FlatList,
@@ -15,6 +17,7 @@ import { useSavedPosts } from "@/context/SavedPostsContext";
 import { SAMPLE_POSTS } from "@/data/feed";
 
 export default function SavedScreen() {
+  const styles = useThemedStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 67 : insets.top;
   const { savedPostIds } = useSavedPosts();
@@ -54,7 +57,7 @@ export default function SavedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,

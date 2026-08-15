@@ -233,3 +233,54 @@ test.describe("accessibility basics", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", /en/);
   });
 });
+
+test.describe("dark mode", () => {
+  test("the app follows a dark system preference", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await gotoApp(page);
+
+    // Read the painted background rather than a class name — the point is what
+    // the student actually sees, not which token we think we applied.
+    const background = await page
+      .locator("#root > div")
+      .first()
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
+
+    const [r, g, b] = background.match(/\d+/g)!.map(Number);
+    const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    expect(luminance, `background was ${background}`).toBeLessThan(0.3);
+
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  });
+
+  test("the app stays light for a light system preference", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await gotoApp(page);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  });
+
+  test("an explicit choice overrides the system and survives a reload", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await gotoApp(page, "/settings");
+
+    await page.getByRole("radio", { name: "Dark" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator("#root")).not.toBeEmpty({ timeout: 30_000 });
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  });
+
+  test("the landing page respects the system preference too", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const background = await page
+      .locator("body")
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
+    const [r, g, b] = background.match(/\d+/g)!.map(Number);
+    expect((0.2126 * r + 0.7152 * g + 0.0722 * b) / 255).toBeLessThan(0.3);
+  });
+});

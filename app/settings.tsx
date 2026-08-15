@@ -1,4 +1,7 @@
 import Feather from "@expo/vector-icons/Feather";
+import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -11,13 +14,26 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ED } from "@/constants/colors";
 import { useApplications } from "@/context/ApplicationsContext";
 import { useSavedPosts } from "@/context/SavedPostsContext";
 import { useSubscriptions } from "@/context/SubscriptionsContext";
+import {
+  useTheme,
+  type ThemePreference,
+} from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { openExternalUrl } from "@/lib/safeLink";
 import { clearAll } from "@/lib/storage";
+
+const THEME_OPTIONS: {
+  value: ThemePreference;
+  label: string;
+  icon: "smartphone" | "sun" | "moon";
+}[] = [
+  { value: "system", label: "System", icon: "smartphone" },
+  { value: "light", label: "Light", icon: "sun" },
+  { value: "dark", label: "Dark", icon: "moon" },
+];
 
 /**
  * Settings & privacy.
@@ -28,6 +44,8 @@ import { clearAll } from "@/lib/storage";
  * is that answer, and the delete control actually clears every key the app owns.
  */
 export default function SettingsScreen() {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 20 : insets.top;
 
@@ -35,6 +53,7 @@ export default function SettingsScreen() {
   const { applications, reset: resetApplications } = useApplications();
   const { subscribed, reset: resetSubscriptions } = useSubscriptions();
   const { savedPostIds, likedPostIds, reset: resetSaved } = useSavedPosts();
+  const { preference, scheme, setPreference } = useTheme();
 
   const [confirming, setConfirming] = useState(false);
   const [erased, setErased] = useState(false);
@@ -77,7 +96,7 @@ export default function SettingsScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Feather name="arrow-left" size={20} color={ED.ink} />
+          <Feather name="arrow-left" size={20} color={c.ink} />
         </Pressable>
         <View>
           <Text style={styles.eyebrow}>Settings</Text>
@@ -112,6 +131,53 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.card}>
+        <Text style={styles.cardTitle}>Appearance</Text>
+        <Text style={styles.body}>
+          oHub follows your device by default, so late-night reading is already
+          dark if your phone is. Override it here if you&rsquo;d rather it
+          didn&rsquo;t.
+        </Text>
+        <View
+          style={styles.themeRow}
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Appearance"
+        >
+          {THEME_OPTIONS.map((option) => {
+            const active = preference === option.value;
+            return (
+              <Pressable
+                key={option.value}
+                style={[styles.themeOption, active && styles.themeOptionActive]}
+                onPress={() => setPreference(option.value)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={option.label}
+                accessibilityHint={
+                  option.value === "system"
+                    ? `Currently showing ${scheme}`
+                    : undefined
+                }
+              >
+                <Feather
+                  name={option.icon}
+                  size={14}
+                  color={active ? c.paper : c.softInk}
+                />
+                <Text
+                  style={[
+                    styles.themeOptionText,
+                    active && styles.themeOptionTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.card}>
         <Text style={styles.cardTitle}>Check the source</Text>
         <Text style={styles.body}>
           Admission averages, deadlines and scholarship details in oHub are
@@ -125,7 +191,7 @@ export default function SettingsScreen() {
           accessibilityLabel="Open OUAC, the official Ontario application centre"
           accessibilityHint="Opens ouac.on.ca in a new tab"
         >
-          <Feather name="external-link" size={14} color={ED.ink} />
+          <Feather name="external-link" size={14} color={c.ink} />
           <Text style={styles.linkBtnText}>Open OUAC — the official source</Text>
         </Pressable>
       </View>
@@ -139,7 +205,7 @@ export default function SettingsScreen() {
 
         {erased ? (
           <View style={styles.doneRow} accessibilityLiveRegion="polite">
-            <Feather name="check-circle" size={16} color={ED.success} />
+            <Feather name="check-circle" size={16} color={c.success} />
             <Text style={styles.doneText}>
               Erased. oHub is back to a fresh start.
             </Text>
@@ -170,7 +236,7 @@ export default function SettingsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Erase all my oHub data from this device"
           >
-            <Feather name="trash-2" size={14} color={ED.warn} />
+            <Feather name="trash-2" size={14} color={c.warn} />
             <Text style={styles.dangerBtnText}>Erase my oHub data</Text>
           </Pressable>
         )}
@@ -181,8 +247,8 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: ED.paper },
+const makeStyles = (c: Palette) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.paper },
   content: { paddingBottom: 80 },
   header: {
     flexDirection: "row",
@@ -204,35 +270,54 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 1,
     textTransform: "uppercase",
-    color: ED.muted,
+    color: c.muted,
   },
   title: {
     fontFamily: "Fraunces_600SemiBold",
     fontSize: 26,
-    color: ED.ink,
+    color: c.ink,
     letterSpacing: -0.5,
   },
   card: {
-    backgroundColor: ED.card,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: ED.rule,
+    borderColor: c.rule,
     borderRadius: 14,
     padding: 18,
     marginHorizontal: 20,
     marginBottom: 16,
     gap: 10,
   },
-  dangerCard: { borderColor: "#e7cdbb" },
+  dangerCard: { borderColor: c.pillBorder },
+  themeRow: { flexDirection: "row", gap: 8 },
+  themeOption: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    minHeight: 44,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: c.pillBorder,
+  },
+  themeOptionActive: { backgroundColor: c.ink, borderColor: c.ink },
+  themeOptionText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 14,
+    color: c.softInk,
+  },
+  themeOptionTextActive: { color: c.paper },
   cardTitle: {
     fontFamily: "Fraunces_600SemiBold",
     fontSize: 17,
-    color: ED.ink,
+    color: c.ink,
   },
   body: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
     lineHeight: 21,
-    color: ED.softInk,
+    color: c.softInk,
   },
   row: {
     flexDirection: "row",
@@ -240,19 +325,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     borderTopWidth: 1,
-    borderTopColor: ED.rule,
+    borderTopColor: c.rule,
     gap: 16,
   },
   rowLabel: {
     fontFamily: "Inter_500Medium",
     fontSize: 14,
-    color: ED.ink,
+    color: c.ink,
     flexShrink: 1,
   },
   rowValue: {
     fontFamily: "JetBrainsMono_400Regular",
     fontSize: 13,
-    color: ED.muted,
+    color: c.muted,
     textAlign: "right",
     flexShrink: 1,
   },
@@ -265,12 +350,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: ED.pillBorder,
+    borderColor: c.pillBorder,
   },
   linkBtnText: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
-    color: ED.ink,
+    color: c.ink,
   },
   dangerBtn: {
     flexDirection: "row",
@@ -286,13 +371,13 @@ const styles = StyleSheet.create({
   dangerBtnText: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
-    color: ED.warn,
+    color: c.warn,
   },
-  dangerBtnFilled: { backgroundColor: ED.warn, borderColor: ED.warn, flex: 1 },
+  dangerBtnFilled: { backgroundColor: c.warn, borderColor: c.warn, flex: 1 },
   dangerBtnFilledText: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
-    color: ED.paper,
+    color: c.paper,
   },
   confirmRow: { flexDirection: "row", gap: 10, alignItems: "center" },
   cancelBtn: {
@@ -304,19 +389,19 @@ const styles = StyleSheet.create({
   cancelBtnText: {
     fontFamily: "Inter_500Medium",
     fontSize: 14,
-    color: ED.softInk,
+    color: c.softInk,
   },
   doneRow: { flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44 },
   doneText: {
     fontFamily: "Inter_500Medium",
     fontSize: 14,
-    color: ED.success,
+    color: c.success,
     flexShrink: 1,
   },
   footer: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
-    color: ED.muted,
+    color: c.muted,
     textAlign: "center",
     marginTop: 8,
   },

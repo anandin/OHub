@@ -1,4 +1,6 @@
 import Feather from "@expo/vector-icons/Feather";
+import type { Palette } from "@/constants/theme";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import { reloadAppAsync } from "expo";
 import React, { useState } from "react";
 import {
@@ -19,6 +21,7 @@ export type ErrorFallbackProps = {
 };
 
 export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
+  const styles = useThemedStyles(makeStyles);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const insets = useSafeAreaInsets();
@@ -179,7 +182,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) => StyleSheet.create({
   container: {
     flex: 1,
     width: "100%",

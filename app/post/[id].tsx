@@ -1,4 +1,7 @@
 import Feather from "@expo/vector-icons/Feather";
+import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -17,10 +20,11 @@ import { useSubscriptions } from "@/context/SubscriptionsContext";
 import { CATEGORY_CONFIG, SAMPLE_POSTS } from "@/data/feed";
 import { REFRESH_BATCHES } from "@/data/feedRefreshBatches";
 import { getUniversityById } from "@/data/universities";
-import { ED } from "@/constants/theme";
 
 
 export default function PostDetailScreen() {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === 'web' ? 20 : insets.top;
@@ -37,7 +41,7 @@ export default function PostDetailScreen() {
       <View style={[styles.container, { paddingTop: topInset, alignItems: 'center', justifyContent: 'center' }]}>
         <Text style={styles.notFoundText}>Post not found.</Text>
         <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
-          <Text style={{ color: ED.muted, fontFamily: 'Inter_400Regular' }}>Go back</Text>
+          <Text style={{ color: c.muted, fontFamily: 'Inter_400Regular' }}>Go back</Text>
         </Pressable>
       </View>
     );
@@ -72,11 +76,11 @@ export default function PostDetailScreen() {
       {/* Top bar */}
       <View style={styles.topBar}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Feather name="arrow-left" size={20} color={ED.ink} />
+          <Feather name="arrow-left" size={20} color={c.ink} />
         </Pressable>
         <View style={styles.topActions}>
           <Pressable style={styles.iconBtn} onPress={handleShare}>
-            <Feather name="share" size={18} color={ED.ink} />
+            <Feather name="share" size={18} color={c.ink} />
           </Pressable>
         </View>
       </View>
@@ -136,14 +140,14 @@ export default function PostDetailScreen() {
             style={[styles.actionBtn, liked && styles.actionBtnLiked]}
             onPress={handleLike}
           >
-            <Feather name="heart" size={16} color={liked ? ED.warn : ED.muted} />
-            <Text style={[styles.actionBtnText, liked && { color: ED.warn }]}>
+            <Feather name="heart" size={16} color={liked ? c.warn : c.muted} />
+            <Text style={[styles.actionBtnText, liked && { color: c.warn }]}>
               {formatCount(likeCount)} {likeCount === 1 ? 'like' : 'likes'}
             </Text>
           </Pressable>
 
           <Pressable style={styles.actionBtn} onPress={handleShare}>
-            <Feather name="share" size={16} color={ED.muted} />
+            <Feather name="share" size={16} color={c.muted} />
             <Text style={styles.actionBtnText}>Share</Text>
           </Pressable>
         </View>
@@ -162,9 +166,9 @@ export default function PostDetailScreen() {
                 accessibilityLabel={`Open source: ${post.source}${post.sourceUrl ? ` at ${displayHost(post.sourceUrl)}` : ''}`}
                 accessibilityHint="Opens in a new tab"
               >
-                <Feather name="globe" size={13} color={ED.softInk} />
+                <Feather name="globe" size={13} color={c.softInk} />
                 <Text style={styles.sourceLinkText}>{post.source}</Text>
-                {post.sourceUrl && <Feather name="external-link" size={12} color={ED.muted} />}
+                {post.sourceUrl && <Feather name="external-link" size={12} color={c.muted} />}
               </Pressable>
             </View>
           </>
@@ -200,8 +204,8 @@ export default function PostDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f1e8' },
+const makeStyles = (c: Palette) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.paper },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -210,12 +214,12 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e8e0cf',
+    borderBottomColor: c.rule,
   },
   backBtn: { padding: 4 },
   topActions: { flexDirection: 'row', gap: 4 },
   iconBtn: { padding: 8 },
-  notFoundText: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612' },
+  notFoundText: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: c.ink },
   content: { padding: 24, paddingBottom: 60, gap: 16 },
   uniRow: {
     flexDirection: 'row',
@@ -223,18 +227,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   uniDot: { width: 8, height: 8, borderRadius: 999 },
-  uniName: { flex: 1, fontSize: 13, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
+  uniName: { flex: 1, fontSize: 13, fontFamily: 'Inter_600SemiBold', color: c.ink },
   followBtn: {
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     backgroundColor: 'transparent',
   },
-  followBtnActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
-  followBtnText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
-  followBtnTextActive: { color: '#f5f1e8' },
+  followBtnActive: { backgroundColor: c.ink, borderColor: c.ink },
+  followBtnText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: c.ink },
+  followBtnTextActive: { color: c.paper },
   catBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -249,29 +253,29 @@ const styles = StyleSheet.create({
     fontFamily: 'Fraunces_600SemiBold',
     fontSize: 24,
     lineHeight: 30,
-    color: '#1a1612',
+    color: c.ink,
   },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metaAuthor: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
-  metaSep: { fontSize: 12, color: '#d4c9b0' },
-  metaTime: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#6f6449' },
+  metaAuthor: { fontSize: 12, fontFamily: 'Inter_500Medium', color: c.softInk },
+  metaSep: { fontSize: 12, color: c.pillBorder },
+  metaTime: { fontSize: 12, fontFamily: 'Inter_400Regular', color: c.muted },
   body: {
     fontFamily: 'Inter_400Regular',
     fontSize: 15,
-    color: '#1a1612',
+    color: c.ink,
     lineHeight: 25,
   },
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tag: {
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
   },
-  tagText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
-  divider: { height: 1, backgroundColor: '#e8e0cf' },
+  tagText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: c.softInk },
+  divider: { height: 1, backgroundColor: c.rule },
   actionsRow: { flexDirection: 'row', gap: 10 },
   actionBtn: {
     flexDirection: 'row',
@@ -281,37 +285,37 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
-    backgroundColor: '#fbf8f1',
+    borderColor: c.rule,
+    backgroundColor: c.card,
   },
-  actionBtnLiked: { borderColor: '#fca5a5', backgroundColor: '#fef3e2' },
-  actionBtnText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#6f6449' },
+  actionBtnLiked: { borderColor: '#fca5a5', backgroundColor: c.warnBg },
+  actionBtnText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: c.muted },
   sourceRow: { gap: 8 },
-  sourceLabel: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: '#6f6449', fontFamily: 'Inter_500Medium' },
+  sourceLabel: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: c.muted, fontFamily: 'Inter_500Medium' },
   sourceLink: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  sourceLinkText: { flex: 1, fontSize: 13, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
+  sourceLinkText: { flex: 1, fontSize: 13, fontFamily: 'Inter_500Medium', color: c.softInk },
   uniCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderRadius: 12,
     borderLeftWidth: 4,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     padding: 14,
   },
   uniCardLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   uniCardDot: { width: 32, height: 32, borderRadius: 8 },
-  uniCardName: { fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#1a1612' },
-  uniCardLocation: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular', marginTop: 1 },
+  uniCardName: { fontFamily: 'Inter_600SemiBold', fontSize: 14, color: c.ink },
+  uniCardLocation: { fontSize: 11, color: c.muted, fontFamily: 'Inter_400Regular', marginTop: 1 },
 });

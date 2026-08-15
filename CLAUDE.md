@@ -62,6 +62,15 @@ almost always to use the module — not to add a disable comment.
    used to carry their own copy of the palette, and four tokens had drifted
    below AA before anyone measured them.
 
+9. **Styles are functions of the palette.** Write
+   `const makeStyles = (c: Palette) => StyleSheet.create({...})` at module
+   scope and `const styles = useThemedStyles(makeStyles)` in the component;
+   read colours with `usePalette()`. A static `StyleSheet.create` with a hex
+   literal will not follow dark mode — and nothing will tell you, because it
+   still renders. `light` and `dark` are asserted to have identical keys in
+   `__tests__/theme.test.tsx`, since a missing token silently renders as no
+   colour at all.
+
 ## Routing, and why `/` is not the app
 
 `/` is the static marketing page (`landing/index.html`). `scripts/postbuild-landing.mjs`

@@ -1,4 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
+import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import React, { useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -12,7 +15,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
-import { ED } from "@/constants/theme";
 
 
 const ESSAY_PROMPTS: Record<string, {
@@ -168,6 +170,8 @@ function getCoachTip(wordCount: number, limit: number): string | null {
 }
 
 export default function EssayScreen() {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const prompt = (id ? ESSAY_PROMPTS[id] : undefined) ?? ESSAY_PROMPTS[DEFAULT_ID];
@@ -199,7 +203,7 @@ export default function EssayScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Pressable onPress={() => router.back()}>
-            <Feather name="arrow-left" size={20} color={ED.ink} />
+            <Feather name="arrow-left" size={20} color={c.ink} />
           </Pressable>
           {lastSaved ? (
             <View style={styles.autoSaveBadge}>
@@ -209,7 +213,7 @@ export default function EssayScreen() {
             <View style={{ flex: 1 }} />
           )}
           <Pressable>
-            <Feather name="more-horizontal" size={18} color={ED.muted} />
+            <Feather name="more-horizontal" size={18} color={c.muted} />
           </Pressable>
         </View>
         <Text style={styles.headerSchool}>{prompt.school} · {prompt.form}</Text>
@@ -230,7 +234,7 @@ export default function EssayScreen() {
           onChangeText={handleChange}
           multiline
           placeholder="Start writing…"
-          placeholderTextColor={ED.muted}
+          placeholderTextColor={c.muted}
           autoFocus={false}
           textAlignVertical="top"
         />
@@ -263,13 +267,13 @@ export default function EssayScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f1e8' },
+const makeStyles = (c: Palette) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.paper },
   header: {
     paddingHorizontal: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#e8e0cf',
+    borderBottomColor: c.rule,
   },
   headerTop: {
     flexDirection: 'row',
@@ -279,54 +283,54 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   autoSaveBadge: {
-    backgroundColor: '#fef3e2',
+    backgroundColor: c.warnBg,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  autoSaveText: { fontSize: 11, color: '#9a3412', fontFamily: 'Inter_500Medium' },
+  autoSaveText: { fontSize: 11, color: c.warnText, fontFamily: 'Inter_500Medium' },
   headerSchool: {
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 3,
   },
   headerQuestion: {
     fontFamily: 'Fraunces_600SemiBold',
     fontSize: 22,
-    color: '#1a1612',
+    color: c.ink,
     lineHeight: 26,
   },
   promptBox: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderBottomWidth: 1,
-    borderBottomColor: '#e8e0cf',
+    borderBottomColor: c.rule,
   },
   promptText: {
     fontFamily: 'Fraunces_500Medium',
     fontSize: 15,
     lineHeight: 22,
-    color: '#1a1612',
+    color: c.ink,
   },
-  promptMeta: { fontSize: 11, color: '#6f6449', marginTop: 8, fontFamily: 'Inter_400Regular' },
+  promptMeta: { fontSize: 11, color: c.muted, marginTop: 8, fontFamily: 'Inter_400Regular' },
   editorArea: { flex: 1, paddingHorizontal: 20, paddingTop: 18 },
   editor: {
     fontFamily: 'Fraunces_400Regular',
     fontSize: 15,
     lineHeight: 26,
-    color: '#1a1612',
+    color: c.ink,
     minHeight: 200,
   },
   footer: {
     paddingHorizontal: 20,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#e8e0cf',
-    backgroundColor: '#fbf8f1',
+    borderTopColor: c.rule,
+    backgroundColor: c.card,
   },
   footerStats: {
     flexDirection: 'row',
@@ -334,21 +338,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  wordCount: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: '#5c4a2f' },
-  wordCountOver: { color: '#b03a09' },
-  readingLevel: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: '#12652f' },
+  wordCount: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: c.softInk },
+  wordCountOver: { color: c.warn },
+  readingLevel: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: c.success },
   coachCard: {
     flexDirection: 'row',
     gap: 10,
-    backgroundColor: '#fef3c7',
+    backgroundColor: c.amber,
     borderWidth: 1,
-    borderColor: '#fbbf24',
+    borderColor: c.amberBorder,
     borderRadius: 12,
     padding: 12,
   },
   coachIcon: { marginTop: 1 },
-  coachIconText: { fontSize: 14, color: '#7c4a03' },
+  coachIconText: { fontSize: 14, color: c.warnDark },
   coachBody: { flex: 1 },
-  coachTitle: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#7c4a03', marginBottom: 2 },
-  coachTip: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#7c4a03', lineHeight: 18 },
+  coachTitle: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: c.warnDark, marginBottom: 2 },
+  coachTip: { fontSize: 12, fontFamily: 'Inter_400Regular', color: c.warnDark, lineHeight: 18 },
 });

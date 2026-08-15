@@ -112,11 +112,14 @@ header{border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(
 .btn:active{transform:translateY(1px)}
 .reassure{margin-top:20px;font-size:14px;color:var(--muted)}
 
+/* Fixed column counts, not auto-fit: auto-fit left a fourth cell stranded
+   beside empty grid background on a phone, which reads as a rendering bug. */
 .figures{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  display:grid;grid-template-columns:repeat(2,1fr);
   gap:1px;margin-top:56px;background:var(--rule);
   border:1px solid var(--rule);border-radius:14px;overflow:hidden
 }
+@media (min-width:720px){.figures{grid-template-columns:repeat(4,1fr)}}
 .figure{background:var(--paper);padding:22px 20px}
 .figure dt{font-size:13px;color:var(--muted);margin-bottom:6px}
 .figure dd{margin:0;font-family:var(--mono);font-size:26px;font-weight:500;letter-spacing:-.02em}

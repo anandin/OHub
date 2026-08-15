@@ -1,4 +1,6 @@
 import Feather from "@expo/vector-icons/Feather";
+import type { Palette } from "@/constants/theme";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -22,6 +24,7 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, showUniversity = true }: PostCardProps) {
+  const styles = useThemedStyles(makeStyles);
   const uni = getUniversityById(post.universityId);
   const { isSaved, isLiked, toggleSave, toggleLike } = useSavedPosts();
   const saved = isSaved(post.id);
@@ -185,7 +188,7 @@ export function PostCard({ post, showUniversity = true }: PostCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) => StyleSheet.create({
   card: {
     backgroundColor: Colors.light.surface,
     marginHorizontal: 12,

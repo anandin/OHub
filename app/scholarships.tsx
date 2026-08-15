@@ -1,4 +1,7 @@
 import { router } from "expo-router";
+import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
+import { useThemedStyles } from "@/lib/useThemedStyles";
 import React, { useMemo, useState } from "react";
 import {
   Platform,
@@ -10,7 +13,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ED } from "@/constants/theme";
 import { openExternalUrl } from "@/lib/safeLink";
 import Feather from "@expo/vector-icons/Feather";
 
@@ -34,6 +36,8 @@ const FILTERS: { id: FilterTab; label: string }[] = [
 ];
 
 export default function ScholarshipsScreen() {
+  const c = usePalette();
+  const styles = useThemedStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 20 : insets.top;
   const [query, setQuery] = useState('');
@@ -60,7 +64,7 @@ export default function ScholarshipsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Feather name="arrow-left" size={20} color={ED.ink} />
+          <Feather name="arrow-left" size={20} color={c.ink} />
         </Pressable>
         <View style={styles.headerText}>
           <Text style={styles.eyebrow}>Money</Text>
@@ -70,18 +74,18 @@ export default function ScholarshipsScreen() {
 
       {/* Search bar */}
       <View style={styles.searchBar}>
-        <Feather name="search" size={15} color={ED.muted} />
+        <Feather name="search" size={15} color={c.muted} />
         <TextInput
           style={styles.searchInput}
           value={query}
           onChangeText={setQuery}
           placeholder="Search by name, keyword or eligibility…"
-          placeholderTextColor={ED.muted}
+          placeholderTextColor={c.muted}
           autoCorrect={false}
         />
         {query.length > 0 && (
           <Pressable onPress={() => setQuery('')}>
-            <Feather name="x" size={15} color={ED.muted} />
+            <Feather name="x" size={15} color={c.muted} />
           </Pressable>
         )}
       </View>
@@ -116,7 +120,7 @@ export default function ScholarshipsScreen() {
             style={styles.sortBtn}
             onPress={() => setSortMode(m => (m === 'value' ? 'az' : 'value'))}
           >
-            <Feather name={sortMode === 'value' ? 'trending-down' : 'chevron-down'} size={12} color={ED.softInk} />
+            <Feather name={sortMode === 'value' ? 'trending-down' : 'chevron-down'} size={12} color={c.softInk} />
             <Text style={styles.sortBtnText}>
               {sortMode === 'value' ? 'Highest value' : 'A–Z'}
             </Text>
@@ -147,7 +151,7 @@ export default function ScholarshipsScreen() {
             <Text style={styles.rowDesc} numberOfLines={2}>{s.description}</Text>
             <View style={styles.rowMeta}>
               <Text style={styles.rowMetaText}>Deadline: {s.deadline}</Text>
-              <Feather name="chevron-right" size={14} color={ED.muted} />
+              <Feather name="chevron-right" size={14} color={c.muted} />
             </View>
           </Pressable>
         ))}
@@ -180,7 +184,7 @@ export default function ScholarshipsScreen() {
                 <Text style={styles.sourceName}>{src.name}</Text>
                 <Text style={styles.sourceBlurb}>{src.blurb}</Text>
               </View>
-              <Feather name="external-link" size={14} color={ED.softInk} />
+              <Feather name="external-link" size={14} color={c.softInk} />
             </Pressable>
           ))}
         </View>
@@ -189,8 +193,8 @@ export default function ScholarshipsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f1e8' },
+const makeStyles = (c: Palette) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.paper },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -205,20 +209,20 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
-  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 28, color: '#1a1612', lineHeight: 32 },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 28, color: c.ink, lineHeight: 32 },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     marginHorizontal: 24,
     marginBottom: 12,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 11,
@@ -227,7 +231,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: 'Inter_400Regular',
-    color: '#1a1612',
+    color: c.ink,
     padding: 0,
     margin: 0,
   },
@@ -238,11 +242,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#d4c9b0',
+    borderColor: c.pillBorder,
   },
-  filterChipActive: { backgroundColor: '#1a1612', borderColor: '#1a1612' },
-  filterText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#1a1612' },
-  filterTextActive: { color: '#f5f1e8' },
+  filterChipActive: { backgroundColor: c.ink, borderColor: c.ink },
+  filterText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: c.ink },
+  filterTextActive: { color: c.paper },
   content: { paddingBottom: 60 },
   metaRow: {
     flexDirection: 'row',
@@ -256,24 +260,24 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
   },
   sortBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  sortBtnText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
+  sortBtnText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: c.softInk },
   row: { paddingHorizontal: 24, paddingVertical: 16 },
-  rowBorder: { borderTopWidth: 1, borderTopColor: '#e8e0cf' },
+  rowBorder: { borderTopWidth: 1, borderTopColor: c.rule },
   rowTop: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   rowLeft: { flex: 1 },
   rowName: {
     fontFamily: 'Fraunces_600SemiBold',
     fontSize: 17,
     lineHeight: 21,
-    color: '#1a1612',
+    color: c.ink,
   },
   rowProvider: {
     fontSize: 11,
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginTop: 2,
     textTransform: 'uppercase',
@@ -283,20 +287,20 @@ const styles = StyleSheet.create({
   rowValue: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 14,
-    color: '#1a1612',
+    color: c.ink,
     textAlign: 'right',
   },
   autoPill: {
     marginTop: 4,
-    backgroundColor: '#ecfdf5',
+    backgroundColor: c.successBg,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  autoPillText: { fontSize: 10, fontFamily: 'Inter_600SemiBold', color: '#14532d' },
+  autoPillText: { fontSize: 10, fontFamily: 'Inter_600SemiBold', color: c.successText },
   rowDesc: {
     fontSize: 12,
-    color: '#5c4a2f',
+    color: c.softInk,
     marginTop: 6,
     lineHeight: 18,
     fontFamily: 'Inter_400Regular',
@@ -307,12 +311,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  rowMetaText: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular' },
+  rowMetaText: { fontSize: 11, color: c.muted, fontFamily: 'Inter_400Regular' },
   emptyState: { padding: 40, alignItems: 'center' },
-  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: '#1a1612', marginBottom: 6 },
+  emptyTitle: { fontFamily: 'Fraunces_500Medium', fontSize: 18, color: c.ink, marginBottom: 6 },
   emptyBody: {
     fontSize: 13,
-    color: '#6f6449',
+    color: c.muted,
     textAlign: 'center',
     lineHeight: 20,
     fontFamily: 'Inter_400Regular',
@@ -321,9 +325,9 @@ const styles = StyleSheet.create({
   sourcesSection: {
     marginTop: 24,
     marginHorizontal: 24,
-    backgroundColor: '#fbf8f1',
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: '#e8e0cf',
+    borderColor: c.rule,
     borderRadius: 14,
     padding: 18,
   },
@@ -331,13 +335,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#6f6449',
+    color: c.muted,
     fontFamily: 'Inter_500Medium',
     marginBottom: 6,
   },
   sourcesIntro: {
     fontSize: 12,
-    color: '#5c4a2f',
+    color: c.softInk,
     lineHeight: 18,
     fontFamily: 'Inter_400Regular',
     marginBottom: 6,
@@ -348,6 +352,6 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 12,
   },
-  sourceName: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
-  sourceBlurb: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular', marginTop: 2 },
+  sourceName: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: c.ink },
+  sourceBlurb: { fontSize: 11, color: c.muted, fontFamily: 'Inter_400Regular', marginTop: 2 },
 });

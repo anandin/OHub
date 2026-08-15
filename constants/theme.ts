@@ -115,7 +115,11 @@ export const dark = {
   amberText: '#fde68a',
 } as const;
 
-export type Palette = typeof light;
+/**
+ * Widened so `light` and `dark` are interchangeable. Without this, `as const`
+ * gives each token a literal type and the two palettes are incompatible.
+ */
+export type Palette = { readonly [K in keyof typeof light]: string };
 
 /**
  * The active palette.
