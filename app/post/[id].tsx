@@ -17,19 +17,8 @@ import { useSubscriptions } from "@/context/SubscriptionsContext";
 import { CATEGORY_CONFIG, SAMPLE_POSTS } from "@/data/feed";
 import { REFRESH_BATCHES } from "@/data/feedRefreshBatches";
 import { getUniversityById } from "@/data/universities";
+import { ED } from "@/constants/theme";
 
-const ED = {
-  paper: '#f5f1e8',
-  card: '#fbf8f1',
-  ink: '#1a1612',
-  softInk: '#5c4a2f',
-  muted: '#8b7e62',
-  rule: '#e8e0cf',
-  pillBorder: '#d4c9b0',
-  warn: '#c2410c',
-  success: '#15803d',
-  successBg: '#ecfdf5',
-};
 
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -265,7 +254,7 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   metaAuthor: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
   metaSep: { fontSize: 12, color: '#d4c9b0' },
-  metaTime: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#8b7e62' },
+  metaTime: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#6f6449' },
   body: {
     fontFamily: 'Inter_400Regular',
     fontSize: 15,
@@ -296,9 +285,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fbf8f1',
   },
   actionBtnLiked: { borderColor: '#fca5a5', backgroundColor: '#fef3e2' },
-  actionBtnText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#8b7e62' },
+  actionBtnText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#6f6449' },
   sourceRow: { gap: 8 },
-  sourceLabel: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: '#8b7e62', fontFamily: 'Inter_500Medium' },
+  sourceLabel: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: '#6f6449', fontFamily: 'Inter_500Medium' },
   sourceLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -324,5 +313,5 @@ const styles = StyleSheet.create({
   uniCardLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   uniCardDot: { width: 32, height: 32, borderRadius: 8 },
   uniCardName: { fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#1a1612' },
-  uniCardLocation: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular', marginTop: 1 },
+  uniCardLocation: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular', marginTop: 1 },
 });

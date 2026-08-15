@@ -16,6 +16,11 @@ same source, as an iOS/Android app.
 | Pulse | `/(tabs)/universities` | Feed from the universities you follow |
 | You | `/(tabs)/search` | Your profile, top-6 marks, application stats |
 
+`/` is the marketing page — a 15 KB static file (5 KB gzipped) served straight
+from the filesystem, so reading the pitch never downloads the 3.5 MB app bundle
+and a search engine can index it. The app shell lives at `/app.html` behind a
+rewrite, and the home tab is `/today`.
+
 Also: `/scholarships` (21 verified awards), `/program/[id]`, `/university/[id]`,
 `/essay/[id]`, and `/settings` (what's stored and how to erase it).
 
@@ -65,6 +70,7 @@ no CLI step and no build config in the dashboard.
 ## Architecture
 
 ```
+landing/        the static marketing page served at /
 app/            expo-router file-based routes; (tabs)/ is the tab bar
 components/     shared UI — PostCard, UniversityCard, CategoryFilter, ErrorBoundary
 context/        React contexts, each persisted through lib/storage
@@ -88,6 +94,10 @@ whole data model, and the privacy story follows from it.
 | `admissions.ts` | Tier and average logic. Returns `null` / `"unknown"` rather than inventing a cutoff or an average. |
 | `privacy.ts` | Masks OUAC references for display; strips control and bidi characters from stored text. |
 | `share.ts` | Native share sheet, Web Share API, or clipboard — in that order. |
+
+Design tokens live in `constants/theme.ts` — one contrast-measured palette for
+light and dark, plus the type scale and spacing. Every colour pairing there
+carries its measured WCAG ratio in a comment.
 
 The first two are enforced by ESLint rules in `eslint.config.js`, so the
 boundaries can't quietly erode. If you need the raw API, you're probably adding

@@ -23,22 +23,8 @@ import {
 import { ALL_PROGRAMS } from "@/data/programs";
 import { getAdviceForProgram, SOURCE_TYPE_CONFIG } from "@/data/suppAdvice";
 import { getUniversityById } from "@/data/universities";
+import { ED } from "@/constants/theme";
 
-const ED = {
-  paper: '#f5f1e8',
-  card: '#fbf8f1',
-  ink: '#1a1612',
-  softInk: '#5c4a2f',
-  muted: '#8b7e62',
-  rule: '#e8e0cf',
-  pillBorder: '#d4c9b0',
-  warn: '#c2410c',
-  warnBg: '#fef3e2',
-  success: '#15803d',
-  successBg: '#ecfdf5',
-  amber: '#fef3c7',
-  amberText: '#7c4a03',
-};
 
 
 const ESSAY_ROUTES: Record<string, string> = {
@@ -397,7 +383,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 4,
   },
@@ -425,7 +411,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 4,
   },
@@ -452,7 +438,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 10,
   },
@@ -496,7 +482,7 @@ const styles = StyleSheet.create({
   },
   chipText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: '#5c4a2f' },
   bulletRow: { flexDirection: 'row', gap: 8, marginBottom: 8, alignItems: 'flex-start' },
-  bulletDot: { fontSize: 7, color: '#8b7e62', marginTop: 7 },
+  bulletDot: { fontSize: 7, color: '#6f6449', marginTop: 7 },
   bulletText: { flex: 1, fontSize: 14, color: '#1a1612', fontFamily: 'Inter_400Regular', lineHeight: 22 },
   essayCard: {
     flexDirection: 'row',
@@ -509,7 +495,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   essayCardTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#1a1612', marginBottom: 2 },
-  essayCardSub: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular' },
+  essayCardSub: { fontSize: 11, color: '#6f6449', fontFamily: 'Inter_400Regular' },
   ouacBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -520,7 +506,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
   },
   ouacBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
-  adviceSubtitle: { fontSize: 12, color: '#8b7e62', fontFamily: 'Inter_400Regular', marginBottom: 12, marginTop: -4 },
+  adviceSubtitle: { fontSize: 12, color: '#6f6449', fontFamily: 'Inter_400Regular', marginBottom: 12, marginTop: -4 },
   adviceCard: {
     backgroundColor: '#fbf8f1',
     borderWidth: 1,
@@ -557,7 +543,7 @@ const styles = StyleSheet.create({
     padding: 8,
     marginBottom: 8,
   },
-  adviceSourceText: { flex: 1, fontSize: 11, fontFamily: 'Inter_400Regular', color: '#8b7e62' },
+  adviceSourceText: { flex: 1, fontSize: 11, fontFamily: 'Inter_400Regular', color: '#6f6449' },
   adviceOpenLink: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#1a1612', flexShrink: 0 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tag: {
@@ -568,7 +554,7 @@ const styles = StyleSheet.create({
     borderColor: '#d4c9b0',
     backgroundColor: '#f5f1e8',
   },
-  tagText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: '#8b7e62' },
+  tagText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: '#6f6449' },
   cta: {
     position: 'absolute',
     bottom: 0,

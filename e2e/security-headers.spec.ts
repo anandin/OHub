@@ -65,6 +65,8 @@ test.describe("edge routing", () => {
   // not span `/`, so it matched nothing and every deep link 404'd in production —
   // while passing locally, because the local preview server does its own fallback.
   const deepLinks = [
+    "/today",
+    "/programs",
     "/settings",
     "/scholarships",
     "/program/torontos-tla",
@@ -90,8 +92,17 @@ test.describe("edge routing", () => {
     expect(favicon.headers()["content-type"]).toContain("image");
   });
 
-  test("fingerprinted assets are cached immutably", async ({ request }) => {
+  test("`/` is the landing page, not the app shell", async ({ request }) => {
+    // The catch-all rewrite must not swallow the root: rewrites run after the
+    // filesystem check, so dist/index.html wins. If that ever stops being true,
+    // visitors get the app bundle instead of the pitch.
     const html = await (await request.get("/")).text();
+    expect(html).toContain("Every Ontario program");
+    expect(html).not.toContain("/_expo/static/js/web/");
+  });
+
+  test("fingerprinted assets are cached immutably", async ({ request }) => {
+    const html = await (await request.get("/today")).text();
     const bundleSrc = html.match(/src="(\/_expo\/static\/js\/web\/[^"]+)"/)?.[1];
 
     expect(bundleSrc, "no hashed bundle found in index.html").toBeTruthy();

@@ -12,20 +12,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
+import { ED } from "@/constants/theme";
 
-const ED = {
-  paper: '#f5f1e8',
-  card: '#fbf8f1',
-  ink: '#1a1612',
-  softInk: '#5c4a2f',
-  muted: '#8b7e62',
-  rule: '#e8e0cf',
-  amber: '#fef3c7',
-  amberBorder: '#fbbf24',
-  amberText: '#7c4a03',
-  warn: '#c2410c',
-  success: '#15803d',
-};
 
 const ESSAY_PROMPTS: Record<string, {
   school: string;
@@ -301,7 +289,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#8b7e62',
+    color: '#6f6449',
     fontFamily: 'Inter_500Medium',
     marginBottom: 3,
   },
@@ -324,7 +312,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: '#1a1612',
   },
-  promptMeta: { fontSize: 11, color: '#8b7e62', marginTop: 8, fontFamily: 'Inter_400Regular' },
+  promptMeta: { fontSize: 11, color: '#6f6449', marginTop: 8, fontFamily: 'Inter_400Regular' },
   editorArea: { flex: 1, paddingHorizontal: 20, paddingTop: 18 },
   editor: {
     fontFamily: 'Fraunces_400Regular',
@@ -347,8 +335,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   wordCount: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: '#5c4a2f' },
-  wordCountOver: { color: '#c2410c' },
-  readingLevel: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: '#15803d' },
+  wordCountOver: { color: '#b03a09' },
+  readingLevel: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 11, color: '#12652f' },
   coachCard: {
     flexDirection: 'row',
     gap: 10,

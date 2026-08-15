@@ -54,10 +54,10 @@ export const APP_STATUS_CONFIG: Record<
   AppStatus,
   { label: string; color: string; bg: string; icon: string; announce: string }
 > = {
-  shortlisted: { label: "Shortlisted", color: "#6366F1", bg: "#EEF2FF", icon: "bookmark",     announce: "Shortlisted" },
-  applied:     { label: "Applied",     color: "#0EA5E9", bg: "#E0F2FE", icon: "send",         announce: "Applied" },
+  shortlisted: { label: "Shortlisted", color: "#4338ca", bg: "#EEF2FF", icon: "bookmark",     announce: "Shortlisted" },
+  applied:     { label: "Applied",     color: "#0369a1", bg: "#E0F2FE", icon: "send",         announce: "Applied" },
   supp_sent:   { label: "Supp. Sent",  color: "#B45309", bg: "#FFFBEB", icon: "file-text",    announce: "Supplementary application sent" },
-  offer:       { label: "Offer!",      color: "#7C3AED", bg: "#F5F3FF", icon: "star",         announce: "Offer received" },
+  offer:       { label: "Offer!",      color: "#6d28d9", bg: "#F5F3FF", icon: "star",         announce: "Offer received" },
   accepted:    { label: "Accepted",    color: "#047857", bg: "#ECFDF5", icon: "check-circle", announce: "Accepted" },
   declined:    { label: "Declined",    color: "#4B5563", bg: "#F3F4F6", icon: "x-circle",     announce: "Declined" },
 };

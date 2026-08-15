@@ -5,7 +5,8 @@
  * Mirrors the two behaviours Vercel provides in production so the E2E suite can
  * run locally and in CI without a deploy:
  *   1. long-lived caching for fingerprinted assets under /_expo and /assets
- *   2. an SPA rewrite — any unknown path falls back to index.html
+ *   2. the SPA rewrite — any unknown path falls back to the app shell,
+ *      app.html, while `/` is served from the filesystem as the landing page
  *
  * It is a test/preview harness, not the production server. Vercel serves the
  * real thing; `vercel.json` carries the security headers.
@@ -41,7 +42,15 @@ function resolveFile(pathname) {
   // resolved path cannot escape dist/.
   const candidate = resolve(join(ROOT, normalize(decodeURIComponent(pathname))));
   if (candidate !== ROOT && !candidate.startsWith(ROOT + sep)) return null;
-  if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
+  if (existsSync(candidate)) {
+    if (statSync(candidate).isFile()) return candidate;
+    // A directory request resolves to its index.html, which is how Vercel
+    // serves `/` from the filesystem before any rewrite is considered. Without
+    // this, `/` would fall through to the SPA shell and the landing page would
+    // never be reachable.
+    const indexFile = join(candidate, "index.html");
+    if (existsSync(indexFile) && statSync(indexFile).isFile()) return indexFile;
+  }
   return null;
 }
 
@@ -49,7 +58,9 @@ const server = createServer((req, res) => {
   const { pathname } = new URL(req.url ?? "/", `http://${req.headers.host}`);
 
   const direct = resolveFile(pathname);
-  const file = direct ?? join(ROOT, "index.html");
+  // Unmatched paths get the app shell, not index.html — index.html is the
+  // marketing page and owns `/` only. This mirrors the Vercel rewrite.
+  const file = direct ?? join(ROOT, "app.html");
 
   if (!existsSync(file)) {
     res.writeHead(404, { "content-type": "text/plain" });
