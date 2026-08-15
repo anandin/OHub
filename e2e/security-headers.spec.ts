@@ -1,11 +1,15 @@
 import { expect, test } from "@playwright/test";
 
 /**
- * Security header checks.
+ * Edge-configuration checks for a real deployment.
  *
- * These assert the headers declared in `vercel.json` are actually served.
- * They are skipped against the local static server, which has no header layer —
- * the point is to verify the deployed edge configuration, not `serve`.
+ * These assert what `vercel.json` actually produces at the edge — headers,
+ * caching, and the SPA rewrite. They are skipped against the local static
+ * server, which reimplements only enough of that behaviour to run the UI specs.
+ *
+ * Deliberately HTTP-only, no browser: this is the layer where a broken
+ * `vercel.json` shows up, and it should stay verifiable even where a browser
+ * cannot run.
  */
 const isRemote = Boolean(process.env.E2E_BASE_URL);
 
@@ -22,6 +26,7 @@ test.describe("security headers", () => {
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("base-uri 'none'");
     // No inline script execution — the whole app ships as one external bundle.
+    expect(csp).toContain("script-src 'self'");
     expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
   });
 
@@ -33,6 +38,7 @@ test.describe("security headers", () => {
     expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
     expect(headers["strict-transport-security"]).toContain("max-age=");
     expect(headers["cross-origin-opener-policy"]).toBe("same-origin");
+    expect(headers["cross-origin-resource-policy"]).toBe("same-origin");
   });
 
   test("denies the sensor and media permissions the app never uses", async ({
@@ -49,19 +55,55 @@ test.describe("security headers", () => {
   test("is served over HTTPS", async ({ baseURL }) => {
     expect(baseURL?.startsWith("https://")).toBe(true);
   });
+});
 
-  test("fingerprinted assets are cached immutably", async ({ request, page }) => {
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-    const bundleSrc = await page.evaluate(() => {
-      const script = document.querySelector<HTMLScriptElement>(
-        'script[src*="/_expo/static/js/"]',
-      );
-      return script?.getAttribute("src") ?? null;
+test.describe("edge routing", () => {
+  test.skip(!isRemote, "Rewrites come from Vercel; run with E2E_BASE_URL set.");
+
+  // Regression: the original `rewrites.source` was written as a negative-lookahead
+  // regex. A Vercel `source` is path-to-regexp, not a raw regex, and its groups do
+  // not span `/`, so it matched nothing and every deep link 404'd in production —
+  // while passing locally, because the local preview server does its own fallback.
+  const deepLinks = [
+    "/settings",
+    "/scholarships",
+    "/program/torontos-tla",
+    "/university/waterloo",
+    "/program/a-program-that-does-not-exist",
+  ];
+
+  for (const path of deepLinks) {
+    test(`${path} is served the app shell, not a 404`, async ({ request }) => {
+      const response = await request.get(path);
+
+      expect(response.status()).toBe(200);
+      expect(response.headers()["content-type"]).toContain("text/html");
+      expect(await response.text()).toContain('id="root"');
     });
+  }
+
+  test("real files are still served directly, not rewritten", async ({
+    request,
+  }) => {
+    const favicon = await request.get("/favicon.ico");
+    expect(favicon.status()).toBe(200);
+    expect(favicon.headers()["content-type"]).toContain("image");
+  });
+
+  test("fingerprinted assets are cached immutably", async ({ request }) => {
+    const html = await (await request.get("/")).text();
+    const bundleSrc = html.match(/src="(\/_expo\/static\/js\/web\/[^"]+)"/)?.[1];
 
     expect(bundleSrc, "no hashed bundle found in index.html").toBeTruthy();
 
-    const cacheControl = (await request.get(bundleSrc!)).headers()["cache-control"];
-    expect(cacheControl).toContain("immutable");
+    const headers = (await request.get(bundleSrc!)).headers();
+    expect(headers["cache-control"]).toContain("immutable");
+    expect(headers["cache-control"]).toContain("max-age=31536000");
+  });
+
+  test("the HTML shell is not cached immutably", async ({ request }) => {
+    // index.html must revalidate, or a deploy would never reach returning users.
+    const cacheControl = (await request.get("/")).headers()["cache-control"];
+    expect(cacheControl).not.toContain("immutable");
   });
 });

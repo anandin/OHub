@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import { proxy, STORAGE_STATE } from "./e2e/global-setup";
+
 /**
  * End-to-end config.
  *
@@ -9,9 +11,13 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const baseURL = process.env.E2E_BASE_URL ?? "http://127.0.0.1:4173";
 const isRemote = Boolean(process.env.E2E_BASE_URL);
+const needsAuth = Boolean(
+  process.env.E2E_SHARE_TOKEN ?? process.env.E2E_BYPASS_SECRET,
+);
 
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: "./e2e/global-setup.ts",
   timeout: 60_000,
   expect: { timeout: 15_000 },
   fullyParallel: true,
@@ -22,6 +28,10 @@ export default defineConfig({
     baseURL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    // Carries the Vercel protection-bypass cookie when testing a protected
+    // preview deployment. Only set when global setup actually wrote one.
+    ...(needsAuth ? { storageState: STORAGE_STATE } : {}),
+    ...(proxy ? { proxy } : {}),
   },
   projects: [
     {
