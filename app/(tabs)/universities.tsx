@@ -4,7 +4,6 @@ import {
   FlatList,
   Platform,
   Pressable,
-  Share,
   StyleSheet,
   Text,
   View,
@@ -14,7 +13,9 @@ import Feather from "@expo/vector-icons/Feather";
 
 import { Post, SAMPLE_POSTS, CATEGORY_CONFIG } from "@/data/feed";
 import { getUniversityById } from "@/data/universities";
+import { useSavedPosts } from "@/context/SavedPostsContext";
 import { useSubscriptions } from "@/context/SubscriptionsContext";
+import { sharePost } from "@/lib/share";
 
 type FeedTab = 'following' | 'trending' | 'all';
 
@@ -37,30 +38,38 @@ function PostItem({
   onTagPress: (tag: string) => void;
 }) {
   const uni = getUniversityById(post.universityId);
-  const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(post.likes);
   const catCfg = CATEGORY_CONFIG[post.category];
   const { toggleSubscription, isSubscribed } = useSubscriptions();
+  const { isLiked, toggleLike } = useSavedPosts();
   const following = isSubscribed(post.universityId);
+  const liked = isLiked(post.id);
+  const likes = liked ? post.likes + 1 : post.likes;
+  const [shareNote, setShareNote] = useState<string | null>(null);
 
-  const handleLike = () => {
-    setLiked(l => !l);
-    setLikes(n => liked ? n - 1 : n + 1);
-  };
+  const handleLike = () => toggleLike(post.id);
 
   const handleShare = async () => {
-    try {
-      await Share.share({
-        message: `${post.title}\n\n${post.body.slice(0, 200)}…\n\n— via UniHub`,
-        title: post.title,
-      });
-    } catch {}
+    const result = await sharePost({
+      title: post.title,
+      body: post.body,
+      url: post.sourceUrl,
+    });
+    if (result.via === "clipboard") {
+      setShareNote("Copied to clipboard");
+      setTimeout(() => setShareNote(null), 2000);
+    } else if (!result.ok) {
+      setShareNote("Couldn't share that");
+      setTimeout(() => setShareNote(null), 2000);
+    }
   };
 
   return (
     <Pressable
       style={styles.postItem}
       onPress={() => router.push({ pathname: '/post/[id]', params: { id: post.id } })}
+      accessibilityRole="button"
+      accessibilityLabel={`${post.title}. ${catCfg.label}${uni ? ` from ${uni.shortName}` : ''}, ${post.timeAgo}.`}
+      accessibilityHint="Opens the full post"
     >
       {/* Meta row */}
       <View style={styles.postMeta}>
@@ -77,6 +86,9 @@ function PostItem({
           style={[styles.followPill, following && styles.followPillActive]}
           onPress={e => { e.stopPropagation?.(); toggleSubscription(post.universityId); }}
           hitSlop={8}
+          accessibilityRole="button"
+          accessibilityState={{ selected: following }}
+          accessibilityLabel={`${following ? 'Unfollow' : 'Follow'} ${uni?.shortName ?? 'this university'}`}
         >
           <Text style={[styles.followPillText, following && styles.followPillTextActive]}>
             {following ? '✓' : '+'}
@@ -96,6 +108,8 @@ function PostItem({
               style={styles.tag}
               onPress={e => { e.stopPropagation?.(); onTagPress(tag); }}
               hitSlop={4}
+              accessibilityRole="button"
+              accessibilityLabel={`Filter the feed by ${tag}`}
             >
               <Text style={styles.tagText}>{tag}</Text>
             </Pressable>
@@ -108,16 +122,21 @@ function PostItem({
         <Pressable
           style={styles.actionBtn}
           onPress={e => { e.stopPropagation?.(); handleLike(); }}
+          accessibilityRole="button"
+          accessibilityState={{ selected: liked }}
+          accessibilityLabel={`${liked ? 'Unlike' : 'Like'} this post. ${likes} likes`}
         >
           <Feather name="heart" size={14} color={liked ? ED.warn : ED.muted} />
           <Text style={[styles.actionText, liked && { color: ED.warn }]}>{likes}</Text>
         </Pressable>
         <Pressable
           style={styles.actionBtn}
-          onPress={e => { e.stopPropagation?.(); handleShare(); }}
+          onPress={e => { e.stopPropagation?.(); void handleShare(); }}
+          accessibilityRole="button"
+          accessibilityLabel="Share this post"
         >
           <Feather name="share" size={14} color={ED.muted} />
-          <Text style={styles.actionText}>Share</Text>
+          <Text style={styles.actionText}>{shareNote ?? 'Share'}</Text>
         </Pressable>
       </View>
     </Pressable>
@@ -174,6 +193,9 @@ export default function PulseScreen() {
             key={tab.id}
             style={[styles.tabPill, activeTab === tab.id && styles.tabPillActive]}
             onPress={() => setActiveTab(tab.id)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activeTab === tab.id }}
+            accessibilityLabel={`${tab.label} posts`}
           >
             <Text style={[styles.tabLabel, activeTab === tab.id && styles.tabLabelActive]}>
               {tab.label}
@@ -187,7 +209,13 @@ export default function PulseScreen() {
         <View style={styles.tagFilterBar}>
           <Feather name="tag" size={12} color={ED.softInk} />
           <Text style={styles.tagFilterLabel}>{activeTag}</Text>
-          <Pressable onPress={() => setActiveTag(null)} hitSlop={8} style={styles.tagFilterClear}>
+          <Pressable
+            onPress={() => setActiveTag(null)}
+            hitSlop={8}
+            style={styles.tagFilterClear}
+            accessibilityRole="button"
+            accessibilityLabel="Clear the tag filter"
+          >
             <Feather name="x" size={13} color={ED.muted} />
           </Pressable>
         </View>
@@ -208,7 +236,12 @@ export default function PulseScreen() {
               <>
                 <Feather name="tag" size={28} color={ED.muted} style={{ marginBottom: 12 }} />
                 <Text style={styles.emptyTitle}>No posts tagged &ldquo;{activeTag}&rdquo;</Text>
-                <Pressable onPress={() => setActiveTag(null)} style={styles.clearTagBtn}>
+                <Pressable
+                  onPress={() => setActiveTag(null)}
+                  style={styles.clearTagBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear the tag filter"
+                >
                   <Text style={styles.clearTagBtnText}>Clear filter</Text>
                 </Pressable>
               </>

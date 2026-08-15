@@ -93,7 +93,14 @@ function AppRow({
 
   return (
     <View style={styles.appRow}>
-      <Pressable style={styles.appRowMain} onPress={() => setExpanded(e => !e)}>
+      <Pressable
+        style={styles.appRowMain}
+        onPress={() => setExpanded(e => !e)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        accessibilityLabel={`${uni.shortName}${entry.programName ? `, ${entry.programName}` : ''}. Status: ${status.label}`}
+        accessibilityHint={expanded ? 'Collapses the status options' : 'Expands the status options'}
+      >
         <View style={[styles.appUniDot, { backgroundColor: uni.color }]} />
         <View style={styles.appInfo}>
           <Text style={styles.appUniName}>{uni.shortName}</Text>
@@ -119,6 +126,9 @@ function AppRow({
                   key={s}
                   style={[styles.statusOption, active && styles.statusOptionActive]}
                   onPress={() => onUpdateStatus(entry.universityId, s)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={`Set status to ${cfg.label}`}
                 >
                   <Text style={[styles.statusOptionText, active && styles.statusOptionTextActive]}>
                     {cfg.label}
@@ -127,7 +137,12 @@ function AppRow({
               );
             })}
           </View>
-          <Pressable style={styles.removeBtn} onPress={() => onRemove(entry.universityId)}>
+          <Pressable
+            style={styles.removeBtn}
+            onPress={() => onRemove(entry.universityId)}
+            accessibilityRole="button"
+            accessibilityLabel={`Remove ${uni.shortName} from your applications`}
+          >
             <Feather name="trash-2" size={13} color={ED.muted} />
             <Text style={styles.removeBtnText}>Remove</Text>
           </Pressable>
@@ -175,7 +190,12 @@ function AddApplicationModal({
       <View style={styles.modal}>
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>Add application</Text>
-          <Pressable onPress={onClose}>
+          <Pressable
+            onPress={onClose}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+          >
             <Feather name="x" size={18} color={ED.muted} />
           </Pressable>
         </View>
@@ -185,6 +205,8 @@ function AddApplicationModal({
         <Pressable
           style={[styles.searchField, showUniSearch && styles.searchFieldFocused]}
           onPress={() => { setShowUniSearch(true); setShowProgramSearch(false); }}
+          accessibilityRole="button"
+          accessibilityLabel="Choose a university"
         >
           <Feather name="search" size={14} color={ED.muted} style={{ marginRight: 8 }} />
           {showUniSearch ? (
@@ -288,6 +310,9 @@ function AddApplicationModal({
 
         <Pressable
           style={[styles.modalAddBtn, !selectedUniId && styles.modalAddBtnDisabled]}
+          accessibilityRole="button"
+          accessibilityLabel="Add this application"
+          accessibilityState={{ disabled: !selectedUniId }}
           onPress={() => {
             if (selectedUniId) {
               onAdd(selectedUniId, selectedProgram);
@@ -449,6 +474,7 @@ export default function ApplyScreen() {
 }
 
 const styles = StyleSheet.create({
+  iconBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   container: { flex: 1, backgroundColor: '#f5f1e8' },
   content: { paddingBottom: 100 },
   header: {
