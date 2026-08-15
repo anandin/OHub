@@ -84,6 +84,13 @@ A Reddit-style mobile app for Ontario Grade 12 applicants. Aggregates university
 - Admissions tab: OUAC info, per-program requirements, admission averages, required courses, deadlines, supplementary app warnings, career paths
 - Track My Application button (opens status picker)
 
+*Scholarship Search (`/scholarships` + `/scholarship/[id]`):*
+- Linked from a card in the Apply tab
+- `data/scholarships.ts` — 21 real awards (National / University / Ontario / Community) with value, quantity, deadline, renewability, eligibility bullets, and verified official apply URLs
+- Searchable (name/keyword/eligibility), category filters incl. "No application" (automatic awards), sort by value or A–Z
+- Detail page shows all award facts + sticky "Apply on official site" button (Linking.openURL)
+- "Search more databases" card links OUInfo, OntarioScholarships.ca, ScholarshipsCanada, StudentAwards, OntarioColleges.ca
+
 **Data Files:**
 - `data/universities.ts` — 16 Ontario universities
 - `data/feed.ts` — 50+ SAMPLE_POSTS across all universities

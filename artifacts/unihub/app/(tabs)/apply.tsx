@@ -382,6 +382,20 @@ export default function ApplyScreen() {
           <Text style={styles.addBtnText}>Add application</Text>
         </Pressable>
 
+        {/* Scholarships card */}
+        <Pressable style={styles.scholCard} onPress={() => router.push('/scholarships')}>
+          <View style={styles.scholCardIcon}>
+            <Feather name="award" size={18} color={ED.softInk} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.scholCardTitle}>Find scholarships</Text>
+            <Text style={styles.scholCardSub}>
+              Search awards up to $120,000 — eligibility, deadlines and apply links
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={16} color={ED.muted} />
+        </Pressable>
+
         {/* Deadlines */}
         {deadlines.length > 0 && (
           <View style={styles.section}>
@@ -525,6 +539,28 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   addBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#f5f1e8' },
+  scholCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginHorizontal: 24,
+    marginBottom: 24,
+    backgroundColor: '#fbf8f1',
+    borderWidth: 1,
+    borderColor: '#e8e0cf',
+    borderRadius: 14,
+    padding: 16,
+  },
+  scholCardIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 999,
+    backgroundColor: '#f0ebe0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scholCardTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#1a1612' },
+  scholCardSub: { fontSize: 11, color: '#8b7e62', fontFamily: 'Inter_400Regular', marginTop: 2, lineHeight: 16 },
   deadlineRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

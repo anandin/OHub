@@ -53,6 +53,10 @@ function RootLayoutNav() {
         name="scholarships"
         options={{ headerShown: false, presentation: "card" }}
       />
+      <Stack.Screen
+        name="scholarship/[id]"
+        options={{ headerShown: false, presentation: "card" }}
+      />
 
       <Stack.Screen
         name="essay/[id]"

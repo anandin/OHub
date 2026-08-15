@@ -182,7 +182,7 @@ function getCoachTip(wordCount: number, limit: number): string | null {
 export default function EssayScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const prompt = (id && ESSAY_PROMPTS[id]) ?? ESSAY_PROMPTS[DEFAULT_ID];
+  const prompt = (id ? ESSAY_PROMPTS[id] : undefined) ?? ESSAY_PROMPTS[DEFAULT_ID];
 
   const [text, setText] = useState(SEED_TEXT[id ?? DEFAULT_ID] ?? '');
   const [lastSaved, setLastSaved] = useState<string | null>(null);
