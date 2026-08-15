@@ -4,253 +4,296 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>oHub — the Ontario university application, in one place</title>
-<meta name="description" content="Every Ontario university program, your OUAC deadlines, and honest Reach / Target / Safety tiers based on your actual marks. Free, private, and built by a Grade 12 student.">
-<meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#14110d" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Every Ontario university program, your OUAC deadlines, and where you actually stand — worked out from the marks you enter, never from a number we made up. Free, private, no account.">
+<meta name="theme-color" content="#f4efe4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12100c" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="/favicon.ico">
-<!-- No hardcoded canonical. The deployment domain has already changed twice
-     (o-hub-api-server -> o-hub) and a canonical pointing at a host that does
-     not resolve tells crawlers the real page lives somewhere it does not,
-     which suppresses indexing of the page that does exist. Browsers and
-     crawlers self-canonicalise correctly without it; add one back only
-     alongside a custom domain that will not move. -->
+<link rel="preload" href="/spectral-400.woff2" as="font" type="font/woff2" crossorigin>
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="oHub — the Ontario university application, in one place">
 <meta property="og:description" content="1,406 Ontario programs, OUAC deadlines, and honest admission tiers based on your actual marks. Free and private.">
 <meta property="og:locale" content="en_CA">
-<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:card" content="summary">
 
 <style>
-/* ─────────────────────────────────────────────────────────────────────────
-   oHub Editorial — the same tokens the app uses (constants/theme.ts).
-   Every colour pairing here is measured; ratios are noted beside each one.
-   ───────────────────────────────────────────────────────────────────────── */
-:root {
-  --paper:#f5f1e8; --card:#fbf8f1; --ink:#1a1612;      /* ink/paper  15.96:1 */
-  --soft:#5c4a2f;                                       /* soft/paper  7.53:1 */
-  --muted:#6f6449;                                      /* muted/paper 5.18:1 */
-  --rule:#e8e0cf; --pill:#d4c9b0;
-  --accent:#b03a09;                                     /* accent/paper 5.39:1 */
-  --accent-bg:#fef3e2; --accent-text:#9a3412;
-  --success:#12652f;                                    /* success/paper 6.36:1 */
-  --success-bg:#ecfdf5;
-  --shadow:rgba(26,22,18,.07);
-  --serif:"Fraunces",Georgia,"Times New Roman",serif;
-  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,"JetBrains Mono",Menlo,Consolas,monospace;
+/* ═══════════════════════════════════════════════════════════════════════════
+   oHub — landing
+
+   The display voice is Spectral, self-hosted (21 KB roman + 22 KB italic,
+   OFL). The page previously fell back to Georgia, which is the "closest
+   installed font" failure: an own-world page cannot borrow the platform's
+   serif and call it an identity. Instrument Serif and Fraunces were both
+   rejected — they sit on the same short list of faces every AI-generated
+   interface converges on. Spectral was drawn for screen reading, which is what
+   this page asks of it. Body text stays on the system UI stack deliberately:
+   it is the interface voice, not the display voice.
+
+   The surface is not the warm cream this kind of page reaches for by reflex —
+   the detector names that as the default "tasteful" AI background, and it was
+   right. This is the pale green of an Ontario exam booklet, with the deep
+   green-black of printed ink and the red of a teacher's marking pen for the
+   one accent. The palette comes from the student's actual desk rather than
+   from a mood. Every pairing below is measured; the ratio sits beside it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Spectral';
+  src: url('/spectral-400.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
 }
-/* Students use this at night. The dark palette is a re-render of the warm
-   editorial idea on near-black brown, not a mechanical inversion. */
+@font-face {
+  font-family: 'Spectral';
+  src: url('/spectral-400-italic.woff2') format('woff2');
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  --paper:   #e8ede4;   /* exam-booklet green */
+  --raised:  #f2f5ef;
+  --ink:     #131711;   /* on paper — 15.3:1 */
+  --soft:    #3f4a37;   /* on paper —  7.9:1 */
+  --muted:   #586352;   /* on paper —  5.3:1 */
+  --rule:    #ccd5c5;
+  --edge:    #b1bda8;
+  --accent:  #a3301a;   /* marking red — on paper 5.9:1 */
+  --on-accent: #f5f7f2; /* on accent —  6.5:1 */
+  --sel:     #d8e3cf;
+  --measure: 58ch;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper:#14110d; --card:#1e1a14; --ink:#f4efe3;     /* 16.40:1 */
-    --soft:#d6cbb4;                                      /* 11.71:1 */
-    --muted:#a99a7d;                                     /*  6.82:1 */
-    --rule:#332c22; --pill:#4a4034;
-    --accent:#fb923c;                                    /*  8.32:1 */
-    --accent-bg:#2a1a0e; --accent-text:#fdba74;
-    --success:#4ade80; --success-bg:#0f2418;
-    --shadow:rgba(0,0,0,.4);
+    color-scheme: dark;
+    --paper:   #0f120d;
+    --raised:  #181c15;
+    --ink:     #eef2e7;  /* on paper — 16.6:1 */
+    --soft:    #c9d2c0;  /* on paper — 12.1:1 */
+    --muted:   #939e8b;  /* on paper —  6.7:1 */
+    --rule:    #2a3025;
+    --edge:    #414a3b;
+    --accent:  #ef8a63;  /* on paper —  7.6:1 */
+    /* Dark ink on the light accent. The previous build used #fff here and
+       measured 2.3:1 — the detector caught it; the static palette audit had
+       not, because it never evaluated hover states. */
+    --on-accent: #131711; /* on accent — 7.3:1 */
+    --sel:     #2f3a26;
   }
 }
+html { -webkit-text-size-adjust: 100%; scrollbar-color: var(--edge) var(--paper) }
 
-*,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{
-  margin:0;background:var(--paper);color:var(--ink);
-  font-family:var(--sans);font-size:17px;line-height:1.6;
-  -webkit-font-smoothing:antialiased;
-}
-h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;margin:0;line-height:1.15}
-p{margin:0}
-a{color:inherit}
-
-/* Keyboard users must always be able to see where they are. */
-:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:4px}
-
-.skip{
-  position:absolute;left:-9999px;top:0;z-index:99;
-  background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:0 0 8px 0;
-}
-.skip:focus{left:0}
-
-.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
-.eyebrow{
-  font-size:12px;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--muted);font-weight:600;margin:0 0 12px
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* ── header ─────────────────────────────────────────────────────────────── */
-header{border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(--paper);z-index:10}
-.bar{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
-.brand{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:-.03em;text-decoration:none}
-.brand span{color:var(--accent)}
-.nav{display:flex;align-items:center;gap:8px}
-.nav a{
-  display:inline-flex;align-items:center;min-height:44px;padding:0 14px;
-  font-size:15px;font-weight:500;text-decoration:none;color:var(--soft);border-radius:8px
+/* The surfaces nobody draws. Left at browser defaults they belong to no design
+   system, and they are the cheapest tell that a page was assembled. */
+::selection { background: var(--sel); color: var(--ink) }
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
 }
-.nav a:hover{background:var(--card);color:var(--ink)}
-.nav .cta{background:var(--ink);color:var(--paper);padding:0 20px}
-.nav .cta:hover{background:var(--accent);color:#fff}
-@media (max-width:640px){.nav .hide-sm{display:none}}
+a { color: inherit; text-underline-offset: 0.22em; text-decoration-thickness: 1px }
 
-/* ── hero ───────────────────────────────────────────────────────────────── */
-.hero{padding:88px 0 72px;border-bottom:1px solid var(--rule)}
-.hero h1{font-size:clamp(38px,7vw,68px)}
-.hero .lede{
-  font-size:clamp(18px,2.2vw,21px);color:var(--soft);
-  max-width:44ch;margin-top:24px
-}
-.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  min-height:52px;padding:0 28px;border-radius:10px;
-  font-size:16px;font-weight:600;text-decoration:none;
-  border:1px solid transparent;transition:transform .12s ease,background .12s ease
-}
-.btn-primary{background:var(--ink);color:var(--paper)}
-.btn-primary:hover{background:var(--accent);color:#fff}
-.btn-secondary{border-color:var(--pill);color:var(--ink)}
-.btn-secondary:hover{background:var(--card)}
-.btn:active{transform:translateY(1px)}
-.reassure{margin-top:20px;font-size:14px;color:var(--muted)}
-
-/* Fixed column counts, not auto-fit: auto-fit left a fourth cell stranded
-   beside empty grid background on a phone, which reads as a rendering bug. */
-.figures{
-  display:grid;grid-template-columns:repeat(2,1fr);
-  gap:1px;margin-top:56px;background:var(--rule);
-  border:1px solid var(--rule);border-radius:14px;overflow:hidden
-}
-@media (min-width:720px){.figures{grid-template-columns:repeat(4,1fr)}}
-.figure{background:var(--paper);padding:22px 20px}
-.figure dt{font-size:13px;color:var(--muted);margin-bottom:6px}
-.figure dd{margin:0;font-family:var(--mono);font-size:26px;font-weight:500;letter-spacing:-.02em}
-
-/* ── sections ───────────────────────────────────────────────────────────── */
-section{padding:80px 0;border-bottom:1px solid var(--rule)}
-.section-head{max-width:56ch;margin-bottom:48px}
-.section-head h2{font-size:clamp(28px,4vw,40px)}
-.section-head p{margin-top:16px;color:var(--soft);font-size:18px}
-
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
-.card{
-  background:var(--card);border:1px solid var(--rule);border-radius:14px;
-  padding:28px;box-shadow:0 1px 3px var(--shadow)
-}
-.card h3{font-size:20px;margin-bottom:10px}
-.card p{color:var(--soft);font-size:15.5px}
-.card .icon{
-  width:40px;height:40px;border-radius:10px;background:var(--accent-bg);
-  display:grid;place-items:center;margin-bottom:18px;font-size:19px
+h1, h2, h3 {
+  font-family: 'Spectral', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  font-weight: 400;
+  margin: 0;
+  line-height: 1.04;
+  letter-spacing: -0.018em;
 }
 
-/* ── honesty callout ────────────────────────────────────────────────────── */
-.callout{
-  background:var(--card);border:1px solid var(--rule);
-  border-left:4px solid var(--accent);border-radius:0 14px 14px 0;padding:32px
+p, .promises li { margin: 0; max-width: var(--measure) }
+.promises li { max-width: 62ch }
+
+.skip {
+  position: absolute; left: -9999px; top: 0; z-index: 99;
+  background: var(--ink); color: var(--paper);
+  padding: 14px 22px; border-radius: 0 0 6px 0;
 }
-.callout h2{font-size:clamp(24px,3.4vw,32px);margin-bottom:16px}
-.callout p{color:var(--soft);max-width:62ch}
-.callout p + p{margin-top:14px}
+.skip:focus { left: 0 }
 
-/* ── privacy list ───────────────────────────────────────────────────────── */
-.checks{list-style:none;margin:0;padding:0;display:grid;gap:14px}
-.checks li{display:flex;gap:12px;align-items:flex-start;color:var(--soft)}
-.checks .tick{
-  flex:0 0 22px;height:22px;border-radius:50%;background:var(--success-bg);
-  color:var(--success);display:grid;place-items:center;font-size:12px;font-weight:700;margin-top:2px
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 22px }
+
+/* ── masthead ─────────────────────────────────────────────────────────────
+   A rule under the masthead, not a card or a shadow. The page is set like a
+   printed page and the horizontal rule is its structural vocabulary. */
+.masthead {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 20px; padding: 26px 0 22px;
+  border-bottom: 1px solid var(--rule);
 }
+.wordmark {
+  font-family: 'Spectral', Georgia, serif;
+  font-size: 26px; letter-spacing: -0.02em; text-decoration: none;
+}
+.wordmark em { font-style: italic; color: var(--accent) }
+.masthead nav { display: flex; align-items: center; gap: 4px }
+.masthead nav a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px;
+  font-size: 15px; color: var(--soft); text-decoration: none;
+}
+.masthead nav a:hover { color: var(--ink); text-decoration: underline }
+.wide-only { display: none }
+@media (min-width: 700px) { .wide-only { display: inline-flex } }
 
-/* ── final CTA ──────────────────────────────────────────────────────────── */
-.final{text-align:center;padding:96px 0}
-.final h2{font-size:clamp(30px,4.6vw,46px)}
-.final p{margin:18px auto 0;max-width:48ch;color:var(--soft);font-size:18px}
-.final .actions{justify-content:center}
+/* ── opening ───────────────────────────────────────────────────────────── */
+.opening { padding: 60px 0 48px }
+.opening h1 {
+  font-size: 48px;
+  max-width: 15ch;
+}
+.opening h1 em { font-style: italic; color: var(--accent) }
 
-footer{padding:44px 0 64px;font-size:14px;color:var(--muted)}
-.foot{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center}
-footer a{color:var(--soft)}
+.lede {
+  font-size: 19px;
+  color: var(--soft);
+  max-width: 42ch;
+  margin-top: 26px;
+}
+/* The counts live in the sentence rather than in a row of stat tiles. The
+   numbers are the same; a metric strip would just be furniture around them. */
+.lede b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums }
 
-@media (prefers-reduced-motion:reduce){
-  *{animation:none!important;transition:none!important}
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 36px }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 54px; padding: 0 30px; border-radius: 3px;
+  font-size: 17px; font-weight: 550; text-decoration: none;
+  border: 1px solid transparent;
+  transition: background 140ms cubic-bezier(.2,.7,.3,1),
+              color 140ms cubic-bezier(.2,.7,.3,1);
+}
+.btn-primary { background: var(--ink); color: var(--paper) }
+.btn-primary:hover { background: var(--accent); color: var(--on-accent) }
+.btn-secondary { border-color: var(--edge); color: var(--ink) }
+.btn-secondary:hover { background: var(--raised) }
+.aside { font-size: 15px; color: var(--muted); margin-top: 22px }
+
+/* ── editorial sections ────────────────────────────────────────────────────
+   Two columns: the claim on the left, the substance on the right. Replaces a
+   row of identical icon-heading-text cards, which is the one page scaffold
+   every generator reaches for and says nothing about this product. */
+section { padding: 56px 0; border-top: 1px solid var(--rule) }
+.spread { display: grid; gap: 24px }
+@media (min-width: 860px) {
+  .wrap { padding: 0 40px }
+  .spread { grid-template-columns: 22ch 1fr; gap: 56px }
+  .opening { padding: 104px 0 72px }
+  .opening h1 { font-size: 62px }
+  .lede { font-size: 21px }
+  section { padding: 88px 0 }
+  .spread > h2 { font-size: 37px }
+  .close { padding: 112px 0 }
+  .close h2 { font-size: 56px }
+}
+.spread > h2 { font-size: 31px; align-self: start }
+
+.entries { display: grid; gap: 34px }
+.entry h3 { font-size: 23px; margin-bottom: 7px }
+.entry p { color: var(--soft); font-size: 17px }
+
+.prose p + p { margin-top: 17px }
+.prose p { color: var(--soft) }
+.prose strong { color: var(--ink); font-weight: 600 }
+
+/* ── the promise list ─────────────────────────────────────────────────────
+   Drawn SVG ticks, one stroke weight. Emoji and Unicode dingbats are not an
+   icon system: they render as someone else's artwork and change per platform. */
+.promises { list-style: none; margin: 0; padding: 0; display: grid; gap: 15px }
+.promises li { display: flex; gap: 13px; align-items: baseline; color: var(--soft) }
+.promises svg { flex: none; width: 15px; height: 15px; color: var(--accent); translate: 0 2px }
+.promises b { color: var(--ink); font-weight: 600 }
+
+/* ── close ────────────────────────────────────────────────────────────── */
+.close { padding: 72px 0; border-top: 1px solid var(--rule) }
+.close h2 { font-size: 38px; max-width: 16ch }
+.close p { margin-top: 22px; color: var(--soft); font-size: 21px }
+
+footer { border-top: 1px solid var(--rule); padding: 30px 0 56px; font-size: 15px; color: var(--muted) }
+footer p { max-width: 48ch }
+.colophon { display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: space-between }
+footer a { color: var(--soft) }
+
+/* One authored moment: the opening settles in as the page arrives. Everything
+   below the fold is static — a repeated scroll entrance on every section is
+   scattered effects, not motion design. */
+@media (prefers-reduced-motion: no-preference) {
+  .opening > * { animation: settle 620ms cubic-bezier(.16,1,.3,1) backwards }
+  .opening h1     { animation-delay: 40ms }
+  .opening .lede  { animation-delay: 110ms }
+  .opening .actions { animation-delay: 170ms }
+  .opening .aside { animation-delay: 220ms }
+}
+@keyframes settle {
+  from { opacity: 0; transform: translateY(9px) }
+  to   { opacity: 1; transform: none }
 }
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
-<header>
-  <div class="wrap bar">
-    <a class="brand" href="/">o<span>Hub</span></a>
-    <nav class="nav" aria-label="Primary">
-      <a class="hide-sm" href="#how">How it works</a>
-      <a class="hide-sm" href="#privacy">Privacy</a>
-      <a class="cta" href="/today">Open oHub</a>
+<div class="wrap">
+  <header class="masthead">
+    <a class="wordmark" href="/">o<em>Hub</em></a>
+    <nav aria-label="Primary">
+      <a class="wide-only" href="#how">How it works</a>
+      <a class="wide-only" href="#privacy">Privacy</a>
+      <a href="/today">Open oHub</a>
     </nav>
-  </div>
-</header>
+  </header>
+</div>
 
 <main id="main">
 
-  <div class="wrap hero">
-    <p class="eyebrow">For Ontario Grade 12 applicants</p>
-    <h1>Every Ontario program,<br>one honest picture.</h1>
+  <div class="wrap opening">
+    <h1>Every Ontario program, <em>one honest picture.</em></h1>
     <p class="lede">
-      1,406 programs, your OUAC deadlines, and where you actually stand —
-      worked out from the marks you enter, never from a number we made up.
+      All <b>1,406</b> undergraduate programs across all <b>23</b> Ontario
+      universities, your OUAC deadlines, and where you actually stand — worked
+      out from the marks you enter, never from a number we made up.
     </p>
     <div class="actions">
-      <a class="btn btn-primary" href="/today">Open oHub — it's free</a>
+      <a class="btn btn-primary" href="/today">Open oHub</a>
       <a class="btn btn-secondary" href="#how">See how it works</a>
     </div>
-    <p class="reassure">No account. No email. Nothing leaves your device.</p>
-
-    <dl class="figures">
-      <div class="figure"><dt>Programs</dt><dd>1,406</dd></div>
-      <div class="figure"><dt>Universities</dt><dd>23</dd></div>
-      <div class="figure"><dt>Scholarships</dt><dd>21</dd></div>
-      <div class="figure"><dt>Cost</dt><dd>$0</dd></div>
-    </dl>
+    <p class="aside">It is free to use, and everything you enter stays in your own browser.</p>
   </div>
 
   <section id="how">
-    <div class="wrap">
-      <div class="section-head">
-        <p class="eyebrow">How it works</p>
-        <h2>Three things, done properly.</h2>
-        <p>
-          Applying to university in Ontario means juggling OUAC, a dozen program
-          pages and a supplementary form you found out about last week. oHub puts
-          the parts that matter in one place.
-        </p>
-      </div>
-      <div class="grid">
-        <article class="card">
-          <div class="icon" aria-hidden="true">📚</div>
+    <div class="wrap spread">
+      <h2>What it does</h2>
+      <div class="entries">
+        <article class="entry">
           <h3>Search every program</h3>
           <p>
-            All 1,406 undergraduate programs across all 23 Ontario universities —
-            admission averages, required Grade 12 courses, co-op, tuition, OUAC
-            codes and whether a supplementary application is waiting for you.
+            Admission averages, required Grade 12 courses, co-op, tuition, OUAC
+            codes, and whether a supplementary application is waiting for you —
+            for all 1,406 of them, in one search field.
           </p>
         </article>
-        <article class="card">
-          <div class="icon" aria-hidden="true">🎯</div>
+        <article class="entry">
           <h3>See where you stand</h3>
           <p>
             Enter your top six marks once and every program sorts into Reach,
-            Target or Safety against your real average. Haven't entered marks?
-            It says so, instead of guessing.
+            Target or Safety against your real average. Until you enter them it
+            shows the tier as unknown rather than estimating one.
           </p>
         </article>
-        <article class="card">
-          <div class="icon" aria-hidden="true">🗓️</div>
+        <article class="entry">
           <h3>Never miss a deadline</h3>
           <p>
-            A live countdown to the next OUAC date, plus a tracker that follows
+            A live countdown to the next OUAC date, and a tracker that follows
             each application from shortlisted through applied, supplementary
             sent, and offer.
           </p>
@@ -260,53 +303,67 @@ footer a{color:var(--soft)}
   </section>
 
   <section>
-    <div class="wrap">
-      <div class="callout">
-        <p class="eyebrow">Why you can trust the numbers</p>
-        <h2>It will tell you when it doesn't know.</h2>
+    <div class="wrap spread">
+      <h2>Why the numbers hold</h2>
+      <div class="prose">
         <p>
-          Most admission tools will hand you a confident percentage no matter what
-          you've told them. That is worse than useless when you are choosing where
-          to spend the next four years — a made-up number is indistinguishable from
-          a real one once it's on screen.
+          Most admission tools hand you a confident percentage no matter what
+          you've told them. That is worse than useless when you're choosing
+          where to spend four years — once a made-up number is on the screen it
+          is indistinguishable from a real one.
         </p>
         <p>
-          oHub refuses to do that. If you haven't entered your marks, it doesn't
-          estimate them. If a university hasn't published a cutoff, it says so
-          rather than inventing one. Every figure you see traces back to something
-          you entered or something a university published — and each program links
-          out to the official page, because averages and deadlines change.
+          <strong>oHub refuses to do that.</strong> Until you enter your marks
+          it will not estimate them, and where a university has published no
+          cutoff it says as much rather than inventing one. Every figure traces
+          back to something you entered or something a university published,
+          and each program links out to the official page, because averages and
+          deadlines change.
         </p>
       </div>
     </div>
   </section>
 
   <section id="privacy">
-    <div class="wrap">
-      <div class="section-head">
-        <p class="eyebrow">Privacy</p>
-        <h2>Your marks are nobody else's business.</h2>
-        <p>
+    <div class="wrap spread">
+      <h2>Your marks stay yours</h2>
+      <div>
+        <p style="color:var(--soft); margin-bottom:26px">
           oHub asks for your name, school, OUAC reference and grades. That is
-          sensitive, so the app is built so that none of it can reach us — there is
-          no server for it to reach.
+          sensitive, so it is built so none of it can reach us — there is no
+          server for it to reach.
         </p>
+        <ul class="promises">
+          <li>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg>
+            <span><b>No account, ever.</b> No sign-up, no email, no password to forget.</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg>
+            <span><b>Stored on your device only.</b> Everything lives in your own browser. There is no oHub database.</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg>
+            <span><b>No tracking, no analytics.</b> Nobody is counting your clicks or selling your data.</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg>
+            <span><b>Your OUAC reference is masked</b> on every screen except the one where you edit it.</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg>
+            <span><b>Erase it all in one tap.</b> Settings has a delete control that actually deletes.</span>
+          </li>
+        </ul>
       </div>
-      <ul class="checks">
-        <li><span class="tick" aria-hidden="true">✓</span><span><strong>No account, ever.</strong> No sign-up, no email, no password to forget.</span></li>
-        <li><span class="tick" aria-hidden="true">✓</span><span><strong>Stored on your device only.</strong> Everything lives in your own browser. There is no oHub database.</span></li>
-        <li><span class="tick" aria-hidden="true">✓</span><span><strong>No tracking or analytics.</strong> Nobody is counting your clicks or selling your data.</span></li>
-        <li><span class="tick" aria-hidden="true">✓</span><span><strong>Your OUAC reference is masked</strong> on every screen except the one where you edit it.</span></li>
-        <li><span class="tick" aria-hidden="true">✓</span><span><strong>Erase it all in one tap.</strong> Settings has a delete control that actually deletes.</span></li>
-      </ul>
     </div>
   </section>
 
-  <div class="wrap final">
+  <div class="wrap close">
     <h2>Start where you are.</h2>
     <p>
-      Open it, search a program you're curious about, and add your marks whenever
-      you feel like it. Nothing is required to get value out of it.
+      Open it, search a program you're curious about, add your marks whenever
+      you feel like it. Nothing is required to get something out of it.
     </p>
     <div class="actions">
       <a class="btn btn-primary" href="/today">Open oHub</a>
@@ -316,11 +373,11 @@ footer a{color:var(--soft)}
 </main>
 
 <footer>
-  <div class="wrap foot">
+  <div class="wrap colophon">
     <p>Built by Adhvaith Anand for Ontario applicants.</p>
     <p>
-      Not affiliated with OUAC or any university.
-      Always confirm dates on the <a href="https://www.ouac.on.ca" rel="noopener noreferrer">official OUAC site</a>.
+      Not affiliated with OUAC or any university. Always confirm dates on the
+      <a href="https://www.ouac.on.ca" rel="noopener noreferrer">official OUAC site</a>.
     </p>
   </div>
 </footer>
