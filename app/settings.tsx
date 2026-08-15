@@ -1,0 +1,323 @@
+import Feather from "@expo/vector-icons/Feather";
+import { router } from "expo-router";
+import React, { useState } from "react";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { ED } from "@/constants/colors";
+import { useApplications } from "@/context/ApplicationsContext";
+import { useSavedPosts } from "@/context/SavedPostsContext";
+import { useSubscriptions } from "@/context/SubscriptionsContext";
+import { useUser } from "@/context/UserContext";
+import { openExternalUrl } from "@/lib/safeLink";
+import { clearAll } from "@/lib/storage";
+
+/**
+ * Settings & privacy.
+ *
+ * oHub asks Grade 12 students for their name, school, OUAC reference number and
+ * marks. Anything that collects that much about a person owes them a plain
+ * answer to "what do you have on me, and how do I get rid of it?" — this screen
+ * is that answer, and the delete control actually clears every key the app owns.
+ */
+export default function SettingsScreen() {
+  const insets = useSafeAreaInsets();
+  const topInset = Platform.OS === "web" ? 20 : insets.top;
+
+  const { profile, tasks, reset: resetUser } = useUser();
+  const { applications, reset: resetApplications } = useApplications();
+  const { subscribed, reset: resetSubscriptions } = useSubscriptions();
+  const { savedPostIds, likedPostIds, reset: resetSaved } = useSavedPosts();
+
+  const [confirming, setConfirming] = useState(false);
+  const [erased, setErased] = useState(false);
+
+  const stored = [
+    {
+      label: "Profile",
+      detail: profile.name
+        ? `Name, school, OUAC reference, ${profile.marks.filter(Boolean).length} marks`
+        : "Nothing saved yet",
+    },
+    { label: "Applications tracked", detail: `${applications.length}` },
+    { label: "Universities followed", detail: `${subscribed.length}` },
+    {
+      label: "Posts saved / liked",
+      detail: `${savedPostIds.length} saved · ${likedPostIds.length} liked`,
+    },
+    { label: "Tasks", detail: `${tasks.length}` },
+  ];
+
+  const handleErase = async () => {
+    await clearAll();
+    resetUser();
+    resetApplications();
+    resetSubscriptions();
+    resetSaved();
+    setConfirming(false);
+    setErased(true);
+  };
+
+  return (
+    <ScrollView
+      style={[styles.container, { paddingTop: topInset }]}
+      contentContainerStyle={styles.content}
+    >
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.backBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Feather name="arrow-left" size={20} color={ED.ink} />
+        </Pressable>
+        <View>
+          <Text style={styles.eyebrow}>Settings</Text>
+          <Text style={styles.title}>Privacy & data</Text>
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Where your data lives</Text>
+        <Text style={styles.body}>
+          Everything you enter in oHub — your name, school, OUAC reference,
+          marks, tracked applications and saved posts — is stored only on this
+          device, in this browser. There is no oHub account and no oHub server:
+          nothing you type is uploaded, and nobody at oHub can read it.
+        </Text>
+        <Text style={styles.body}>
+          Because it is stored locally, clearing your browser data, or opening
+          oHub on a different device or in a private window, will show an empty
+          app. On a shared or school computer, use the erase control below when
+          you are done.
+        </Text>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>What is on this device</Text>
+        {stored.map((row) => (
+          <View key={row.label} style={styles.row}>
+            <Text style={styles.rowLabel}>{row.label}</Text>
+            <Text style={styles.rowValue}>{row.detail}</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Check the source</Text>
+        <Text style={styles.body}>
+          Admission averages, deadlines and scholarship details in oHub are
+          gathered from public sources and can go out of date. Always confirm
+          against the official page before you rely on a date or a cutoff.
+        </Text>
+        <Pressable
+          style={styles.linkBtn}
+          onPress={() => void openExternalUrl("https://www.ouac.on.ca")}
+          accessibilityRole="link"
+          accessibilityLabel="Open OUAC, the official Ontario application centre"
+          accessibilityHint="Opens ouac.on.ca in a new tab"
+        >
+          <Feather name="external-link" size={14} color={ED.ink} />
+          <Text style={styles.linkBtnText}>Open OUAC — the official source</Text>
+        </Pressable>
+      </View>
+
+      <View style={[styles.card, styles.dangerCard]}>
+        <Text style={styles.cardTitle}>Erase everything</Text>
+        <Text style={styles.body}>
+          Removes your profile, marks, tracked applications, followed
+          universities and saved posts from this device. This cannot be undone.
+        </Text>
+
+        {erased ? (
+          <View style={styles.doneRow} accessibilityLiveRegion="polite">
+            <Feather name="check-circle" size={16} color={ED.success} />
+            <Text style={styles.doneText}>
+              Erased. oHub is back to a fresh start.
+            </Text>
+          </View>
+        ) : confirming ? (
+          <View style={styles.confirmRow}>
+            <Pressable
+              style={[styles.dangerBtn, styles.dangerBtnFilled]}
+              onPress={() => void handleErase()}
+              accessibilityRole="button"
+              accessibilityLabel="Confirm — erase all my oHub data"
+            >
+              <Text style={styles.dangerBtnFilledText}>Yes, erase it all</Text>
+            </Pressable>
+            <Pressable
+              style={styles.cancelBtn}
+              onPress={() => setConfirming(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel erasing data"
+            >
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            style={styles.dangerBtn}
+            onPress={() => setConfirming(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Erase all my oHub data from this device"
+          >
+            <Feather name="trash-2" size={14} color={ED.warn} />
+            <Text style={styles.dangerBtnText}>Erase my oHub data</Text>
+          </Pressable>
+        )}
+      </View>
+
+      <Text style={styles.footer}>oHub · Built for Ontario applicants</Text>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: ED.paper },
+  content: { paddingBottom: 80 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 20,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: -10,
+  },
+  eyebrow: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 11,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: ED.muted,
+  },
+  title: {
+    fontFamily: "Fraunces_600SemiBold",
+    fontSize: 26,
+    color: ED.ink,
+    letterSpacing: -0.5,
+  },
+  card: {
+    backgroundColor: ED.card,
+    borderWidth: 1,
+    borderColor: ED.rule,
+    borderRadius: 14,
+    padding: 18,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    gap: 10,
+  },
+  dangerCard: { borderColor: "#e7cdbb" },
+  cardTitle: {
+    fontFamily: "Fraunces_600SemiBold",
+    fontSize: 17,
+    color: ED.ink,
+  },
+  body: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    lineHeight: 21,
+    color: ED.softInk,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: ED.rule,
+    gap: 16,
+  },
+  rowLabel: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 14,
+    color: ED.ink,
+    flexShrink: 1,
+  },
+  rowValue: {
+    fontFamily: "JetBrainsMono_400Regular",
+    fontSize: 13,
+    color: ED.muted,
+    textAlign: "right",
+    flexShrink: 1,
+  },
+  linkBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: ED.pillBorder,
+  },
+  linkBtnText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
+    color: ED.ink,
+  },
+  dangerBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#e7cdbb",
+  },
+  dangerBtnText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
+    color: ED.warn,
+  },
+  dangerBtnFilled: { backgroundColor: ED.warn, borderColor: ED.warn, flex: 1 },
+  dangerBtnFilledText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
+    color: ED.paper,
+  },
+  confirmRow: { flexDirection: "row", gap: 10, alignItems: "center" },
+  cancelBtn: {
+    minHeight: 44,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelBtnText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 14,
+    color: ED.softInk,
+  },
+  doneRow: { flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44 },
+  doneText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 14,
+    color: ED.success,
+    flexShrink: 1,
+  },
+  footer: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: ED.muted,
+    textAlign: "center",
+    marginTop: 8,
+  },
+});

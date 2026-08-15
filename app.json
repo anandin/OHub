@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "oHub",
+    "slug": "ohub",
+    "version": "1.0.0",
+    "description": "The Ontario university application companion — programs, deadlines, OUAC tracking and scholarships for Grade 12 students.",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "ohub",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f5f1e8"
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#f5f1e8"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/icon.png",
+      "themeColor": "#f5f1e8",
+      "backgroundColor": "#f5f1e8",
+      "shortName": "oHub",
+      "lang": "en-CA",
+      "display": "standalone"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
