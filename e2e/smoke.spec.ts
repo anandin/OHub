@@ -284,3 +284,80 @@ test.describe("dark mode", () => {
     expect((0.2126 * r + 0.7152 * g + 0.0722 * b) / 255).toBeLessThan(0.3);
   });
 });
+
+test.describe("landing craft floor", () => {
+  // Regressions for what Impeccable's detector flagged on the first landing
+  // build. Each of these shipped once; the assertion is cheaper than the audit.
+  test("no eyebrow labels, icon tiles, or side-tab borders", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const tells = await page.evaluate(() => {
+      const els = Array.from(document.querySelectorAll("*")) as HTMLElement[];
+      const found: string[] = [];
+      for (const el of els) {
+        const cs = getComputedStyle(el);
+        const w = parseFloat(cs.borderLeftWidth) || 0;
+        if (w > 1 && cs.borderLeftStyle !== "none") {
+          const c = cs.borderLeftColor;
+          if (c && c !== "rgba(0, 0, 0, 0)" && !c.startsWith("rgba(0, 0, 0, 0")) {
+            found.push(`side-tab: ${el.tagName.toLowerCase()} ${w}px`);
+          }
+        }
+        // A small square tile immediately before a heading is the AI feature card.
+        const box = el.getBoundingClientRect();
+        const next = el.nextElementSibling?.tagName ?? "";
+        if (
+          box.width > 0 && box.width <= 56 && Math.abs(box.width - box.height) < 6 &&
+          parseFloat(cs.borderRadius) > 3 && /^H[1-4]$/.test(next)
+        ) {
+          found.push(`icon-tile above ${next}`);
+        }
+      }
+      return found;
+    });
+
+    expect(tells, tells.join(" | ")).toEqual([]);
+  });
+
+  test("the display face is self-hosted, not a platform fallback", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => document.fonts.ready);
+
+    const family = await page
+      .locator("h1")
+      .evaluate((el) => getComputedStyle(el).fontFamily);
+    expect(family).toContain("Spectral");
+
+    const loaded = await page.evaluate(() =>
+      Array.from(document.fonts).some((f) => f.family === "Spectral" && f.status === "loaded"),
+    );
+    expect(loaded, "Spectral did not load — the page fell back to a system serif").toBe(true);
+  });
+
+  test("no emoji standing in for an icon system", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    const text = (await page.locator("body").innerText()) ?? "";
+    // Pictographic ranges; the drawn ticks are inline SVG and are not caught.
+    expect(text).not.toMatch(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u);
+  });
+
+  test("body text stays within a readable measure", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const tooWide = await page.evaluate(() => {
+      const out: string[] = [];
+      for (const p of Array.from(document.querySelectorAll("p, li"))) {
+        const el = p as HTMLElement;
+        if (!el.innerText.trim()) continue;
+        const size = parseFloat(getComputedStyle(el).fontSize);
+        // ~0.5em average glyph advance is the usual approximation.
+        const chars = el.getBoundingClientRect().width / (size * 0.5);
+        if (chars > 80) out.push(`${Math.round(chars)}ch: ${el.innerText.slice(0, 40)}`);
+      }
+      return out;
+    });
+
+    expect(tooWide, tooWide.join(" | ")).toEqual([]);
+  });
+});

@@ -132,3 +132,34 @@ and go out of date. The app says so, and links to the official page.
 ## Licence
 
 MIT.
+
+## Design
+
+`PRODUCT.md` holds durable product truth — users, purpose, positioning,
+constraints. It is the input to design decisions, not a design document.
+
+The landing page was rebuilt against [Impeccable](https://github.com/pbakaus/impeccable)'s
+anti-pattern detector, which flagged the first version as textbook
+AI-generated: eyebrow labels above headings, a row of identical icon-tile
+feature cards, a coloured `border-left` callout, a hero-metric strip, emoji
+standing in for an icon system, and a warm-cream background. All of it is gone.
+
+Typeface is **Spectral** (SIL Open Font License), self-hosted as two 22 KB
+subsets. Fraunces and Instrument Serif were both rejected: they sit on the
+short list of faces every AI-generated interface converges on.
+
+The surface is the pale green of an Ontario exam booklet, with printed-ink
+green-black and a teacher's marking red for the single accent — a palette taken
+from the student's desk rather than from a mood. Every pairing is measured and
+noted inline; all pass WCAG AA.
+
+Four E2E specs in `e2e/smoke.spec.ts` guard the result: no side-tabs or icon
+tiles, the display face actually loads, no emoji-as-icons, and body text inside
+a readable measure.
+
+To re-audit after a change:
+
+```bash
+node <impeccable>/scripts/detect.mjs landing/index.html   # static
+CI=1 node <impeccable>/scripts/detect.mjs http://127.0.0.1:4173/   # rendered
+```
