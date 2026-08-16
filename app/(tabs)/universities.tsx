@@ -288,7 +288,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingBottom: 16,
   },
   eyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: c.muted,
@@ -344,7 +344,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     marginLeft: 2,
   },
   catBadgeText: {
-    fontSize: 9,
+    fontSize: 11,
     fontFamily: 'Inter_600SemiBold',
     letterSpacing: 0.4,
     textTransform: 'uppercase',
@@ -385,7 +385,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingVertical: 3,
     backgroundColor: c.card,
   },
-  tagText: { fontSize: 10, color: c.softInk, fontFamily: 'Inter_500Medium' },
+  tagText: { fontSize: 11, color: c.softInk, fontFamily: 'Inter_500Medium' },
   postActions: { flexDirection: 'row', gap: 16, alignItems: 'center' },
   actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   actionText: { fontSize: 12, color: c.muted, fontFamily: 'Inter_400Regular' },

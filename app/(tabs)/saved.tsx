@@ -1,5 +1,6 @@
 import Feather from "@expo/vector-icons/Feather";
 import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
 import { useThemedStyles } from "@/lib/useThemedStyles";
 import React from "react";
 import {
@@ -12,11 +13,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PostCard } from "@/components/PostCard";
-import Colors from "@/constants/colors";
 import { useSavedPosts } from "@/context/SavedPostsContext";
 import { SAMPLE_POSTS } from "@/data/feed";
 
 export default function SavedScreen() {
+  const c = usePalette();
   const styles = useThemedStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const topInset = Platform.OS === "web" ? 67 : insets.top;
@@ -45,7 +46,7 @@ export default function SavedScreen() {
         scrollEnabled={!!savedPosts.length}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Feather name="bookmark" size={48} color={Colors.light.textMuted} />
+            <Feather name="bookmark" size={48} color={c.muted} />
             <Text style={styles.emptyTitle}>No saved posts yet</Text>
             <Text style={styles.emptySubtitle}>
               Tap the bookmark icon on any post to save it for later.
@@ -60,7 +61,7 @@ export default function SavedScreen() {
 const makeStyles = (c: Palette) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: c.paper,
   },
   header: {
     paddingHorizontal: 16,
@@ -70,12 +71,12 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    color: c.ink,
   },
   subtitle: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: c.muted,
     marginTop: 2,
   },
   listContent: {
@@ -92,13 +93,13 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    color: c.ink,
     textAlign: "center",
   },
   emptySubtitle: {
     fontSize: 14,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
     textAlign: "center",
     lineHeight: 20,
   },

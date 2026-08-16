@@ -25,7 +25,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: c.ink,
         tabBarInactiveTintColor: c.muted,
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 11,
           fontFamily: "Inter_500Medium",
           marginTop: -2,
         },

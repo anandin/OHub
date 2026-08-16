@@ -206,7 +206,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   backBtn: { paddingTop: 4 },
   headerText: { flex: 1 },
   eyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: c.muted,
@@ -257,7 +257,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingBottom: 6,
   },
   metaCount: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: c.muted,
@@ -297,7 +297,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  autoPillText: { fontSize: 10, fontFamily: 'Inter_600SemiBold', color: c.successText },
+  autoPillText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: c.successText },
   rowDesc: {
     fontSize: 12,
     color: c.softInk,
@@ -332,7 +332,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     padding: 18,
   },
   sectionLabel: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: c.muted,

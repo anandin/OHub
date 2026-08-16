@@ -359,7 +359,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingBottom: 16,
   },
   eyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: c.muted,
@@ -394,7 +394,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   profileName: { fontFamily: 'Inter_600SemiBold', fontSize: 16, color: c.ink },
   profileSchool: { fontSize: 12, color: c.muted, marginTop: 2, fontFamily: 'Inter_400Regular' },
   ouacRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  ouacLabel: { fontSize: 10, color: c.muted, fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8 },
+  ouacLabel: { fontSize: 11, color: c.muted, fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8 },
   ouacRef: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 12, color: c.softInk },
   statsGrid: {
     flexDirection: 'row',
@@ -411,7 +411,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     padding: 12,
     alignItems: 'center',
   },
-  statLabel: { fontSize: 9, color: c.muted, fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, textAlign: 'center' },
+  statLabel: { fontSize: 11, color: c.muted, fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, textAlign: 'center' },
   statValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 18, color: c.ink, textAlign: 'center' },
   divider: { height: 1, backgroundColor: c.rule, marginHorizontal: 24, marginBottom: 20 },
   section: { paddingHorizontal: 24, marginBottom: 20 },
@@ -423,7 +423,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   saveMarksBtnText: { fontSize: 12, color: c.paper, fontFamily: 'Inter_500Medium' },
   marksGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   markItem: { width: '47%', backgroundColor: c.card, borderWidth: 1, borderColor: c.rule, borderRadius: 10, padding: 12 },
-  markCourse: { fontSize: 10, color: c.muted, fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, minHeight: 16 },
+  markCourse: { fontSize: 11, color: c.muted, fontFamily: 'Inter_500Medium', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4, minHeight: 16 },
   markCodeInput: {
     fontFamily: 'JetBrainsMono_400Regular',
     fontSize: 11,
@@ -487,7 +487,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   },
   modalTitle: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: c.ink },
   modalLabel: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: c.muted,

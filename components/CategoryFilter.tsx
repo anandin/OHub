@@ -1,10 +1,10 @@
 import Feather from "@expo/vector-icons/Feather";
 import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
 import { useThemedStyles } from "@/lib/useThemedStyles";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 
-import Colors from "@/constants/colors";
 import { CATEGORY_CONFIG, PostCategory } from "@/data/feed";
 
 const ALL_CATEGORIES: PostCategory[] = [
@@ -28,6 +28,7 @@ interface CategoryFilterProps {
 }
 
 export function CategoryFilter({ selected, onSelect }: CategoryFilterProps) {
+  const c = usePalette();
   const styles = useThemedStyles(makeStyles);
   return (
     <ScrollView
@@ -66,7 +67,7 @@ export function CategoryFilter({ selected, onSelect }: CategoryFilterProps) {
             <Feather
               name={config.icon as any}
               size={12}
-              color={isActive ? "#fff" : Colors.light.textSecondary}
+              color={isActive ? c.paper : c.softInk}
             />
             <Text
               style={[styles.chipText, isActive && styles.chipTextActive]}
@@ -96,20 +97,20 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: c.rule,
   },
   chipActive: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
+    backgroundColor: c.ink,
+    borderColor: c.ink,
   },
   chipText: {
     fontSize: 13,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
   },
   chipTextActive: {
-    color: "#fff",
+    color: c.paper,
   },
 });

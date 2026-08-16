@@ -36,6 +36,6 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   },
   linkText: {
     fontSize: 14,
-    color: "#2e78b7",
+    color: c.warnText,
   },
 });

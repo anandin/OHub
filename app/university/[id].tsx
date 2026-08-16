@@ -1,5 +1,6 @@
 import Feather from "@expo/vector-icons/Feather";
 import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
 import { useThemedStyles } from "@/lib/useThemedStyles";
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
@@ -15,10 +16,10 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { legibleBrand, readableOn } from "@/lib/contrast";
 import { openExternalUrl } from "@/lib/safeLink";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { PostCard } from "@/components/PostCard";
-import Colors from "@/constants/colors";
 import {
   APP_STATUS_CONFIG,
   APP_STATUS_ORDER,
@@ -34,6 +35,7 @@ import { getUniversityById } from "@/data/universities";
 type DetailTab = "feed" | "programs" | "admissions" | "about";
 
 export default function UniversityDetailScreen() {
+  const c = usePalette();
   const styles = useThemedStyles(makeStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
@@ -56,6 +58,15 @@ export default function UniversityDetailScreen() {
       </View>
     );
   }
+
+  // Twenty brand colours, chosen by twenty marketing departments. White on
+  // Waterloo's #FFC72C measures 1.60:1 — a school name a student cannot read.
+  // The foreground is measured rather than assumed. See lib/contrast.ts.
+  const onBrand = readableOn(university.color);
+  const onBrandMuted = `${onBrand}bf`;
+  // Once following, the pill is card-coloured and the brand becomes the
+  // text. Nine of the twenty brand colours are too dark to read there.
+  const brandOnCard = legibleBrand(university.color, c.card, c.ink);
 
   const subscribed = isSubscribed(university.id);
   const tracked = isTracked(university.id);
@@ -93,20 +104,29 @@ export default function UniversityDetailScreen() {
     <>
       <View style={[styles.heroSection, { backgroundColor: university.color }]}>
         <View style={[styles.topBar, { paddingTop: topInset }]}>
-          <Pressable style={styles.backBtn} onPress={() => router.back()}>
-            <Feather name="arrow-left" size={20} color="#fff" />
+          <Pressable
+            style={[styles.backBtn, { backgroundColor: `${onBrand}33` }]}
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Feather name="arrow-left" size={20} color={onBrand} />
           </Pressable>
           <View style={styles.topBarRight}>
             <Pressable
-              style={[styles.subscribeHeroBtn, subscribed && styles.subscribedHeroBtn]}
+              style={[
+                styles.subscribeHeroBtn,
+                { backgroundColor: `${onBrand}33` },
+                subscribed && styles.subscribedHeroBtn,
+              ]}
               onPress={handleSubscribe}
             >
               <Feather
                 name={subscribed ? "check" : "rss"}
                 size={15}
-                color={subscribed ? university.color : "#fff"}
+                color={subscribed ? brandOnCard : onBrand}
               />
-              <Text style={[styles.subscribeHeroBtnText, subscribed && { color: university.color }]}>
+              <Text style={[styles.subscribeHeroBtnText, { color: subscribed ? brandOnCard : onBrand }]}>
                 {subscribed ? "Following" : "Follow"}
               </Text>
             </Pressable>
@@ -114,33 +134,33 @@ export default function UniversityDetailScreen() {
         </View>
 
         <View style={styles.heroContent}>
-          <View style={styles.uniLogoCircle}>
+          <View style={[styles.uniLogoCircle, { backgroundColor: `${onBrand}26` }]}>
             <Text style={styles.uniLogo}>{university.logo}</Text>
           </View>
-          <Text style={styles.heroName}>{university.name}</Text>
+          <Text style={[styles.heroName, { color: onBrand }]}>{university.name}</Text>
           <View style={styles.heroMeta}>
-            <Feather name="map-pin" size={13} color="rgba(255,255,255,0.8)" />
-            <Text style={styles.heroMetaText}>{university.location}</Text>
-            <Text style={styles.heroDot}>·</Text>
-            <Text style={styles.heroMetaText}>Est. {university.established}</Text>
+            <Feather name="map-pin" size={13} color={onBrandMuted} />
+            <Text style={[styles.heroMetaText, { color: onBrandMuted }]}>{university.location}</Text>
+            <Text style={[styles.heroDot, { color: onBrandMuted }]}>·</Text>
+            <Text style={[styles.heroMetaText, { color: onBrandMuted }]}>Est. {university.established}</Text>
           </View>
 
-          <View style={styles.heroStats}>
+          <View style={[styles.heroStats, { backgroundColor: `${onBrand}26` }]}>
             <View style={styles.heroStat}>
-              <Text style={styles.heroStatValue}>
+              <Text style={[styles.heroStatValue, { color: onBrand }]}>
                 {(university.enrollment / 1000).toFixed(0)}K+
               </Text>
-              <Text style={styles.heroStatLabel}>Students</Text>
+              <Text style={[styles.heroStatLabel, { color: onBrandMuted }]}>Students</Text>
             </View>
-            <View style={styles.heroStatDivider} />
+            <View style={[styles.heroStatDivider, { backgroundColor: `${onBrand}40` }]} />
             <View style={styles.heroStat}>
-              <Text style={styles.heroStatValue}>{university.faculties.length}</Text>
-              <Text style={styles.heroStatLabel}>Faculties</Text>
+              <Text style={[styles.heroStatValue, { color: onBrand }]}>{university.faculties.length}</Text>
+              <Text style={[styles.heroStatLabel, { color: onBrandMuted }]}>Faculties</Text>
             </View>
-            <View style={styles.heroStatDivider} />
+            <View style={[styles.heroStatDivider, { backgroundColor: `${onBrand}40` }]} />
             <View style={styles.heroStat}>
-              <Text style={styles.heroStatValue}>{uniPrograms.length || "–"}</Text>
-              <Text style={styles.heroStatLabel}>Programs</Text>
+              <Text style={[styles.heroStatValue, { color: onBrand }]}>{uniPrograms.length || "–"}</Text>
+              <Text style={[styles.heroStatLabel, { color: onBrandMuted }]}>Programs</Text>
             </View>
           </View>
         </View>
@@ -161,7 +181,7 @@ export default function UniversityDetailScreen() {
           <Feather
             name={tracked ? (APP_STATUS_CONFIG[application!.status].icon as any) : "clipboard"}
             size={16}
-            color={tracked ? APP_STATUS_CONFIG[application!.status].color : Colors.light.primary}
+            color={tracked ? APP_STATUS_CONFIG[application!.status].color : c.ink}
           />
           <Text
             style={[
@@ -213,7 +233,7 @@ export default function UniversityDetailScreen() {
                 setShowStatusPicker(false);
               }}
             >
-              <Feather name="trash-2" size={13} color={Colors.light.textMuted} />
+              <Feather name="trash-2" size={13} color={c.muted} />
               <Text style={styles.removeTrackText}>Remove from tracker</Text>
             </Pressable>
           </View>
@@ -270,7 +290,7 @@ export default function UniversityDetailScreen() {
           scrollEnabled
           ListEmptyComponent={
             <View style={styles.emptySection}>
-              <Feather name="inbox" size={36} color={Colors.light.textMuted} />
+              <Feather name="inbox" size={36} color={c.muted} />
               <Text style={styles.emptyText}>No posts yet</Text>
             </View>
           }
@@ -293,7 +313,7 @@ export default function UniversityDetailScreen() {
           <View style={styles.section}>
             {uniPrograms.length === 0 ? (
               <View style={styles.emptySection}>
-                <Feather name="book-open" size={36} color={Colors.light.textMuted} />
+                <Feather name="book-open" size={36} color={c.muted} />
                 <Text style={styles.emptyText}>No programs listed yet</Text>
               </View>
             ) : (
@@ -305,7 +325,7 @@ export default function UniversityDetailScreen() {
                       <Text style={styles.programFaculty}>{prog.faculty} · {prog.degree}</Text>
                     </View>
                     <View style={[styles.progBadge, prog.hasCoOp && styles.coOpBadge]}>
-                      <Text style={[styles.progBadgeText, prog.hasCoOp && { color: Colors.light.success }]}>
+                      <Text style={[styles.progBadgeText, prog.hasCoOp && { color: c.success }]}>
                         {prog.hasCoOp ? "Co-op ✓" : "Regular"}
                       </Text>
                     </View>
@@ -313,15 +333,15 @@ export default function UniversityDetailScreen() {
                   <Text style={styles.programDesc}>{prog.description}</Text>
                   <View style={styles.progStats}>
                     <View style={styles.progStat}>
-                      <Feather name="trending-up" size={12} color={Colors.light.primary} />
+                      <Feather name="trending-up" size={12} color={c.ink} />
                       <Text style={styles.progStatText}>{prog.averageGrade} avg</Text>
                     </View>
                     <View style={styles.progStat}>
-                      <Feather name="clock" size={12} color={Colors.light.primary} />
+                      <Feather name="clock" size={12} color={c.ink} />
                       <Text style={styles.progStatText}>{prog.duration}</Text>
                     </View>
                     <View style={styles.progStat}>
-                      <Feather name="dollar-sign" size={12} color={Colors.light.primary} />
+                      <Feather name="dollar-sign" size={12} color={c.ink} />
                       <Text style={styles.progStatText}>{prog.tuition}</Text>
                     </View>
                   </View>
@@ -336,7 +356,7 @@ export default function UniversityDetailScreen() {
                     </View>
                   </View>
                   <View style={styles.deadlineRow}>
-                    <Feather name="calendar" size={13} color={Colors.light.textMuted} />
+                    <Feather name="calendar" size={13} color={c.muted} />
                     <Text style={styles.deadlineText}>Deadline: {prog.applicationDeadline}</Text>
                     <Text style={styles.ouacCode}>OUAC: {prog.ouacCode}</Text>
                   </View>
@@ -353,7 +373,7 @@ export default function UniversityDetailScreen() {
             {/* OUAC info card */}
             <View style={styles.admissionInfoCard}>
               <View style={styles.admissionInfoHeader}>
-                <Feather name="send" size={16} color={Colors.light.primary} />
+                <Feather name="send" size={16} color={c.ink} />
                 <Text style={styles.admissionInfoTitle}>How to Apply</Text>
               </View>
               <Text style={styles.admissionInfoBody}>
@@ -369,7 +389,7 @@ export default function UniversityDetailScreen() {
                 accessibilityLabel="Apply via OUAC"
                 accessibilityHint="Opens ouac.on.ca in a new tab"
               >
-                <Feather name="external-link" size={14} color="#fff" />
+                <Feather name="external-link" size={14} color={c.paper} />
                 <Text style={styles.ouacApplyBtnText}>Open OUAC Portal</Text>
               </Pressable>
             </View>
@@ -406,7 +426,7 @@ export default function UniversityDetailScreen() {
                       </View>
                       <View style={styles.admissionProgItem}>
                         <Text style={styles.admissionProgItemLabel}>Co-op</Text>
-                        <Text style={[styles.admissionProgItemValue, { color: prog.hasCoOp ? Colors.light.success : Colors.light.textMuted }]}>
+                        <Text style={[styles.admissionProgItemValue, { color: prog.hasCoOp ? c.success : c.muted }]}>
                           {prog.hasCoOp ? "Available ✓" : "No"}
                         </Text>
                       </View>
@@ -424,7 +444,7 @@ export default function UniversityDetailScreen() {
                     </View>
 
                     <View style={styles.admissionProgDeadline}>
-                      <Feather name="calendar" size={12} color={Colors.light.textMuted} />
+                      <Feather name="calendar" size={12} color={c.muted} />
                       <Text style={styles.admissionProgDeadlineText}>
                         Deadline: {prog.applicationDeadline}
                       </Text>
@@ -456,7 +476,7 @@ export default function UniversityDetailScreen() {
                         <Text
                           style={[
                             styles.deadlineCardDaysNum,
-                            { color: days <= 14 ? "#EF4444" : Colors.light.primary },
+                            { color: days <= 14 ? c.error : c.ink },
                           ]}
                         >
                           {days < 0 ? "–" : days === 0 ? "Today" : days}
@@ -473,7 +493,7 @@ export default function UniversityDetailScreen() {
 
             {/* Supplementary app info */}
             <View style={styles.suppCard}>
-              <Feather name="file-text" size={16} color="#F59E0B" />
+              <Feather name="file-text" size={16} color={c.amberBorder} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.suppTitle}>Supplementary Applications</Text>
                 <Text style={styles.suppBody}>
@@ -523,8 +543,8 @@ export default function UniversityDetailScreen() {
                   accessibilityLabel={`Visit ${university.name} website`}
                   accessibilityHint="Opens in a new tab"
             >
-              <Feather name="external-link" size={16} color="#fff" />
-              <Text style={styles.websiteBtnText}>Visit Official Website</Text>
+              <Feather name="external-link" size={16} color={onBrand} />
+              <Text style={[styles.websiteBtnText, { color: onBrand }]}>Visit Official Website</Text>
             </Pressable>
 
             <View style={styles.infoGrid}>
@@ -561,7 +581,7 @@ export default function UniversityDetailScreen() {
                 <Text style={styles.sectionTitle}>Affiliated Organizations</Text>
                 {university.affiliated.map((org, index) => (
                   <View key={index} style={styles.affiliatedRow}>
-                    <Feather name="users" size={14} color={Colors.light.primary} />
+                    <Feather name="users" size={14} color={c.ink} />
                     <Text style={styles.affiliatedName}>{org}</Text>
                   </View>
                 ))}
@@ -579,7 +599,7 @@ export default function UniversityDetailScreen() {
 const makeStyles = (c: Palette) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: c.paper,
   },
   notFound: {
     flex: 1,
@@ -590,12 +610,12 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   notFoundText: {
     fontSize: 18,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
+    color: c.ink,
   },
   backLink: {
     fontSize: 15,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
+    color: c.ink,
   },
   heroSection: {
     paddingBottom: 20,
@@ -616,7 +636,8 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    // Colour comes from `onBrand` at the render site — it depends on the
+    // university's brand colour, which a static sheet cannot see.
     alignItems: "center",
     justifyContent: "center",
   },
@@ -624,18 +645,18 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    // Colour comes from `onBrand` at the render site — it depends on the
+    // university's brand colour, which a static sheet cannot see.
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
   },
   subscribedHeroBtn: {
-    backgroundColor: "#fff",
+    backgroundColor: c.card,
   },
   subscribeHeroBtnText: {
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
-    color: "#fff",
   },
   heroContent: {
     alignItems: "center",
@@ -646,7 +667,6 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 4,
@@ -657,7 +677,6 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   heroName: {
     fontSize: 22,
     fontFamily: "Inter_700Bold",
-    color: "#fff",
     textAlign: "center",
   },
   heroMeta: {
@@ -668,15 +687,11 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   heroMetaText: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
-    color: "rgba(255,255,255,0.85)",
   },
-  heroDot: {
-    color: "rgba(255,255,255,0.5)",
-  },
+  heroDot: {},
   heroStats: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.15)",
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -691,27 +706,24 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   heroStatValue: {
     fontSize: 20,
     fontFamily: "Inter_700Bold",
-    color: "#fff",
   },
   heroStatLabel: {
     fontSize: 11,
     fontFamily: "Inter_400Regular",
-    color: "rgba(255,255,255,0.75)",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   heroStatDivider: {
     width: 1,
     height: 32,
-    backgroundColor: "rgba(255,255,255,0.25)",
   },
   trackSection: {
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 8,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    borderBottomColor: c.rule,
   },
   trackBtn: {
     flexDirection: "row",
@@ -720,15 +732,15 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 11,
     borderRadius: 12,
-    backgroundColor: Colors.light.primaryMuted,
+    backgroundColor: c.warnBg,
     borderWidth: 1,
-    borderColor: Colors.light.primary + "33",
+    borderColor: c.ink + "33",
   },
   trackBtnText: {
     flex: 1,
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
+    color: c.ink,
   },
   statusPicker: {
     flexDirection: "row",
@@ -743,7 +755,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: Colors.light.backgroundSecondary,
+    backgroundColor: c.paperAlt,
   },
   statusOptionText: {
     fontSize: 12,
@@ -756,17 +768,17 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: Colors.light.backgroundSecondary,
+    backgroundColor: c.paperAlt,
   },
   removeTrackText: {
     fontSize: 12,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.textMuted,
+    color: c.muted,
   },
   tabsBar: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    borderBottomColor: c.rule,
   },
   tabsScroll: {
     paddingHorizontal: 12,
@@ -781,7 +793,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   tabText: {
     fontSize: 14,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.textMuted,
+    color: c.muted,
   },
   tabTextActive: {
     fontFamily: "Inter_700Bold",
@@ -814,10 +826,10 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   emptyText: {
     fontSize: 15,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.textMuted,
+    color: c.muted,
   },
   programCard: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderRadius: 14,
     padding: 14,
     gap: 10,
@@ -839,31 +851,31 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   programName: {
     fontSize: 16,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    color: c.ink,
   },
   programFaculty: {
     fontSize: 12,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: c.muted,
   },
   progBadge: {
-    backgroundColor: Colors.light.primaryMuted,
+    backgroundColor: c.warnBg,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
   },
   coOpBadge: {
-    backgroundColor: Colors.light.success + "15",
+    backgroundColor: c.success + "15",
   },
   progBadgeText: {
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
+    color: c.ink,
   },
   programDesc: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
     lineHeight: 18,
   },
   progStats: {
@@ -879,7 +891,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   progStatText: {
     fontSize: 12,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.text,
+    color: c.ink,
   },
   reqCoursesSection: {
     gap: 6,
@@ -887,7 +899,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   reqCoursesLabel: {
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
@@ -897,7 +909,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     gap: 6,
   },
   reqCourse: {
-    backgroundColor: Colors.light.backgroundSecondary,
+    backgroundColor: c.paperAlt,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -905,7 +917,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   reqCourseText: {
     fontSize: 12,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
   },
   deadlineRow: {
     flexDirection: "row",
@@ -916,26 +928,26 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   deadlineText: {
     fontSize: 12,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: c.muted,
     flex: 1,
   },
   ouacCode: {
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
-    backgroundColor: Colors.light.primaryMuted,
+    color: c.ink,
+    backgroundColor: c.warnBg,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
   },
   // Admissions tab styles
   admissionInfoCard: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderRadius: 14,
     padding: 14,
     gap: 10,
     borderLeftWidth: 4,
-    borderLeftColor: Colors.light.primary,
+    borderLeftColor: c.ink,
   },
   admissionInfoHeader: {
     flexDirection: "row",
@@ -945,23 +957,23 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   admissionInfoTitle: {
     fontSize: 15,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    color: c.ink,
   },
   admissionInfoBody: {
     fontSize: 14,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
     lineHeight: 21,
   },
   admissionLink: {
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
+    color: c.ink,
   },
   ouacApplyBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: c.ink,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
@@ -970,18 +982,18 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   ouacApplyBtnText: {
     fontSize: 13,
     fontFamily: "Inter_600SemiBold",
-    color: "#fff",
+    color: c.paper,
   },
   sectionTitle: {
     fontSize: 13,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginTop: 6,
   },
   admissionProgCard: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderRadius: 14,
     padding: 14,
     gap: 10,
@@ -1003,15 +1015,15 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   admissionProgName: {
     fontSize: 16,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    color: c.ink,
   },
   admissionProgFaculty: {
     fontSize: 12,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: c.muted,
   },
   admissionAvgBadge: {
-    backgroundColor: Colors.light.primaryMuted,
+    backgroundColor: c.warnBg,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
@@ -1020,12 +1032,12 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   admissionAvgText: {
     fontSize: 16,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.primary,
+    color: c.ink,
   },
   admissionAvgLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.primary,
+    color: c.ink,
   },
   admissionProgGrid: {
     flexDirection: "row",
@@ -1034,7 +1046,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   },
   admissionProgItem: {
     width: "47%",
-    backgroundColor: Colors.light.backgroundSecondary,
+    backgroundColor: c.paperAlt,
     borderRadius: 10,
     padding: 10,
     gap: 2,
@@ -1042,14 +1054,14 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   admissionProgItemLabel: {
     fontSize: 11,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: c.muted,
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
   admissionProgItemValue: {
     fontSize: 13,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
+    color: c.ink,
   },
   admissionProgDeadline: {
     flexDirection: "row",
@@ -1060,11 +1072,11 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   admissionProgDeadlineText: {
     fontSize: 12,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: c.muted,
     flex: 1,
   },
   ouacCodeBadge: {
-    backgroundColor: Colors.light.primaryMuted,
+    backgroundColor: c.warnBg,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
@@ -1072,11 +1084,11 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   ouacCodeText: {
     fontSize: 11,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
+    color: c.ink,
   },
   deadlineCard: {
     flexDirection: "row",
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderRadius: 12,
     padding: 12,
     alignItems: "center",
@@ -1094,18 +1106,18 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   deadlineCardTitle: {
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
+    color: c.ink,
   },
   deadlineCardDesc: {
     fontSize: 12,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
     lineHeight: 17,
   },
   deadlineCardDate: {
     fontSize: 11,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.textMuted,
+    color: c.muted,
     marginTop: 2,
   },
   deadlineCardDays: {
@@ -1117,29 +1129,29 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     fontFamily: "Inter_700Bold",
   },
   deadlineCardDaysLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: c.muted,
   },
   suppCard: {
     flexDirection: "row",
     gap: 12,
-    backgroundColor: "#FFFBEB",
+    backgroundColor: c.amber,
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#F59E0B33",
+    borderColor: c.amberBorder,
   },
   suppTitle: {
     fontSize: 14,
     fontFamily: "Inter_700Bold",
-    color: "#92400E",
+    color: c.amberText,
     marginBottom: 4,
   },
   suppBody: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
-    color: "#78350F",
+    color: c.amberText,
     lineHeight: 19,
   },
   suppLink: {
@@ -1148,7 +1160,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   suppLinkText: {
     fontSize: 13,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.primary,
+    color: c.ink,
   },
   careerGrid: {
     flexDirection: "row",
@@ -1156,24 +1168,24 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     gap: 8,
   },
   careerChip: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: c.rule,
   },
   careerChipText: {
     fontSize: 13,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
   },
   // About tab
   facultyRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -1191,13 +1203,13 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   facultyName: {
     fontSize: 14,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.text,
+    color: c.ink,
   },
   affiliatedRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -1205,10 +1217,10 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   affiliatedName: {
     fontSize: 14,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.text,
+    color: c.ink,
   },
   aboutCard: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderRadius: 14,
     padding: 16,
     shadowColor: "#000",
@@ -1220,7 +1232,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   aboutDescription: {
     fontSize: 15,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.text,
+    color: c.ink,
     lineHeight: 24,
   },
   websiteBtn: {
@@ -1234,10 +1246,9 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   websiteBtnText: {
     fontSize: 15,
     fontFamily: "Inter_600SemiBold",
-    color: "#fff",
   },
   infoGrid: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderRadius: 14,
     overflow: "hidden",
     shadowColor: "#000",
@@ -1253,17 +1264,17 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.borderLight,
+    borderBottomColor: c.paperAlt,
   },
   infoLabel: {
     fontSize: 14,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: c.muted,
   },
   infoValue: {
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
+    color: c.ink,
     maxWidth: "60%",
     textAlign: "right",
   },

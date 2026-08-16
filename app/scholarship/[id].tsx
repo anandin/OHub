@@ -167,7 +167,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   backBtn: { paddingTop: 4 },
   headerText: { flex: 1 },
   eyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: c.muted,
@@ -186,7 +186,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     padding: 18,
   },
   valueLabel: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: c.muted,
@@ -211,7 +211,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   tagText: { fontSize: 11, fontFamily: 'Inter_500Medium', color: c.softInk },
   section: { paddingHorizontal: 24, marginBottom: 22 },
   sectionLabel: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: c.muted,
@@ -227,9 +227,9 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     padding: 16,
   },
   factRow: { flexDirection: 'row', gap: 10 },
-  factDivider: { height: 1, backgroundColor: '#f0ebe0', marginVertical: 12 },
+  factDivider: { height: 1, backgroundColor: c.paperAlt, marginVertical: 12 },
   factLabel: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: c.muted,
@@ -268,7 +268,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   },
   applyBtnText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: c.paper },
   applyBarSource: {
-    fontSize: 10,
+    fontSize: 11,
     color: c.muted,
     fontFamily: 'JetBrainsMono_400Regular',
     textAlign: 'center',

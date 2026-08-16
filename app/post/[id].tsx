@@ -247,7 +247,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  catBadgeText: { fontSize: 10, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4, textTransform: 'uppercase' },
+  catBadgeText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4, textTransform: 'uppercase' },
   title: {
     fontFamily: 'Fraunces_600SemiBold',
     fontSize: 24,
@@ -287,10 +287,10 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     borderColor: c.rule,
     backgroundColor: c.card,
   },
-  actionBtnLiked: { borderColor: '#fca5a5', backgroundColor: c.warnBg },
+  actionBtnLiked: { borderColor: c.warn, backgroundColor: c.warnBg },
   actionBtnText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: c.muted },
   sourceRow: { gap: 8 },
-  sourceLabel: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: c.muted, fontFamily: 'Inter_500Medium' },
+  sourceLabel: { fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', color: c.muted, fontFamily: 'Inter_500Medium' },
   sourceLink: {
     flexDirection: 'row',
     alignItems: 'center',
