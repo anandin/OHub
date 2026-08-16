@@ -113,7 +113,7 @@ function redirectTarget(): string {
  * account here is an account-enumeration oracle, and this app's users are
  * minors.
  */
-function readableAuthError(message: string, status?: number): string {
+function readableAuthError(message: string, status?: number, code?: string): string {
   const text = message.toLowerCase();
 
   if (text.includes("invalid login credentials")) {
@@ -121,6 +121,12 @@ function readableAuthError(message: string, status?: number): string {
   }
   if (text.includes("email not confirmed")) {
     return "Confirm your email first — check your inbox for the link we sent.";
+  }
+  // Two different limits wearing the same 429. The email one is hourly and
+  // project-wide, so "wait a minute" would be advice that does not work — and
+  // Google still will, which is the useful thing to say.
+  if (code === "over_email_send_rate_limit" || text.includes("email rate limit")) {
+    return "oHub cannot send any more emails right now — that limit is on us, not you. Use Continue with Google, or try again later.";
   }
   if (text.includes("rate limit") || status === 429) {
     return "Too many attempts. Wait a minute and try again.";
@@ -257,7 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (authError) {
-        return { ok: false, message: readableAuthError(authError.message, authError.status) };
+        return { ok: false, message: readableAuthError(authError.message, authError.status, authError.code) };
       }
       // `onAuthStateChange` takes it from here.
       return { ok: true };
@@ -285,7 +291,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (authError) {
-        return { ok: false, message: readableAuthError(authError.message, authError.status) };
+        return { ok: false, message: readableAuthError(authError.message, authError.status, authError.code) };
       }
 
       // Supabase deliberately returns a decoy user with no identities when the
@@ -318,7 +324,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // the latter would turn this form into a way of asking oHub whether a
       // given classmate has an account.
       if (authError && (authError.status === 429 || /rate limit/i.test(authError.message))) {
-        return { ok: false, message: readableAuthError(authError.message, authError.status) };
+        return {
+          ok: false,
+          message: readableAuthError(authError.message, authError.status, authError.code),
+        };
       }
       return { ok: true };
     },
@@ -333,7 +342,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const { error: authError } = await supabase.auth.updateUser({ password });
       if (authError) {
-        return { ok: false, message: readableAuthError(authError.message, authError.status) };
+        return { ok: false, message: readableAuthError(authError.message, authError.status, authError.code) };
       }
 
       // Recovery is over; let the normal sign-in path hydrate and open the app.
