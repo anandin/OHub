@@ -133,6 +133,66 @@ test.describe("the sign-in gate", () => {
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
   });
 
+  test("offers email as well as Google", async ({ page }) => {
+    await stubSupabase(page);
+    await page.goto("/today", { waitUntil: "domcontentloaded" });
+
+    await expect(page.getByRole("button", { name: /continue with google/i })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByRole("textbox", { name: "Email address" })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Password", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^sign in$/i })).toBeVisible();
+  });
+
+  test("the password field is masked and can be revealed", async ({ page }) => {
+    await stubSupabase(page);
+    await page.goto("/today", { waitUntil: "domcontentloaded" });
+
+    const password = page.getByRole("textbox", { name: "Password", exact: true });
+    await expect(password).toBeVisible({ timeout: 30_000 });
+    // The DOM property, not the attribute: react-native-web drops `type`
+    // entirely when the field is not secure rather than writing type="text".
+    await expect(password).toHaveJSProperty("type", "password");
+
+    await page.getByRole("button", { name: /show password/i }).click();
+    await expect(password).toHaveJSProperty("type", "text");
+
+    await page.getByRole("button", { name: /hide password/i }).click();
+    await expect(password).toHaveJSProperty("type", "password");
+  });
+
+  test("sign-up and reset are reachable and reversible", async ({ page }) => {
+    await stubSupabase(page);
+    await page.goto("/today", { waitUntil: "domcontentloaded" });
+
+    await page
+      .getByRole("button", { name: /create an account with email instead/i })
+      .click({ timeout: 30_000 });
+    await expect(page.getByRole("button", { name: /^create account$/i })).toBeVisible();
+    await expect(page.locator("#root")).toContainText(/at least 10 characters/i);
+
+    await page.getByRole("button", { name: /back to sign in/i }).click();
+    await expect(page.getByRole("button", { name: /^sign in$/i })).toBeVisible();
+
+    // A forgotten password must not be a dead end: the reset route exists and
+    // asks for an email only.
+    await page.getByRole("button", { name: /reset a forgotten password/i }).click();
+    await expect(page.getByRole("button", { name: /send a reset link/i })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Password", exact: true })).toHaveCount(0);
+  });
+
+  test("a bad email is rejected before anything is sent", async ({ page }) => {
+    await stubSupabase(page);
+    await page.goto("/today", { waitUntil: "domcontentloaded" });
+
+    await page.getByRole("textbox", { name: "Email address" }).fill("not-an-email", { timeout: 30_000 });
+    await page.getByRole("textbox", { name: "Password", exact: true }).fill("something-long-enough");
+    await page.getByRole("button", { name: /^sign in$/i }).click();
+
+    await expect(page.locator("#root")).toContainText(/does not look like an email/i);
+  });
+
   test("the privacy notice it links to actually exists", async ({ request }) => {
     const response = await request.get("/privacy.html");
     expect(response.status()).toBe(200);

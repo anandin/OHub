@@ -22,6 +22,7 @@ import { JetBrainsMono_400Regular } from "@expo-google-fonts/jetbrains-mono/400R
 import { JetBrainsMono_500Medium } from "@expo-google-fonts/jetbrains-mono/500Medium";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { NewPasswordScreen } from "@/components/NewPasswordScreen";
 import { SignInScreen } from "@/components/SignInScreen";
 import { ED } from "@/constants/colors";
 import { ThemeProvider, usePalette } from "@/context/ThemeContext";
@@ -78,6 +79,8 @@ function AuthGate() {
 
   if (status === "loading") return <AppLoading label="Checking your session" />;
   if (status === "signedOut") return <SignInScreen />;
+  // A reset link opens a session; hold it here until a password is set.
+  if (status === "recovery") return <NewPasswordScreen />;
   if (status === "syncing") return <AppLoading label="Loading your application" />;
 
   return (

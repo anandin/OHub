@@ -163,6 +163,14 @@ to `connect-src` in `vercel.json`, and in the Supabase dashboard:
 3. **Authentication → URL Configuration**: Site URL is the production origin;
    the redirect allow list needs `<origin>/today` and, for previews,
    `https://*.vercel.app/today`.
+4. **Authentication → Sign In / Providers → Email**: on, with "Confirm email"
+   on. `MIN_PASSWORD` in `context/AuthContext.tsx` is enforced in the form;
+   set the same minimum under **Password requirements** so it also holds for
+   anyone posting straight to `/auth/v1/signup`.
+5. **Custom SMTP.** Supabase's built-in sender is rate-limited to a handful of
+   messages an hour and is documented as not for production. Email sign-up and
+   password reset both depend on a message arriving, so without this the second
+   student to sign up in an hour simply never gets their link.
 
 ## Licence
 

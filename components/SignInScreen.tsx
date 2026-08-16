@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { EmailAuthForm } from "@/components/EmailAuthForm";
 import { GoogleMark } from "@/components/GoogleMark";
 import { TOUCH_TARGET, radius, space, type } from "@/constants/theme";
 import type { Palette } from "@/constants/theme";
@@ -73,30 +74,6 @@ export function SignInScreen() {
         Sign in so your programme list, marks and deadlines follow you from the
         school library to your phone to the laptop at home.
       </Text>
-
-      <View style={styles.reasons}>
-        <Reason
-          icon="refresh-cw"
-          title="Nothing to re-enter"
-          body="Add a programme on one device and it is there on the next one."
-          c={c}
-          styles={styles}
-        />
-        <Reason
-          icon="shield"
-          title="Stored in Canada"
-          body="Your marks and OUAC reference live in a Canadian data centre, readable only by your account."
-          c={c}
-          styles={styles}
-        />
-        <Reason
-          icon="trash-2"
-          title="Delete it whenever"
-          body="One control in Settings erases your account and everything in it. No email, no waiting."
-          c={c}
-          styles={styles}
-        />
-      </View>
 
       {error ? (
         <View
@@ -169,6 +146,43 @@ export function SignInScreen() {
         read your Gmail, Drive or calendar.
       </Text>
 
+      {/* Google first because it is one tap and has nothing to forget, but not
+          everyone has a Google account they want attached to their marks —
+          plenty of students only have a school one their board can read. */}
+      <View style={styles.divider}>
+        <View style={styles.dividerRule} />
+        <Text style={styles.dividerLabel}>or use an email address</Text>
+        <View style={styles.dividerRule} />
+      </View>
+
+      <EmailAuthForm />
+
+      <Text style={styles.reasonsHeading}>Why oHub asks for an account</Text>
+
+      <View style={styles.reasons}>
+        <Reason
+          icon="refresh-cw"
+          title="Nothing to re-enter"
+          body="Add a programme on one device and it is there on the next one."
+          c={c}
+          styles={styles}
+        />
+        <Reason
+          icon="shield"
+          title="Stored in Canada"
+          body="Your marks and OUAC reference live in a Canadian data centre, readable only by your account."
+          c={c}
+          styles={styles}
+        />
+        <Reason
+          icon="trash-2"
+          title="Delete it whenever"
+          body="One control in Settings erases your account and everything in it. No email, no waiting."
+          c={c}
+          styles={styles}
+        />
+      </View>
+
       <Pressable
         onPress={() => openExternalUrl(PRIVACY_URL)}
         accessibilityRole="link"
@@ -232,7 +246,8 @@ const makeStyles = (c: Palette) =>
     },
     lede: { ...type.body, color: c.softInk },
 
-    reasons: { gap: space.lg, marginTop: space.sm },
+    reasonsHeading: { ...type.eyebrow, color: c.muted, marginTop: space.md },
+    reasons: { gap: space.lg },
     reason: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },
     reasonIcon: {
       width: 32,
@@ -294,6 +309,15 @@ const makeStyles = (c: Palette) =>
     googleLabel: { ...type.heading, color: c.ink },
 
     fineprint: { ...type.bodySmall, color: c.muted, textAlign: "center" },
+
+    divider: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.md,
+      marginTop: space.sm,
+    },
+    dividerRule: { flex: 1, height: 1, backgroundColor: c.rule },
+    dividerLabel: { ...type.bodySmall, color: c.muted },
 
     privacyLink: {
       flexDirection: "row",
