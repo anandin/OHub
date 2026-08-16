@@ -56,8 +56,8 @@ test.describe("landing page", () => {
 
   test("states the privacy promise the app has to keep", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await expect(page.locator("body")).toContainText(/no account/i);
-    await expect(page.locator("body")).toContainText(/stored on your device/i);
+    await expect(page.locator("body")).toContainText(/stays in canada/i);
+    await expect(page.locator("body")).toContainText(/no tracking/i);
   });
 
   test("has a skip link for keyboard users", async ({ page }) => {
@@ -166,7 +166,7 @@ test.describe("persistence", () => {
 test.describe("privacy", () => {
   test("settings explains storage and offers erasure", async ({ page }) => {
     await gotoApp(page, "/settings");
-    await expect(page.locator("#root")).toContainText(/stored only on this device/i);
+    await expect(page.locator("#root")).toContainText(/canadian data region/i);
     await expect(page.locator("#root")).toContainText(/erase my ohub data/i);
   });
 

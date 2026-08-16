@@ -107,16 +107,19 @@ export default function SettingsScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Where your data lives</Text>
         <Text style={styles.body}>
-          Everything you enter in oHub — your name, school, OUAC reference,
-          marks, tracked applications and saved posts — is stored only on this
-          device, in this browser. There is no oHub account and no oHub server:
-          nothing you type is uploaded, and nobody at oHub can read it.
+          Your name, school, OUAC reference, marks, tracked applications and
+          saved posts are stored in your oHub account, in a Canadian data
+          region. They are also kept on this device so the app works offline.
         </Text>
         <Text style={styles.body}>
-          Because it is stored locally, clearing your browser data, or opening
-          oHub on a different device or in a private window, will show an empty
-          app. On a shared or school computer, use the erase control below when
-          you are done.
+          Only your account can read your data. That is enforced by the database
+          itself rather than by app code — a bug in oHub cannot show your grades
+          to somebody else. It is never used for advertising, never sold, and
+          never used to train a model.
+        </Text>
+        <Text style={styles.body}>
+          On a shared or school computer, sign out when you are done. Signing
+          out clears the copy held on that device.
         </Text>
       </View>
 
@@ -200,7 +203,9 @@ export default function SettingsScreen() {
         <Text style={styles.cardTitle}>Erase everything</Text>
         <Text style={styles.body}>
           Removes your profile, marks, tracked applications, followed
-          universities and saved posts from this device. This cannot be undone.
+          universities and saved posts from this device and from your account.
+          This cannot be undone. Anything you leave behind is deleted
+          automatically 18 months after your application cycle ends.
         </Text>
 
         {erased ? (
