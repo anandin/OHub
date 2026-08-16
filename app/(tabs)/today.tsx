@@ -17,7 +17,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
 
 import { useUser } from "@/context/UserContext";
-import { getUpcomingDeadlines } from "@/data/deadlines";
+import {
+  deadlineDataIsStale,
+  getUpcomingDeadlines,
+  lastDeadlineDate,
+} from "@/data/deadlines";
 import { FEATURED_ARTICLES } from "@/data/userData";
 import { useApplications } from "@/context/ApplicationsContext";
 import { displayHost, openExternalUrl } from "@/lib/safeLink";
@@ -165,6 +169,7 @@ export default function TodayScreen() {
   const nextDeadline = deadlines[0] ?? null;
   // The hero already shows the nearest one; this list carries the next few.
   const comingUp = useMemo(() => getUpcomingDeadlines(6).slice(1, 4), []);
+  const datesAreStale = useMemo(() => deadlineDataIsStale(), []);
   const daysLeft = nextDeadline ? nextDeadline.daysUntil : 0;
 
   const article = FEATURED_ARTICLES[0];
@@ -210,6 +215,31 @@ export default function TodayScreen() {
                   </View>
                 </>
               )}
+            </>
+          ) : datesAreStale ? (
+            // Nothing ahead *and* everything behind means our list has run out,
+            // not that the student is finished. Telling someone who has not
+            // started their application that they are on track is the single
+            // most harmful sentence this screen could produce.
+            <>
+              <Text style={styles.heroCount}>Dates out of date.</Text>
+              <Text style={styles.heroSub}>
+                oHub&rsquo;s deadline list ends
+                {lastDeadlineDate() ? ` ${formatDeadlineDate(lastDeadlineDate() as string)}` : ""}
+                {" "}and the next cycle&rsquo;s dates are not published here yet.
+                {"\n"}
+                <Text style={styles.heroSubBold}>Check OUAC for your dates.</Text>
+              </Text>
+              <Pressable
+                style={styles.staleLink}
+                onPress={() => void openExternalUrl("https://www.ouac.on.ca/dates/")}
+                accessibilityRole="link"
+                accessibilityLabel="Open OUAC important dates"
+                accessibilityHint="Opens ouac.on.ca in a new tab"
+              >
+                <Feather name="external-link" size={13} color={c.warnText} />
+                <Text style={styles.staleLinkText}>OUAC important dates</Text>
+              </Pressable>
             </>
           ) : (
             <>
@@ -324,7 +354,9 @@ export default function TodayScreen() {
           <Text style={styles.eyebrow}>What&rsquo;s coming</Text>
           {comingUp.length === 0 ? (
             <Text style={styles.emptyTasks}>
-              No published deadlines ahead in this cycle. Check OUAC for the next one.
+              {datesAreStale
+                ? "oHub has no dates for the current cycle yet. Do not treat this as \u201cnothing due\u201d — check OUAC."
+                : "Nothing else published ahead. Check OUAC before you rely on that."}
             </Text>
           ) : (
             comingUp.map((deadline, i) => (
@@ -372,6 +404,17 @@ export default function TodayScreen() {
 }
 
 const makeStyles = (c: Palette) => StyleSheet.create({
+  staleLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 44,
+  },
+  staleLinkText: {
+    fontSize: 13,
+    fontFamily: 'Inter_600SemiBold',
+    color: c.warnText,
+  },
   iconBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   container: { flex: 1, backgroundColor: c.paper },
   content: { paddingBottom: 100 },
@@ -384,14 +427,14 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingBottom: 0,
   },
   dateText: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: c.muted,
     fontFamily: 'Inter_500Medium',
   },
   issueText: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: c.muted,
@@ -442,7 +485,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     marginBottom: 10,
   },
   eyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: c.muted,
@@ -463,7 +506,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     marginTop: 2,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: '#b8a888',
+    borderColor: c.pillBorder,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -592,7 +635,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   },
   modalTitle: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, color: c.ink },
   modalLabel: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: c.muted,

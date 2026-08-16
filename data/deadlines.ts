@@ -151,3 +151,28 @@ export function getUpcomingDeadlines(n = 5): (Deadline & { daysUntil: number })[
     .sort((a, b) => a.daysUntil - b.daysUntil)
     .slice(0, n);
 }
+
+/**
+ * True when this list has run out rather than been completed.
+ *
+ * These are hand-entered dates for one application cycle. Once the cycle ends
+ * there are no upcoming deadlines, and a countdown screen that reads "You're
+ * on track — no upcoming deadlines" to a student who has not started their
+ * application is the most damaging thing this app could say.
+ *
+ * The two states look identical from `getUpcomingDeadlines` alone, so they are
+ * distinguished here: nothing ahead *and* something behind means the data is
+ * stale, not that the student is finished.
+ */
+export function deadlineDataIsStale(): boolean {
+  return (
+    ONTARIO_DEADLINES.length > 0 &&
+    ONTARIO_DEADLINES.every((d) => getDaysUntil(d.date) < 0)
+  );
+}
+
+/** The most recent date in the dataset, for telling the student how old it is. */
+export function lastDeadlineDate(): string | null {
+  const sorted = [...ONTARIO_DEADLINES].map((d) => d.date).sort();
+  return sorted[sorted.length - 1] ?? null;
+}

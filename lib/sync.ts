@@ -33,6 +33,7 @@ const SYNCED_KEYS: readonly StorageKey[] = [
   StorageKeys.profile,
   StorageKeys.tasksList,
   StorageKeys.tasksDone,
+  StorageKeys.essayDrafts,
   StorageKeys.applications,
   StorageKeys.savedPosts,
   StorageKeys.likedPosts,
@@ -41,7 +42,13 @@ const SYNCED_KEYS: readonly StorageKey[] = [
 ];
 
 /** Which push routine each key triggers. Two keys can share one. */
-type Target = "profile" | "tasks" | "applications" | "reactions" | "subscriptions";
+type Target =
+  | "profile"
+  | "tasks"
+  | "applications"
+  | "reactions"
+  | "subscriptions"
+  | "drafts";
 
 const TARGET_FOR: Partial<Record<StorageKey, Target>> = {
   [StorageKeys.profile]: "profile",
@@ -52,6 +59,7 @@ const TARGET_FOR: Partial<Record<StorageKey, Target>> = {
   [StorageKeys.savedPosts]: "reactions",
   [StorageKeys.likedPosts]: "reactions",
   [StorageKeys.subscriptions]: "subscriptions",
+  [StorageKeys.essayDrafts]: "drafts",
 };
 
 // ---------------------------------------------------------------------------
@@ -96,6 +104,9 @@ const LocalApplications = z
   .catch([]);
 
 const LocalTheme = z.enum(["system", "light", "dark"]).catch("system");
+
+/** Prompt id -> draft body. Bounded so one paste cannot fill the quota. */
+const LocalDrafts = z.record(z.string().max(64), z.string().max(20_000)).catch({});
 
 const APP_STATUSES = new Set([
   "shortlisted",
@@ -216,6 +227,8 @@ async function pushTarget(target: Target, uid: string): Promise<void> {
       return pushReactions(uid);
     case "subscriptions":
       return pushSubscriptions(uid);
+    case "drafts":
+      return pushDrafts(uid);
   }
 }
 
@@ -341,6 +354,27 @@ async function pushSubscriptions(uid: string): Promise<void> {
   );
 }
 
+async function pushDrafts(uid: string): Promise<void> {
+  const drafts = await readValidated(StorageKeys.essayDrafts, LocalDrafts, {});
+
+  const rows = Object.entries(drafts)
+    .filter(([promptId, body]) => promptId !== "" && body.trim() !== "")
+    .slice(0, 60)
+    .map(([promptId, body]) => ({
+      user_id: uid,
+      prompt_id: promptId.slice(0, 64),
+      body: body.slice(0, 20_000),
+    }));
+
+  if (rows.length > 0) {
+    const { error } = await supabase
+      .from("essay_drafts")
+      .upsert(rows, { onConflict: "user_id,prompt_id" });
+    fail(error);
+  }
+  await deleteMissing("essay_drafts", "prompt_id", uid, rows.map((r) => r.prompt_id));
+}
+
 /**
  * Remove rows the student deleted locally.
  *
@@ -395,16 +429,22 @@ export async function hydrateFromRemote(uid: string): Promise<void> {
   announce("syncing");
 
   try {
-    const [profile, tasks, apps, reactions, subs] = await Promise.all([
+    const [profile, tasks, apps, reactions, subs, drafts] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
       supabase.from("tasks").select("*").eq("user_id", uid),
       supabase.from("applications").select("*").eq("user_id", uid),
       supabase.from("post_reactions").select("*").eq("user_id", uid),
       supabase.from("subscriptions").select("university_id").eq("user_id", uid),
+      supabase.from("essay_drafts").select("prompt_id, body").eq("user_id", uid),
     ]);
 
     const firstError =
-      profile.error ?? tasks.error ?? apps.error ?? reactions.error ?? subs.error;
+      profile.error ??
+      tasks.error ??
+      apps.error ??
+      reactions.error ??
+      subs.error ??
+      drafts.error;
     if (firstError) throw new Error(firstError.message);
 
     const pushBack = new Set<Target>();
@@ -414,6 +454,7 @@ export async function hydrateFromRemote(uid: string): Promise<void> {
     await adoptApplications(apps.data ?? [], pushBack);
     await adoptReactions(reactions.data ?? [], pushBack);
     await adoptSubscriptions(subs.data ?? [], pushBack);
+    await adoptDrafts(drafts.data ?? [], pushBack);
 
     suspended = false;
 
@@ -579,6 +620,23 @@ async function adoptSubscriptions(rows: unknown[], pushBack: Set<Target>): Promi
       .map((row) => str((row as Record<string, unknown>).university_id))
       .filter((id) => id !== ""),
   );
+}
+
+async function adoptDrafts(rows: unknown[], pushBack: Set<Target>): Promise<void> {
+  if (rows.length === 0) {
+    const local = await readValidated(StorageKeys.essayDrafts, LocalDrafts, {});
+    if (Object.keys(local).length > 0) pushBack.add("drafts");
+    return;
+  }
+
+  const drafts: Record<string, string> = {};
+  for (const row of rows) {
+    const r = row as Record<string, unknown>;
+    const promptId = str(r.prompt_id);
+    if (promptId !== "") drafts[promptId] = str(r.body);
+  }
+
+  await write(StorageKeys.essayDrafts, drafts);
 }
 
 /** Exported for the unit tests, which assert the key list stays in step. */

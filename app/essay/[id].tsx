@@ -1,8 +1,11 @@
+import * as Clipboard from "expo-clipboard";
 import { router, useLocalSearchParams } from "expo-router";
 import type { Palette } from "@/constants/theme";
 import { usePalette } from "@/context/ThemeContext";
+import { StorageKeys, readValidated, write } from "@/lib/storage";
 import { useThemedStyles } from "@/lib/useThemedStyles";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { z } from "zod";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -141,13 +144,18 @@ const ESSAY_PROMPTS: Record<string, {
 
 const DEFAULT_ID = 'waterloo-aif-4';
 
-const SEED_TEXT: Record<string, string> = {
-  'waterloo-aif-4': `Two summers ago I taught myself to weld. Not for school, not for an award — I wanted to build a metal frame for my mom's vegetable garden after the wooden one rotted out.
+/**
+ * Drafts, keyed by prompt id.
+ *
+ * There used to be a `SEED_TEXT` here containing a finished 120-word essay
+ * about learning to weld, which appeared in the editor for Waterloo AIF
+ * question 4 as though the student had written it. A student who did not
+ * notice could have submitted it.
+ */
+const DraftsSchema = z.record(z.string().max(64), z.string().max(20_000));
 
-The first frame was crooked. The second collapsed under tomato vines. By the third, I'd watched maybe forty hours of YouTube and burned a small hole through my dad's gardening glove.
-
-What stuck with me wasn't the welding. It was realizing I could just start something.`,
-};
+const AUTOSAVE_MS = 800;
+const MAX_DRAFT = 20_000;
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(w => w.length > 0).length;
@@ -176,9 +184,54 @@ export default function EssayScreen() {
   const insets = useSafeAreaInsets();
   const prompt = (id ? ESSAY_PROMPTS[id] : undefined) ?? ESSAY_PROMPTS[DEFAULT_ID];
 
-  const [text, setText] = useState(SEED_TEXT[id ?? DEFAULT_ID] ?? '');
+  const promptId = id ?? DEFAULT_ID;
+  const [text, setText] = useState('');
+  const [loaded, setLoaded] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    readValidated(StorageKeys.essayDrafts, DraftsSchema, {})
+      .then((drafts) => {
+        if (!mounted) return;
+        setText(drafts[promptId] ?? '');
+      })
+      .finally(() => {
+        if (mounted) setLoaded(true);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [promptId]);
+
+  // Flush a pending save on unmount. Without this, navigating back within the
+  // debounce window loses whatever was typed in that last moment — the exact
+  // thing the "Auto-saved" badge was promising would not happen.
+  const persist = useCallback(
+    async (value: string) => {
+      const drafts = await readValidated(StorageKeys.essayDrafts, DraftsSchema, {});
+      const next = { ...drafts };
+      if (value.trim() === '') delete next[promptId];
+      else next[promptId] = value.slice(0, MAX_DRAFT);
+      await write(StorageKeys.essayDrafts, next);
+    },
+    [promptId],
+  );
+
+  const latest = useRef(text);
+  latest.current = text;
+
+  useEffect(
+    () => () => {
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+        void persist(latest.current);
+      }
+    },
+    [persist],
+  );
 
   const wordCount = countWords(text);
   const overLimit = wordCount > prompt.limit;
@@ -186,12 +239,27 @@ export default function EssayScreen() {
   const readingStatus = getReadingStatus(wordCount, prompt.limit);
 
   const handleChange = (val: string) => {
-    setText(val);
+    const capped = val.slice(0, MAX_DRAFT);
+    setText(capped);
+    setCopied(false);
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      const now = new Date();
-      setLastSaved(`${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`);
-    }, 2000);
+      saveTimer.current = null;
+      void persist(capped).then(() => {
+        const now = new Date();
+        setLastSaved(
+          `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`,
+        );
+      });
+    }, AUTOSAVE_MS);
+  };
+
+  // The draft has to leave oHub eventually — it gets pasted into Waterloo's
+  // form. This is what the header's dead "…" button should always have been.
+  const handleCopy = async () => {
+    if (text.trim() === '') return;
+    await Clipboard.setStringAsync(text);
+    setCopied(true);
   };
 
   return (
@@ -202,18 +270,34 @@ export default function EssayScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Pressable onPress={() => router.back()}>
+          <Pressable
+            onPress={() => router.back()}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
             <Feather name="arrow-left" size={20} color={c.ink} />
           </Pressable>
           {lastSaved ? (
-            <View style={styles.autoSaveBadge}>
-              <Text style={styles.autoSaveText}>Auto-saved · {lastSaved}</Text>
+            <View style={styles.autoSaveBadge} accessibilityLiveRegion="polite">
+              <Text style={styles.autoSaveText}>Saved · {lastSaved}</Text>
             </View>
           ) : (
             <View style={{ flex: 1 }} />
           )}
-          <Pressable>
-            <Feather name="more-horizontal" size={18} color={c.muted} />
+          <Pressable
+            onPress={() => void handleCopy()}
+            disabled={text.trim() === ''}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel={copied ? 'Draft copied' : 'Copy draft to clipboard'}
+            accessibilityState={{ disabled: text.trim() === '' }}
+          >
+            <Feather
+              name={copied ? 'check' : 'copy'}
+              size={18}
+              color={text.trim() === '' ? c.rule : copied ? c.success : c.muted}
+            />
           </Pressable>
         </View>
         <Text style={styles.headerSchool}>{prompt.school} · {prompt.form}</Text>
@@ -233,8 +317,9 @@ export default function EssayScreen() {
           value={text}
           onChangeText={handleChange}
           multiline
-          placeholder="Start writing…"
+          placeholder={loaded ? 'Start writing…' : 'Loading your draft…'}
           placeholderTextColor={c.muted}
+          editable={loaded}
           autoFocus={false}
           textAlignVertical="top"
         />
@@ -268,6 +353,12 @@ export default function EssayScreen() {
 }
 
 const makeStyles = (c: Palette) => StyleSheet.create({
+  iconBtn: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   container: { flex: 1, backgroundColor: c.paper },
   header: {
     paddingHorizontal: 20,
@@ -290,7 +381,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   },
   autoSaveText: { fontSize: 11, color: c.warnText, fontFamily: 'Inter_500Medium' },
   headerSchool: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: c.muted,

@@ -39,6 +39,11 @@ export const light = {
   paper: '#f5f1e8',
   /** Raised surface: cards, sheets, the tab bar. */
   card: '#fbf8f1',
+  /**
+   * Recessed surface, one step *down* from paper: tag chips, inset rows,
+   * filter bars. Non-text; `softInk` on it measures 7.10:1.
+   */
+  paperAlt: '#ede8dc',
   /** Primary text. 15.96:1 — AAA. */
   ink: '#1a1612',
   /** Secondary text: body copy, descriptions. 7.53:1 — AAA. */
@@ -85,6 +90,8 @@ export const dark = {
   /** 16.40:1 for `ink` — AAA. */
   paper: '#14110d',
   card: '#1e1a14',
+  /** Recessed surface. `softInk` on it measures 11.02:1 — AAA. */
+  paperAlt: '#1a1710',
   /** Primary text. 16.40:1 — AAA. */
   ink: '#f4efe3',
   /** Secondary text. 11.71:1 — AAA. */

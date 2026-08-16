@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import type { Palette } from "@/constants/theme";
 import { usePalette } from "@/context/ThemeContext";
+import { readableOn } from "@/lib/contrast";
 import { useThemedStyles } from "@/lib/useThemedStyles";
 import React, { useMemo, useState } from "react";
 import {
@@ -51,7 +52,7 @@ function ProgramRow({ program, userAvg }: { program: Program; userAvg: number | 
           <Text style={styles.programFaculty}>{program.faculty}</Text>
         </View>
         <View style={[styles.uniBadge, { backgroundColor: uni.color }]}>
-          <Text style={styles.uniInitials}>
+          <Text style={[styles.uniInitials, { color: readableOn(uni.color) }]}>
             {uni.shortName.slice(0, 2).toUpperCase()}
           </Text>
         </View>
@@ -213,7 +214,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.paper },
   header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
   eyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: c.muted,
@@ -260,7 +261,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   chipText: { fontSize: 12, fontFamily: 'Inter_500Medium', color: c.ink },
   chipTextActive: { color: c.paper },
   countLabel: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: c.muted,
@@ -280,7 +281,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   programTop: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   programLeft: { flex: 1 },
   programUniLabel: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: c.muted,
@@ -302,7 +303,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  uniInitials: { fontFamily: 'Fraunces_600SemiBold', fontSize: 12, color: '#fff' },
+  uniInitials: { fontFamily: 'Fraunces_600SemiBold', fontSize: 12 },
   programStats: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -311,7 +312,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   },
   statItem: { flex: 1, alignItems: 'center' },
   statLabel: {
-    fontSize: 9,
+    fontSize: 11,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: c.muted,

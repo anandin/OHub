@@ -1,6 +1,7 @@
 import Feather from "@expo/vector-icons/Feather";
 import type { Palette } from "@/constants/theme";
 import { usePalette } from "@/context/ThemeContext";
+import { readableOn } from "@/lib/contrast";
 import { useThemedStyles } from "@/lib/useThemedStyles";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
@@ -96,7 +97,9 @@ export default function ProgramDetailScreen() {
         <View style={styles.hero}>
           {uni && (
             <View style={[styles.uniBadge, { backgroundColor: uni.color }]}>
-              <Text style={styles.uniInitials}>{uni.shortName.slice(0, 2).toUpperCase()}</Text>
+              <Text style={[styles.uniInitials, { color: readableOn(uni.color) }]}>
+                {uni.shortName.slice(0, 2).toUpperCase()}
+              </Text>
             </View>
           )}
           <View style={styles.heroInfo}>
@@ -149,7 +152,7 @@ export default function ProgramDetailScreen() {
             </View>
           )}
           {program.suppRequired && (
-            <View style={[styles.badge, { borderColor: '#fca5a5', backgroundColor: c.warnBg }]}>
+            <View style={[styles.badge, { borderColor: c.warn, backgroundColor: c.warnBg }]}>
               <Feather name="file-text" size={11} color={c.warnText} />
               <Text style={[styles.badgeText, { color: c.warnText }]}>Supp. required</Text>
             </View>
@@ -381,10 +384,10 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  uniInitials: { fontFamily: 'Fraunces_600SemiBold', fontSize: 16, color: '#fff' },
+  uniInitials: { fontFamily: 'Fraunces_600SemiBold', fontSize: 16 },
   heroInfo: { flex: 1 },
   heroUni: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: c.muted,
@@ -412,7 +415,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   },
   statItem: { flex: 1, alignItems: 'center' },
   statLabel: {
-    fontSize: 9,
+    fontSize: 11,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: c.muted,
@@ -439,7 +442,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   divider: { height: 1, backgroundColor: c.rule, marginHorizontal: 24, marginBottom: 20 },
   section: { paddingHorizontal: 24, marginBottom: 20 },
   sectionTitle: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: c.muted,
@@ -451,7 +454,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     marginHorizontal: 24,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#fca5a5',
+    borderColor: c.warn,
     backgroundColor: c.warnBg,
     padding: 16,
     marginBottom: 20,

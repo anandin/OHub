@@ -1,4 +1,10 @@
 import {
+  ONTARIO_DEADLINES,
+  deadlineDataIsStale,
+  getUpcomingDeadlines,
+  lastDeadlineDate,
+} from "@/data/deadlines";
+import {
   classifyTier,
   computeAverage,
   formatAverage,
@@ -98,5 +104,37 @@ describe("formatAverage", () => {
 
   it("formats a real average", () => {
     expect(formatAverage(92.5)).toBe("92.5%");
+  });
+});
+
+describe("deadline data staleness", () => {
+  it("distinguishes a finished cycle from a finished student", () => {
+    // `getUpcomingDeadlines` returns [] in both cases. The screen has to know
+    // which one it is: "You're on track" to a student who has not started is
+    // the most harmful sentence the app can produce.
+    const upcoming = getUpcomingDeadlines(5);
+    const stale = deadlineDataIsStale();
+
+    if (upcoming.length > 0) {
+      expect(stale).toBe(false);
+    } else {
+      // Nothing ahead. Either the dataset is empty, or every date has passed.
+      expect(stale).toBe(ONTARIO_DEADLINES.length > 0);
+    }
+  });
+
+  it("reports the end of the dataset so the student can judge its age", () => {
+    const last = lastDeadlineDate();
+    expect(last).not.toBeNull();
+    expect(last).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // It must be the maximum, not merely the last entry in source order.
+    const max = [...ONTARIO_DEADLINES].map((d) => d.date).sort().pop();
+    expect(last).toBe(max);
+  });
+
+  it("never returns a deadline that has already passed", () => {
+    for (const d of getUpcomingDeadlines(20)) {
+      expect(d.daysUntil).toBeGreaterThanOrEqual(0);
+    }
   });
 });

@@ -1,12 +1,13 @@
 import Feather from "@expo/vector-icons/Feather";
 import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
+import { legibleBrand } from "@/lib/contrast";
 import { useThemedStyles } from "@/lib/useThemedStyles";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import Colors from "@/constants/colors";
 import { useSubscriptions } from "@/context/SubscriptionsContext";
 import { University } from "@/data/universities";
 
@@ -16,6 +17,7 @@ interface UniversityCardProps {
 }
 
 export function UniversityCard({ university, compact = false }: UniversityCardProps) {
+  const c = usePalette();
   const styles = useThemedStyles(makeStyles);
   const { isSubscribed, toggleSubscription } = useSubscriptions();
   const subscribed = isSubscribed(university.id);
@@ -70,14 +72,17 @@ export function UniversityCard({ university, compact = false }: UniversityCardPr
           <View style={styles.info}>
             <Text style={styles.name}>{university.name}</Text>
             <View style={styles.locationRow}>
-              <Feather name="map-pin" size={11} color={Colors.light.textMuted} />
+              <Feather name="map-pin" size={11} color={c.muted} />
               <Text style={styles.location}>{university.location}</Text>
             </View>
           </View>
           <Pressable
             style={[
               styles.subscribeBtn,
-              subscribed && [styles.subscribedBtn, { borderColor: university.color }],
+              subscribed && [
+                styles.subscribedBtn,
+                { borderColor: legibleBrand(university.color, c.card, c.pillBorder) },
+              ],
             ]}
             onPress={handleSubscribe}
             accessibilityRole="button"
@@ -91,7 +96,7 @@ export function UniversityCard({ university, compact = false }: UniversityCardPr
             <Text
               style={[
                 styles.subscribeBtnText,
-                subscribed && { color: university.color },
+                subscribed && { color: legibleBrand(university.color, c.card, c.ink) },
               ]}
             >
               {subscribed ? "Joined" : "Join"}
@@ -128,7 +133,7 @@ export function UniversityCard({ university, compact = false }: UniversityCardPr
 
 const makeStyles = (c: Palette) => StyleSheet.create({
   card: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderRadius: 16,
     marginHorizontal: 12,
     marginBottom: 10,
@@ -173,7 +178,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   name: {
     fontSize: 15,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    color: c.ink,
     lineHeight: 20,
   },
   locationRow: {
@@ -184,13 +189,13 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   location: {
     fontSize: 12,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: c.muted,
   },
   subscribeBtn: {
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: c.ink,
   },
   subscribedBtn: {
     backgroundColor: "transparent",
@@ -199,18 +204,18 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   subscribeBtnText: {
     fontSize: 13,
     fontFamily: "Inter_600SemiBold",
-    color: "#fff",
+    color: c.paper,
   },
   description: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
     lineHeight: 18,
   },
   statsRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.light.backgroundSecondary,
+    backgroundColor: c.paperAlt,
     borderRadius: 10,
     padding: 10,
   },
@@ -222,24 +227,24 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   statValue: {
     fontSize: 14,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    color: c.ink,
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: c.muted,
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
   statDivider: {
     width: 1,
     height: 28,
-    backgroundColor: Colors.light.border,
+    backgroundColor: c.rule,
   },
   compactCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     borderRadius: 12,
     padding: 10,
     gap: 10,
@@ -266,17 +271,17 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   compactName: {
     fontSize: 13,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
+    color: c.ink,
   },
   compactLocation: {
     fontSize: 11,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
+    color: c.muted,
   },
   subscribedDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.light.success,
+    backgroundColor: c.success,
   },
 });

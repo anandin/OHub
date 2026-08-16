@@ -1,5 +1,6 @@
 import Feather from "@expo/vector-icons/Feather";
 import type { Palette } from "@/constants/theme";
+import { usePalette } from "@/context/ThemeContext";
 import { useThemedStyles } from "@/lib/useThemedStyles";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -9,7 +10,6 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSavedPosts } from "@/context/SavedPostsContext";
 import { CATEGORY_CONFIG, Post } from "@/data/feed";
 import { getUniversityById } from "@/data/universities";
-import Colors from "@/constants/colors";
 import { sharePost } from "@/lib/share";
 
 /** Haptics are a no-op on web and log a warning if called there. */
@@ -24,6 +24,7 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, showUniversity = true }: PostCardProps) {
+  const c = usePalette();
   const styles = useThemedStyles(makeStyles);
   const uni = getUniversityById(post.universityId);
   const { isSaved, isLiked, toggleSave, toggleLike } = useSavedPosts();
@@ -78,7 +79,7 @@ export function PostCard({ post, showUniversity = true }: PostCardProps) {
     >
       {post.isPinned && (
         <View style={styles.pinnedBanner}>
-          <Feather name="bookmark" size={11} color={Colors.light.primary} />
+          <Feather name="bookmark" size={11} color={c.ink} />
           <Text style={styles.pinnedText}>Pinned</Text>
         </View>
       )}
@@ -133,7 +134,7 @@ export function PostCard({ post, showUniversity = true }: PostCardProps) {
           <Feather
             name="heart"
             size={15}
-            color={liked ? Colors.light.likeColor : Colors.light.textSecondary}
+            color={liked ? c.warn : c.softInk}
           />
           <Text style={[styles.actionText, liked && styles.likeText]}>
             {formatCount(displayLikes)}
@@ -148,7 +149,7 @@ export function PostCard({ post, showUniversity = true }: PostCardProps) {
           accessibilityRole="button"
           accessibilityLabel={`${post.comments} comments. Open the post to read them`}
         >
-          <Feather name="message-square" size={15} color={Colors.light.textSecondary} />
+          <Feather name="message-square" size={15} color={c.softInk} />
           <Text style={styles.actionText}>{formatCount(post.comments)}</Text>
         </Pressable>
 
@@ -164,7 +165,7 @@ export function PostCard({ post, showUniversity = true }: PostCardProps) {
             <Feather
               name="bookmark"
               size={16}
-              color={saved ? Colors.light.primary : Colors.light.textSecondary}
+              color={saved ? c.ink : c.softInk}
             />
           </Pressable>
           <Pressable
@@ -174,7 +175,7 @@ export function PostCard({ post, showUniversity = true }: PostCardProps) {
             accessibilityRole="button"
             accessibilityLabel="Share this post"
           >
-            <Feather name="share-2" size={16} color={Colors.light.textSecondary} />
+            <Feather name="share-2" size={16} color={c.softInk} />
           </Pressable>
         </View>
       </View>
@@ -190,7 +191,7 @@ export function PostCard({ post, showUniversity = true }: PostCardProps) {
 
 const makeStyles = (c: Palette) => StyleSheet.create({
   card: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: c.card,
     marginHorizontal: 12,
     marginBottom: 8,
     borderRadius: 16,
@@ -213,7 +214,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   },
   pinnedText: {
     fontSize: 11,
-    color: Colors.light.primary,
+    color: c.ink,
     fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.3,
     textTransform: "uppercase",
@@ -233,20 +234,20 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   uniName: {
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
   },
   dot: {
     fontSize: 12,
-    color: Colors.light.textMuted,
+    color: c.muted,
   },
   timeAgo: {
     fontSize: 12,
-    color: Colors.light.textMuted,
+    color: c.muted,
     fontFamily: "Inter_400Regular",
   },
   author: {
     fontSize: 12,
-    color: Colors.light.textMuted,
+    color: c.muted,
     fontFamily: "Inter_400Regular",
     flexShrink: 1,
   },
@@ -268,14 +269,14 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   title: {
     fontSize: 16,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    color: c.ink,
     lineHeight: 22,
     marginBottom: 6,
   },
   body: {
     fontSize: 14,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
     lineHeight: 20,
     marginBottom: 10,
   },
@@ -286,7 +287,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     marginBottom: 12,
   },
   tag: {
-    backgroundColor: Colors.light.tag,
+    backgroundColor: c.paperAlt,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -294,7 +295,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   tagText: {
     fontSize: 11,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.tagText,
+    color: c.softInk,
   },
   actionsRow: {
     flexDirection: "row",
@@ -310,18 +311,18 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: Colors.light.backgroundSecondary,
+    backgroundColor: c.paperAlt,
   },
   likeActive: {
-    backgroundColor: "#FF2D5515",
+    backgroundColor: c.warnBg,
   },
   actionText: {
     fontSize: 13,
     fontFamily: "Inter_600SemiBold",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
   },
   likeText: {
-    color: Colors.light.likeColor,
+    color: c.warn,
   },
   rightActions: {
     marginLeft: "auto",
@@ -339,6 +340,6 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     marginTop: 8,
     fontSize: 12,
     fontFamily: "Inter_500Medium",
-    color: Colors.light.textSecondary,
+    color: c.softInk,
   },
 });

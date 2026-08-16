@@ -33,6 +33,7 @@ export const StorageKeys = {
   profile: "@ohub_user_profile",
   tasksDone: "@ohub_tasks_done",
   tasksList: "@ohub_tasks_list",
+  essayDrafts: "@ohub_essay_drafts",
   lastRefresh: "@ohub_last_refresh",
   extraPosts: "@ohub_extra_posts",
   themePreference: "@ohub_theme_preference",
@@ -49,6 +50,8 @@ const LEGACY_KEYS: Record<StorageKey, string> = {
   [StorageKeys.profile]: "@unihub_user_profile",
   [StorageKeys.tasksDone]: "@unihub_tasks_done",
   [StorageKeys.tasksList]: "@unihub_tasks_list",
+  // No pre-1.0 equivalent; drafts were never persisted.
+  [StorageKeys.essayDrafts]: "",
   [StorageKeys.lastRefresh]: "@unihub_last_refresh",
   [StorageKeys.extraPosts]: "@unihub_extra_posts",
   // No pre-1.0 equivalent; the theme control did not exist.
