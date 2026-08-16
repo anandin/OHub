@@ -1,11 +1,12 @@
 /**
  * Display helpers for personal data.
  *
- * oHub stores a student's name, school, OUAC reference number and marks. All of
- * it lives on the device and never leaves it, but "local only" is not the same
- * as "safe to render at full size" — an OUAC reference identifies a real
- * application, and these screens get shown over shoulders in classrooms and
- * screenshotted into group chats.
+ * oHub stores a student's name, school, OUAC reference number and marks — in
+ * their account, and cached on each device they sign in on. Access control is
+ * not the whole problem: an OUAC reference identifies a real application, and
+ * these screens get shown over shoulders in classrooms and screenshotted into
+ * group chats. Being the only person entitled to read it does not help if it
+ * is legible from the next desk.
  */
 
 /**

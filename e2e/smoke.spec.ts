@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { signInAsTestStudent, stubSupabase } from "./session";
+
 /**
  * Smoke tests for the deployed web app.
  *
@@ -19,10 +21,23 @@ function watchConsole(page: Page): string[] {
   return errors;
 }
 
+/**
+ * Open a screen as a signed-in student.
+ *
+ * The session has to be seeded before the first script runs, so this must be
+ * called instead of `page.goto` — see `e2e/session.ts` for why the session is
+ * faked rather than obtained from Google.
+ */
 async function gotoApp(page: Page, path = "/today") {
+  await signInAsTestStudent(page);
   await page.goto(path, { waitUntil: "domcontentloaded" });
   // The Expo bundle mounts into #root; wait for real content, not just HTML.
   await expect(page.locator("#root")).not.toBeEmpty({ timeout: 30_000 });
+  // The gate paints a loading state first; wait for it to resolve so tests do
+  // not race the sync that runs between sign-in and the first screen.
+  await expect(page.locator("#root")).not.toContainText(/Loading your application/i, {
+    timeout: 30_000,
+  });
 }
 
 test.describe("landing page", () => {
@@ -63,6 +78,67 @@ test.describe("landing page", () => {
   test("has a skip link for keyboard users", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(page.locator('a.skip[href="#main"]')).toHaveCount(1);
+  });
+});
+
+test.describe("the sign-in gate", () => {
+  test("an unauthenticated visitor gets the sign-in screen, not the app", async ({
+    page,
+  }) => {
+    const errors = watchConsole(page);
+    await stubSupabase(page);
+    await page.goto("/today", { waitUntil: "domcontentloaded" });
+
+    const root = page.locator("#root");
+    await expect(root).toContainText(/continue with google/i, { timeout: 30_000 });
+
+    // The navigator is not mounted at all while signed out, so none of the
+    // tabs should exist to be reached — this is the assertion that would catch
+    // the gate degrading into a redirect that a screen can render behind.
+    await expect(root).not.toContainText(/Programs/);
+    await expect(root).not.toContainText(/Universities/);
+
+    expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
+  });
+
+  test("a protected deep link is gated the same way", async ({ page }) => {
+    await stubSupabase(page);
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("#root")).toContainText(/continue with google/i, {
+      timeout: 30_000,
+    });
+    await expect(page.locator("#root")).not.toContainText(/canadian data region/i);
+  });
+
+  test("says what the account is for before asking for it", async ({ page }) => {
+    await stubSupabase(page);
+    await page.goto("/today", { waitUntil: "domcontentloaded" });
+    const root = page.locator("#root");
+
+    await expect(root).toContainText(/continue with google/i, { timeout: 30_000 });
+    await expect(root).toContainText(/stored in canada/i);
+    await expect(root).toContainText(/delete it whenever/i);
+    // The scope disclosure is the part a student actually needs.
+    await expect(root).toContainText(/cannot read your gmail/i);
+  });
+
+  test("the sign-in button is reachable and named", async ({ page }) => {
+    await stubSupabase(page);
+    await page.goto("/today", { waitUntil: "domcontentloaded" });
+
+    const button = page.getByRole("button", { name: /continue with google/i });
+    await expect(button).toBeVisible({ timeout: 30_000 });
+
+    const box = await button.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  });
+
+  test("the privacy notice it links to actually exists", async ({ request }) => {
+    const response = await request.get("/privacy.html");
+    expect(response.status()).toBe(200);
+    const body = await response.text();
+    expect(body).toMatch(/what oHub stores/i);
+    expect(body).toMatch(/delete my account/i);
   });
 });
 
@@ -164,13 +240,26 @@ test.describe("persistence", () => {
 });
 
 test.describe("privacy", () => {
-  test("settings explains storage and offers erasure", async ({ page }) => {
+  test("settings explains storage and offers both ways out", async ({ page }) => {
     await gotoApp(page, "/settings");
-    await expect(page.locator("#root")).toContainText(/canadian data region/i);
-    await expect(page.locator("#root")).toContainText(/erase my ohub data/i);
+    const root = page.locator("#root");
+    await expect(root).toContainText(/canadian data region/i);
+    await expect(root).toContainText(/clear my ohub data/i);
+    // Emptying the account and deleting it are different promises and need to
+    // be different controls.
+    await expect(root).toContainText(/delete my account/i);
+    await expect(root).toContainText(/sign out of this device/i);
   });
 
-  test("erasing data clears a saved profile", async ({ page }) => {
+  test("shows the signed-in account rather than implying anonymity", async ({
+    page,
+  }) => {
+    await gotoApp(page, "/settings");
+    await expect(page.locator("#root")).toContainText("Test Student");
+    await expect(page.locator("#root")).toContainText("test.student@example.com");
+  });
+
+  test("clearing data clears a saved profile", async ({ page }) => {
     await gotoApp(page);
     await page.getByText("You", { exact: true }).first().click();
     await page.getByText(/add your name/i).first().click();
@@ -179,14 +268,28 @@ test.describe("privacy", () => {
     await expect(page.locator("#root")).toContainText("Erase Me");
 
     await page.goto("/settings", { waitUntil: "domcontentloaded" });
-    await page.getByText(/erase my ohub data/i).click();
-    await page.getByText(/yes, erase it all/i).click();
+    await page.getByText(/clear my ohub data/i).click();
+    await page.getByText(/yes, clear it all/i).click();
     await expect(page.locator("#root")).toContainText(/fresh start/i);
 
     await gotoApp(page);
     await page.getByText("You", { exact: true }).first().click();
     await expect(page.locator("#root")).toContainText(/add your name/i);
     await expect(page.locator("#root")).not.toContainText("Erase Me");
+  });
+
+  test("deleting the account needs a confirmation and does not fire on one tap", async ({
+    page,
+  }) => {
+    await gotoApp(page, "/settings");
+
+    await page.getByRole("button", { name: /permanently delete my ohub account/i }).click();
+    // Still signed in — the first tap only arms the control.
+    await expect(page.locator("#root")).toContainText(/yes, delete my account/i);
+    await expect(page.locator("#root")).toContainText("test.student@example.com");
+
+    await page.getByRole("button", { name: /cancel deleting my account/i }).click();
+    await expect(page.locator("#root")).not.toContainText(/yes, delete my account/i);
   });
 
   test("the OUAC reference is masked on screen", async ({ page }) => {

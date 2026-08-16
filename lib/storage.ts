@@ -127,16 +127,39 @@ export async function readValidated<T>(
 }
 
 /**
+ * Notified after every successful write, so the sync layer can mirror the
+ * value to the student's account.
+ *
+ * It is a registered callback rather than a direct import because `lib/sync`
+ * reads through `readValidated` — importing it from here would be a cycle.
+ * It also keeps this module usable, and testable, with no backend at all.
+ */
+type WriteMirror = (key: StorageKey) => void;
+
+let mirror: WriteMirror | null = null;
+
+export function setWriteMirror(next: WriteMirror | null): void {
+  mirror = next;
+}
+
+/**
  * Write a value. Never throws — a full or unavailable store degrades to
  * in-memory-only state rather than taking a screen down with it.
  */
 export async function write(key: StorageKey, value: unknown): Promise<boolean> {
   try {
     await AsyncStorage.setItem(key, JSON.stringify(value));
-    return true;
   } catch {
     return false;
   }
+
+  // A broken mirror must not make a successful local write look failed.
+  try {
+    mirror?.(key);
+  } catch {
+    // Sync reports its own failures; the value is safely on the device.
+  }
+  return true;
 }
 
 export async function remove(key: StorageKey): Promise<boolean> {

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What oHub stores, and why</title>
+<meta name="description" content="Exactly what oHub keeps about a student, where it lives, who can read it, and how to delete all of it.">
+<meta name="theme-color" content="#e8ede4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f120d" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="index, follow">
+<link rel="icon" href="/favicon.ico">
+<link rel="preload" href="/spectral-400.woff2" as="font" type="font/woff2" crossorigin>
+
+<style>
+/* Shares the landing page's palette and voice deliberately: a privacy notice
+   that looks like it came from a different company reads as boilerplate.
+   Ratios below are measured, same as the landing page. */
+
+@font-face {
+  font-family: 'Spectral';
+  src: url('/spectral-400.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Spectral';
+  src: url('/spectral-400-italic.woff2') format('woff2');
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  --paper:  #e8ede4;
+  --raised: #f2f5ef;
+  --ink:    #131711;  /* 15.3:1 */
+  --soft:   #3f4a37;  /*  7.9:1 */
+  --muted:  #586352;  /*  5.3:1 */
+  --rule:   #ccd5c5;
+  --accent: #a3301a;  /*  5.9:1 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper:  #0f120d;
+    --raised: #181c15;
+    --ink:    #eef2e7;  /* 16.6:1 */
+    --soft:   #c9d2c0;  /* 12.1:1 */
+    --muted:  #939e8b;  /*  6.7:1 */
+    --rule:   #2a3025;
+    --accent: #ef8a63;  /*  7.6:1 */
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Spectral', Georgia, 'Times New Roman', serif;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+}
+
+header { border-bottom: 1px solid var(--rule); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+
+.mark {
+  display: inline-block;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.mark:hover, .mark:focus-visible { border-bottom-color: var(--accent); }
+
+h1 { font-size: clamp(1.75rem, 5vw, 2.375rem); line-height: 1.2; letter-spacing: -0.02em; margin: 1.25rem 0 0.5rem; }
+h2 { font-size: 1.3125rem; line-height: 1.3; letter-spacing: -0.01em; margin: 2.5rem 0 0.5rem; }
+h3 { font-size: 1.0625rem; margin: 1.5rem 0 0.25rem; }
+
+.lede { color: var(--soft); font-size: 1.125rem; margin: 0; }
+.updated { color: var(--muted); font-size: 0.9375rem; font-style: italic; margin: 0.75rem 0 0; }
+
+p, li { color: var(--soft); }
+p { margin: 0.75rem 0; }
+ul { margin: 0.75rem 0; padding-left: 1.25rem; }
+li { margin: 0.375rem 0; }
+
+strong { color: var(--ink); font-weight: 400; box-shadow: inset 0 -0.4em 0 rgba(163, 48, 26, 0.14); }
+@media (prefers-color-scheme: dark) {
+  strong { box-shadow: inset 0 -0.4em 0 rgba(239, 138, 99, 0.18); }
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 0.15em; }
+
+table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9375rem; }
+caption { text-align: left; color: var(--muted); font-size: 0.875rem; padding-bottom: 0.5rem; }
+th, td { text-align: left; padding: 0.625rem 0.75rem 0.625rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { color: var(--ink); font-weight: 400; }
+td { color: var(--soft); }
+
+.note {
+  background: var(--raised);
+  border-left: 2px solid var(--accent);
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-radius: 0 4px 4px 0;
+}
+.note p:first-child { margin-top: 0; }
+.note p:last-child { margin-bottom: 0; }
+
+footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1.5rem; color: var(--muted); font-size: 0.9375rem; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<header>
+  <a class="mark" href="/">oHub</a>
+  <h1>What oHub stores, and why</h1>
+  <p class="lede">
+    oHub is used by Grade&nbsp;12 students, most of whom are under 18. This page
+    is the whole of it — not a summary of a longer document kept somewhere else.
+  </p>
+  <p class="updated">Last updated 16 August 2026.</p>
+</header>
+
+<h2>What we hold</h2>
+
+<p>
+  Only what you type in, plus what Google tells us when you sign in.
+</p>
+
+<table>
+  <caption>Everything stored against your account.</caption>
+  <thead>
+    <tr><th scope="col">Data</th><th scope="col">Where it comes from</th><th scope="col">Why</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Name and email address</td><td>Google, at sign-in</td><td>To identify your account. Nothing else.</td></tr>
+    <tr><td>Your school</td><td>You</td><td>Shown on your own profile.</td></tr>
+    <tr><td>Course codes and marks</td><td>You</td><td>To work out your top-6 average and where you stand against published cutoffs.</td></tr>
+    <tr><td>OUAC reference number</td><td>You, optionally</td><td>So you can find it without digging. Masked on screen everywhere except the field that edits it.</td></tr>
+    <tr><td>Programmes you track, their status and your notes</td><td>You</td><td>The application list itself.</td></tr>
+    <tr><td>Universities you follow, posts you save</td><td>You</td><td>To build your feed.</td></tr>
+  </tbody>
+</table>
+
+<h3>What Google gives us</h3>
+<p>
+  Your name, your email address, and a Google account identifier. oHub requests
+  no other scopes: it <strong>cannot read your Gmail, Drive, Photos or
+  Calendar</strong>, and could not be granted that access without asking you
+  again on Google's own consent screen.
+</p>
+
+<h2>Where it lives</h2>
+
+<p>
+  In a Postgres database hosted by Supabase in <strong>Canada</strong>
+  (ca-central-1, Montréal), and in your browser's local storage on each device
+  you sign in on, so the app keeps working when the network does not.
+</p>
+
+<p>
+  Every table has row-level security switched on, with policies that match rows
+  to your account id. There is no "read everything" role in the application:
+  the key shipped in the app has had its table access revoked outright, and a
+  query can only return rows your own signed-in session is entitled to. A table
+  added without a policy returns nothing rather than everything.
+</p>
+
+<h2>Who can see it</h2>
+
+<ul>
+  <li><strong>You</strong>, on any device you sign in on.</li>
+  <li><strong>Nobody else.</strong> Not other students, not your school, not your teachers. oHub has no counsellor accounts, no class rosters, and no admin view of student data.</li>
+  <li><strong>Supabase</strong>, as the hosting provider, in the sense that any database host can technically reach the disk it runs on.</li>
+</ul>
+
+<div class="note">
+  <p>
+    <strong>oHub does not sell data, run advertising, or load third-party
+    analytics.</strong> There are no tracking pixels and no advertising
+    identifiers. The site's content security policy blocks scripts from any
+    origin but our own, so one could not be added quietly.
+  </p>
+</div>
+
+<h2>How long we keep it</h2>
+
+<p>
+  Your records carry a deletion date eighteen months out, refreshed while you
+  are using the app. Nobody needs a 2026 applicant's marks in 2030.
+</p>
+
+<h2>Deleting it</h2>
+
+<p>
+  <strong>Settings → Delete my account</strong> removes your account and
+  everything attached to it, immediately. No email, no support ticket, no
+  waiting period. Signing out separately clears the copy held on that device.
+</p>
+
+<p>
+  Deletion is permanent. There is no backup we can restore your list from
+  afterwards, which is the point.
+</p>
+
+<h2>Under 18</h2>
+
+<p>
+  oHub is built for Grade&nbsp;12 students and expects most of its users to be
+  17. It asks for the minimum that makes the tool work, stores it in Canada,
+  and puts the delete control in the app rather than behind a request process —
+  because a consent you cannot withdraw yourself is not much of a consent.
+</p>
+
+<p>
+  If you are a parent or guardian and want a student's data removed, the
+  student can do it in Settings in about five seconds. If they cannot, write to
+  the address below.
+</p>
+
+<h2>Changes</h2>
+
+<p>
+  If what we store or where it lives changes, this page changes with it, and the
+  date at the top moves. It is version-controlled alongside the app's source,
+  so the history is public.
+</p>
+
+<h2>Contact</h2>
+
+<p>
+  oHub is run by Anand Inbasekaran and was built by Adhvaith Inbasekaran.
+  Questions, deletion requests and security reports:
+  <a href="mailto:anand.inbasekaran@gmail.com">anand.inbasekaran@gmail.com</a>.
+</p>
+
+<footer>
+  <p><a href="/">Back to oHub</a> &nbsp;·&nbsp; <a href="/today">Open the app</a></p>
+</footer>
+
+</main>
+</body>
+</html>

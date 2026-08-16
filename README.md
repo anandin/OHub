@@ -119,15 +119,50 @@ ships all twenty icon families. Use `@expo/vector-icons/Feather` and
 `0`; an unparseable cutoff is `null`, not `75`. The UI asks for the missing
 input instead of showing a confident answer built on a default.
 
-## Privacy
+## Accounts, and privacy
 
-No accounts, no analytics, no network calls. Name, school, OUAC reference,
-marks, tracked applications and saved posts live only in the browser or app
-that entered them. `/settings` lists exactly what is stored and erases all of
-it. OUAC references are masked everywhere except the field that edits them.
+Signing in with Google is required to use the app. There is one gate, in
+`app/_layout.tsx`: with no session the navigator is not mounted at all, so
+there is no protected screen for a redirect to race. `/` stays public — it is
+the static landing page and never reaches the router.
+
+Personal data lives in Postgres (Supabase, `ca-central-1`) and is cached in
+local storage on each device so the app works offline. Every table has RLS on,
+with policies keyed to `auth.uid()`; the key shipped in the bundle grants the
+`anon` role, which has had its table access revoked outright. Row caps and
+length limits are database triggers and constraints, not client-side checks,
+because the client is not a trust boundary.
+
+Sync hangs off `write()` in `lib/storage.ts` rather than off the contexts, so a
+new feature cannot save locally and forget to sync. `lib/sync.ts` owns the
+mapping and reports its real state — `/settings` says "could not reach your
+account" when that is what happened, rather than showing a tick regardless.
+
+`/settings` lists what is stored, clears it, or deletes the account outright
+(`delete_my_account()`, which removes the `auth.users` row and cascades).
+`/privacy.html` is the full notice. OUAC references are masked everywhere
+except the field that edits them.
+
+No analytics, no ad tech, no third-party scripts — `script-src 'self'`.
+`connect-src` names exactly one external origin, the Supabase project, and
+`__tests__/sync.test.ts` fails if it drifts from the configured URL.
 
 Admission averages, deadlines and scholarship details come from public sources
 and go out of date. The app says so, and links to the official page.
+
+### One-time setup for a fork
+
+The app is wired to a Supabase project already; a fork needs its own. Set
+`EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`, add the origin
+to `connect-src` in `vercel.json`, and in the Supabase dashboard:
+
+1. **Authentication → Sign In / Providers → Google**: on, with a client ID and
+   secret from a Google Cloud OAuth 2.0 Web application credential.
+2. In Google Cloud, the authorised redirect URI is
+   `https://<project-ref>.supabase.co/auth/v1/callback`.
+3. **Authentication → URL Configuration**: Site URL is the production origin;
+   the redirect allow list needs `<origin>/today` and, for previews,
+   `https://*.vercel.app/today`.
 
 ## Licence
 

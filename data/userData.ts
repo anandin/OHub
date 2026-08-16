@@ -45,19 +45,16 @@ export const DEFAULT_PROFILE: UserProfile = {
   courseCodes: [...EMPTY_MARKS],
 };
 
-export const DEFAULT_TASKS: Task[] = [
-  { id: '1', label: 'Finish Waterloo AIF — Section 3', est: '25 min', priority: 'high' },
-  { id: '2', label: "Review Queen's PSE draft", est: '15 min', priority: 'med' },
-  { id: '3', label: 'Email teacher — ref letter follow-up', est: '5 min', priority: 'low' },
-  { id: '4', label: 'Practice Ivey video essay (3 takes)', est: '30 min', priority: 'high' },
-];
-
-export const UPCOMING_EVENTS: UserEvent[] = [
-  { id: '1', name: 'Waterloo Virtual Tour', host: 'Waterloo', date: 'Tue Jan 14', time: '7 PM', attending: true },
-  { id: '2', name: "Smith PSE Workshop", host: "Queen's", date: 'Wed Jan 15', time: '6 PM', attending: false },
-  { id: '3', name: 'Toronto Eng Open House', host: 'U of T', date: 'Sat Jan 18', time: '11 AM', attending: true },
-  { id: '4', name: 'Schulich Leader Info Session', host: 'Schulich', date: 'Mon Jan 20', time: '8 PM', attending: false },
-];
+/**
+ * A new account starts with no tasks.
+ *
+ * This used to seed four — "Finish Waterloo AIF — Section 3", "Review Queen's
+ * PSE draft" and so on — which a student who had never opened Waterloo's form
+ * would find already waiting for them, complete with time estimates. They were
+ * the same fiction as the seeded profile, and the empty state on `/today`
+ * ("No tasks yet. Add one below.") is the honest version.
+ */
+export const DEFAULT_TASKS: Task[] = [];
 
 export const FEATURED_ARTICLES = [
   {
