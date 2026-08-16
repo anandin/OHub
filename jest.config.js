@@ -8,7 +8,7 @@ module.exports = {
   collectCoverageFrom: [
     "lib/**/*.ts",
     "context/**/*.tsx",
-    "hooks/**/*.ts",
+    "components/**/*.tsx",
     "!**/node_modules/**",
   ],
   // `transformIgnorePatterns` is deliberately not overridden: the jest-expo

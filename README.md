@@ -75,15 +75,16 @@ app/            expo-router file-based routes; (tabs)/ is the tab bar
 components/     shared UI — PostCard, UniversityCard, CategoryFilter, ErrorBoundary
 context/        React contexts, each persisted through lib/storage
 data/           bundled datasets: programs, universities, scholarships, deadlines, feed
-hooks/          useFeedRefresh — rotating feed batches on a 6-hour timer
 lib/            the modules the rest of the app is built on (below)
 e2e/            Playwright specs
 __tests__/      Jest unit + context tests
 ```
 
-There is no backend. Every dataset ships in the bundle and everything a student
-enters stays in `AsyncStorage` (which is `localStorage` on web). That is the
-whole data model, and the privacy story follows from it.
+Programme, university, scholarship and deadline data ships in the bundle — it
+is public reference data, the same for everyone, and putting it behind auth
+would break the app for anyone not signed in. Everything a *student* enters
+lives in their Supabase row and is cached in `AsyncStorage` (which is
+`localStorage` on web) so the app works offline.
 
 ### `lib/` — where the invariants live
 
@@ -94,6 +95,9 @@ whole data model, and the privacy story follows from it.
 | `admissions.ts` | Tier and average logic. Returns `null` / `"unknown"` rather than inventing a cutoff or an average. |
 | `privacy.ts` | Masks OUAC references for display; strips control and bidi characters from stored text. |
 | `share.ts` | Native share sheet, Web Share API, or clipboard — in that order. |
+| `supabase.ts` | The one client. Documents why the publishable key is in the source and why the session lives where it does. |
+| `sync.ts` | Local storage ⇄ Postgres. Hooks `write()` so no feature can persist without syncing; reports failure rather than a reassuring tick. |
+| `contrast.ts` | WCAG ratio maths. Picks a readable foreground for the twenty university brand colours instead of assuming white. |
 
 Design tokens live in `constants/theme.ts` — contrast-measured palettes for
 light and dark, plus the type scale and spacing. Every colour pairing carries
@@ -121,7 +125,8 @@ input instead of showing a confident answer built on a default.
 
 ## Accounts, and privacy
 
-Signing in with Google is required to use the app. There is one gate, in
+Signing in is required to use the app — with Google, or with an email address
+and password. There is one gate, in
 `app/_layout.tsx`: with no session the navigator is not mounted at all, so
 there is no protected screen for a redirect to race. `/` stays public — it is
 the static landing page and never reaches the router.
@@ -163,6 +168,14 @@ to `connect-src` in `vercel.json`, and in the Supabase dashboard:
 3. **Authentication → URL Configuration**: Site URL is the production origin;
    the redirect allow list needs `<origin>/today` and, for previews,
    `https://*.vercel.app/today`.
+4. **Authentication → Sign In / Providers → Email**: on, with "Confirm email"
+   on. `MIN_PASSWORD` in `context/AuthContext.tsx` is enforced in the form;
+   set the same minimum under **Password requirements** so it also holds for
+   anyone posting straight to `/auth/v1/signup`.
+5. **Custom SMTP.** Supabase's built-in sender is rate-limited to a handful of
+   messages an hour and is documented as not for production. Email sign-up and
+   password reset both depend on a message arriving, so without this the second
+   student to sign up in an hour simply never gets their link.
 
 ## Licence
 
