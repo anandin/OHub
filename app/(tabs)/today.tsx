@@ -18,11 +18,35 @@ import Feather from "@expo/vector-icons/Feather";
 
 import { useUser } from "@/context/UserContext";
 import { getUpcomingDeadlines } from "@/data/deadlines";
-import { FEATURED_ARTICLES, UPCOMING_EVENTS } from "@/data/userData";
+import { FEATURED_ARTICLES } from "@/data/userData";
 import { useApplications } from "@/context/ApplicationsContext";
+import { displayHost, openExternalUrl } from "@/lib/safeLink";
 
 
 type Priority = 'high' | 'med' | 'low';
+
+/** "in 3 days", not "3" — a bare number beside a date is ambiguous. */
+function describeDaysUntil(days: number): string {
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days < 7) return `In ${days} days`;
+  if (days < 14) return "Next week";
+  const weeks = Math.round(days / 7);
+  if (days < 60) return `In ${weeks} weeks`;
+  return `In ${Math.round(days / 30)} months`;
+}
+
+function formatDeadlineDate(iso: string): string {
+  // Parsed as UTC noon so a negative timezone offset cannot roll the date back
+  // a day — a deadline shown one day early is worse than useless.
+  const parsed = new Date(`${iso}T12:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return iso;
+  return parsed.toLocaleDateString("en-CA", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
 
 function issueNumber() {
   const start = new Date('2025-09-01');
@@ -139,6 +163,8 @@ export default function TodayScreen() {
 
   const deadlines = useMemo(() => getUpcomingDeadlines(3), []);
   const nextDeadline = deadlines[0] ?? null;
+  // The hero already shows the nearest one; this list carries the next few.
+  const comingUp = useMemo(() => getUpcomingDeadlines(6).slice(1, 4), []);
   const daysLeft = nextDeadline ? nextDeadline.daysUntil : 0;
 
   const article = FEATURED_ARTICLES[0];
@@ -289,26 +315,49 @@ export default function TodayScreen() {
           </Pressable>
         </View>
 
-        {/* This week */}
+        {/* What's coming.
+            This was a list of invented information sessions with fixed dates
+            and a "RSVP" badge that was not a button and had nothing behind it.
+            These are the real published deadlines, each linking to the source
+            it came from. */}
         <View style={[styles.section, { paddingBottom: 32 }]}>
-          <Text style={styles.eyebrow}>This week</Text>
-          {UPCOMING_EVENTS.slice(0, 3).map((event, i) => (
-            <View key={event.id} style={[styles.eventRow, i > 0 && styles.eventRowBorder]}>
-              <View style={styles.eventBody}>
-                <Text style={styles.eventName}>{event.name}</Text>
-                <Text style={styles.eventMeta}>{event.host} · {event.date}, {event.time}</Text>
-              </View>
-              {event.attending ? (
-                <View style={styles.goingBadge}>
-                  <Text style={styles.goingText}>Going</Text>
+          <Text style={styles.eyebrow}>What&rsquo;s coming</Text>
+          {comingUp.length === 0 ? (
+            <Text style={styles.emptyTasks}>
+              No published deadlines ahead in this cycle. Check OUAC for the next one.
+            </Text>
+          ) : (
+            comingUp.map((deadline, i) => (
+              <Pressable
+                key={deadline.id}
+                style={[styles.eventRow, i > 0 && styles.eventRowBorder]}
+                onPress={() => deadline.url && void openExternalUrl(deadline.url)}
+                disabled={!deadline.url}
+                accessibilityRole={deadline.url ? "link" : "text"}
+                accessibilityLabel={`${deadline.title}. ${describeDaysUntil(deadline.daysUntil)}.`}
+                accessibilityHint={
+                  deadline.url ? "Opens the official page in a new tab" : undefined
+                }
+              >
+                <View style={styles.eventBody}>
+                  <Text style={styles.eventName}>{deadline.title}</Text>
+                  <Text style={styles.eventMeta}>
+                    {formatDeadlineDate(deadline.date)}
+                    {deadline.url ? ` · ${displayHost(deadline.url)}` : ""}
+                  </Text>
                 </View>
-              ) : (
-                <View style={styles.rsvpBadge}>
-                  <Text style={styles.rsvpText}>RSVP</Text>
+                <View
+                  style={deadline.daysUntil <= 14 ? styles.rsvpBadge : styles.goingBadge}
+                >
+                  <Text
+                    style={deadline.daysUntil <= 14 ? styles.rsvpText : styles.goingText}
+                  >
+                    {describeDaysUntil(deadline.daysUntil)}
+                  </Text>
                 </View>
-              )}
-            </View>
-          ))}
+              </Pressable>
+            ))
+          )}
         </View>
       </ScrollView>
 

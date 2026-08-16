@@ -22,9 +22,11 @@ import { JetBrainsMono_400Regular } from "@expo-google-fonts/jetbrains-mono/400R
 import { JetBrainsMono_500Medium } from "@expo-google-fonts/jetbrains-mono/500Medium";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SignInScreen } from "@/components/SignInScreen";
 import { ED } from "@/constants/colors";
 import { ThemeProvider, usePalette } from "@/context/ThemeContext";
 import { ApplicationsProvider } from "@/context/ApplicationsContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { SavedPostsProvider } from "@/context/SavedPostsContext";
 import { SubscriptionsProvider } from "@/context/SubscriptionsContext";
 import { UserProvider } from "@/context/UserContext";
@@ -46,7 +48,7 @@ const queryClient = new QueryClient({
  * Shown while fonts load. Web has no native splash screen, so without this the
  * first paint is a blank white rectangle on the app's paper-coloured shell.
  */
-function AppLoading() {
+function AppLoading({ label = "Loading oHub" }: { label?: string }) {
   const c = usePalette();
   return (
     <View
@@ -54,8 +56,44 @@ function AppLoading() {
       accessibilityRole="progressbar"
     >
       <Text style={[styles.loadingMark, { color: c.ink }]}>oHub</Text>
-      <ActivityIndicator color={c.muted} accessibilityLabel="Loading oHub" />
+      <ActivityIndicator color={c.muted} accessibilityLabel={label} />
+      <Text style={[styles.loadingNote, { color: c.muted }]}>{label}</Text>
     </View>
+  );
+}
+
+/**
+ * Decides between the sign-in screen and the app.
+ *
+ * The data providers are mounted *inside* the signed-in branch, so they read
+ * local storage after `hydrateFromRemote` has filled it. Mounting them above
+ * the gate would have every screen paint an empty account for the moment
+ * between sign-in and the first sync — which reads as "it lost my data".
+ *
+ * Unmounting them on sign-out is the other half: it drops one student's marks
+ * out of memory before the next one signs in on the same laptop.
+ */
+function AuthGate() {
+  const { status } = useAuth();
+
+  if (status === "loading") return <AppLoading label="Checking your session" />;
+  if (status === "signedOut") return <SignInScreen />;
+  if (status === "syncing") return <AppLoading label="Loading your application" />;
+
+  return (
+    <UserProvider>
+      <SubscriptionsProvider>
+        <SavedPostsProvider>
+          <ApplicationsProvider>
+            <GestureHandlerRootView style={styles.root}>
+              <KeyboardProvider>
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </ApplicationsProvider>
+        </SavedPostsProvider>
+      </SubscriptionsProvider>
+    </UserProvider>
   );
 }
 
@@ -102,19 +140,9 @@ function ThemedApp() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <UserProvider>
-          <SubscriptionsProvider>
-            <SavedPostsProvider>
-              <ApplicationsProvider>
-                <GestureHandlerRootView style={styles.root}>
-                  <KeyboardProvider>
-                    <RootLayoutNav />
-                  </KeyboardProvider>
-                </GestureHandlerRootView>
-              </ApplicationsProvider>
-            </SavedPostsProvider>
-          </SubscriptionsProvider>
-        </UserProvider>
+        <AuthProvider>
+          <AuthGate />
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
@@ -148,5 +176,9 @@ const styles = StyleSheet.create({
     fontSize: 28,
     letterSpacing: -0.5,
     color: ED.ink,
+  },
+  loadingNote: {
+    fontSize: 13,
+    color: ED.muted,
   },
 });
