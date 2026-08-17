@@ -163,3 +163,75 @@ describe("the privacy notice", () => {
     expect(page).toContain('href="/"');
   });
 });
+
+describe("vercel.json is deployable at all", () => {
+  const raw = readFileSync(join(__dirname, "..", "vercel.json"), "utf8");
+  const config = JSON.parse(raw) as Record<string, unknown>;
+
+  /**
+   * Vercel validates `vercel.json` against a schema with
+   * `additionalProperties: false`, and rejects the deployment *before the
+   * build starts* if it fails — which means no build log, no error line, and a
+   * production alias silently left on the previous commit.
+   *
+   * That is exactly how a JSON "comment" shipped once. There is no comment
+   * syntax in this file; explanations go in CLAUDE.md.
+   */
+  const ALLOWED = new Set([
+    "$schema",
+    "buildCommand",
+    "installCommand",
+    "outputDirectory",
+    "devCommand",
+    "framework",
+    "ignoreCommand",
+    "public",
+    "regions",
+    "trailingSlash",
+    "cleanUrls",
+    "github",
+    "git",
+    "headers",
+    "redirects",
+    "rewrites",
+    "functions",
+    "crons",
+    "images",
+    "buildEnv",
+    "env",
+  ]);
+
+  it("has no top-level key Vercel would reject", () => {
+    const unknown = Object.keys(config).filter((key) => !ALLOWED.has(key));
+    expect(unknown).toEqual([]);
+  });
+
+  it("carries no attempt at a JSON comment", () => {
+    const commentish = Object.keys(config).filter(
+      (key) => key.startsWith("_") || key.startsWith("//"),
+    );
+    expect(commentish).toEqual([]);
+  });
+
+  it("redirects auth parameters landing on / into the app", () => {
+    // `/` is the static landing page and cannot redeem an auth code. Rewrites
+    // run after the filesystem check, so only a redirect can move it.
+    const redirects = (config.redirects ?? []) as {
+      source: string;
+      destination: string;
+      has?: { type: string; key: string }[];
+    }[];
+
+    for (const key of ["code", "token_hash", "error"]) {
+      const rule = redirects.find(
+        (r) => r.source === "/" && r.has?.some((h) => h.type === "query" && h.key === key),
+      );
+      // Named in the assertion rather than a message argument: Jest's expect
+      // takes only one.
+      expect({ key, destination: rule?.destination }).toEqual({
+        key,
+        destination: "/today",
+      });
+    }
+  });
+});

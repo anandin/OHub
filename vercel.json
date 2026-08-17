@@ -8,7 +8,6 @@
   "github": {
     "silent": true
   },
-  "_comment_redirects": "Supabase sends a confirmation link back to the Site URL, which is `/` — and `/` is the static landing page, so an auth code delivered there would never reach the router. Rewrites cannot fix this: Vercel applies them AFTER the filesystem check, and /index.html exists. Redirects run BEFORE it, so these are redirects.",
   "redirects": [
     {
       "source": "/",
