@@ -84,6 +84,20 @@ must not need to own `/`. If you add a route, remember the app is entered at
 `/today`, and `postbuild-landing.mjs` fails the build if the landing page stops
 linking there.
 
+The same ordering is why the auth rules in `vercel.json` are **redirects**, not
+rewrites. Supabase returns from a confirmation or reset link to the Site URL,
+which is `/` — the landing page, which has no router to hand the code to. A
+rewrite cannot move it, because rewrites lose to the filesystem. Redirects run
+before it, so `/?code=`, `/?token_hash=` and `/?error=` are redirected to
+`/today`.
+
+**`vercel.json` cannot hold comments.** Vercel validates it against a schema
+with `additionalProperties: false` and rejects the deployment *before the build
+starts* — no build log, no error line, and the production alias silently left
+on the previous commit. A `"_comment_..."` key shipped once and looked exactly
+like a deploy that never triggered. Explanations go here;
+`__tests__/sync.test.ts` fails on any unrecognised top-level key.
+
 ## Where things live
 
 - `lib/` holds the invariants — read those five files before changing behaviour
