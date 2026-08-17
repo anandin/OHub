@@ -88,9 +88,19 @@ export function EmailAuthForm() {
         </Text>
         <Text style={styles.sentBody}>
           {sentKind === "confirm"
-            ? `We sent a confirmation link to ${email.trim()}. Open it and you are in. It can take a minute, and it sometimes lands in spam.`
+            ? `We sent a confirmation link to ${email.trim()}. Open it on this device, in this browser, and you are in. It can take a minute, and it often lands in spam.`
             : `We have sent a reset link to ${email.trim()}. We do not say whether an account exists — that would let anyone check who uses oHub.`}
         </Text>
+        {sentKind === "confirm" ? (
+          // Two things a student needs before they decide the mail is a scam
+          // and bin it: who it is from, and that it will not look like us yet.
+          <Text style={styles.sentFootnote}>
+            It comes from &ldquo;Supabase Auth&rdquo; — that is oHub&rsquo;s
+            sign-in provider, not a scam. And open it in this browser: the
+            confirmation is tied to the one you signed up in.
+          </Text>
+        ) : null}
+
         <Pressable
           onPress={() => go("signin")}
           accessibilityRole="button"

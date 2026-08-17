@@ -11,6 +11,11 @@ import React, {
 } from "react";
 import { Platform } from "react-native";
 
+import {
+  describeLinkError,
+  readEmailArrival,
+  urlWithoutEmailToken,
+} from "@/lib/emailLink";
 import { clearAll } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
 import { flushNow, getSyncSnapshot, hydrateFromRemote, stopSync } from "@/lib/sync";
@@ -179,6 +184,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    /**
+     * Redeem a `token_hash` from an emailed link, if this page load is one.
+     *
+     * Runs before `getSession` so the confirmed session is the one adopted,
+     * and so a `recovery` link is recognised as a recovery *before* the state
+     * change fires — `verifyOtp` reports a plain sign-in, not the
+     * `PASSWORD_RECOVERY` event a hosted redirect would have produced.
+     */
+    async function redeemEmailLink(): Promise<boolean> {
+      if (Platform.OS !== "web") return false;
+
+      const arrival = readEmailArrival(window.location.href);
+      if (arrival.kind === "none") return false;
+
+      // Recovery has to be latched *before* the session appears. `verifyOtp`
+      // and `exchangeCodeForSession` both report an ordinary sign-in, not the
+      // PASSWORD_RECOVERY event a hosted redirect would have produced.
+      if (arrival.recovery) recovering.current = true;
+
+      const clean = () =>
+        window.history.replaceState(
+          null,
+          "",
+          urlWithoutEmailToken(window.location.href),
+        );
+
+      if (arrival.kind === "error") {
+        clean();
+        recovering.current = false;
+        if (mounted) setError(describeLinkError(arrival.code, arrival.recovery));
+        return false;
+      }
+
+      const result =
+        arrival.kind === "token"
+          ? await supabase.auth.verifyOtp({
+              token_hash: arrival.tokenHash,
+              type: arrival.type,
+            })
+          : await supabase.auth.exchangeCodeForSession(arrival.code);
+
+      // Spent, expired or tampered with. Clean the URL either way so a reload
+      // does not retry a token that will never work again.
+      clean();
+
+      if (result.error) {
+        recovering.current = false;
+        if (mounted) {
+          // A PKCE code can only be redeemed by the browser that started the
+          // sign-up, because the verifier is in that browser's storage. A
+          // student who signs up on a school desktop and opens the email on
+          // their phone lands exactly here, and "something went wrong" would
+          // leave them with no idea what to do.
+          const crossDevice =
+            arrival.kind === "code" &&
+            /verifier|code challenge|invalid request/i.test(result.error.message);
+
+          setError(
+            crossDevice
+              ? "Open that link in the same browser you signed up in — the confirmation is tied to it. If you have switched devices, sign in with your email and password instead."
+              : describeLinkError(undefined, arrival.recovery),
+          );
+        }
+        return false;
+      }
+      return true;
+    }
+
     async function adopt(next: Session | null) {
       if (!mounted) return;
       setSession(next);
@@ -211,8 +284,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setStatus("ready");
     }
 
-    supabase.auth
-      .getSession()
+    redeemEmailLink()
+      .catch(() => false)
+      .then(() => supabase.auth.getSession())
       .then(({ data }) => adopt(data.session))
       .catch(() => {
         if (mounted) setStatus("signedOut");

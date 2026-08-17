@@ -1,6 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
-import { Platform } from "react-native";
 
 /**
  * The Supabase client.
@@ -50,9 +49,12 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     // PKCE keeps the authorization code useless without the verifier this
     // client generated, so an intercepted redirect URL cannot be replayed.
     flowType: "pkce",
-    // Only the web build ever returns from a redirect with a code in the URL.
-    // On native the deep-link handler passes it to `exchangeCodeForSession`.
-    detectSessionInUrl: Platform.OS === "web",
+    // Off deliberately, on every platform. `AuthContext` redeems the code or
+    // token itself, because the automatic path swallows the failure: a student
+    // who signs up on a school desktop and opens the email on their phone
+    // cannot complete a PKCE exchange, and needs to be told that rather than
+    // watching a spinner. See `redeemEmailLink`.
+    detectSessionInUrl: false,
   },
   global: {
     headers: { "x-application-name": "ohub" },
