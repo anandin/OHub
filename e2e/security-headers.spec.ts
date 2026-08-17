@@ -84,6 +84,24 @@ test.describe("edge routing", () => {
     });
   }
 
+  // Regression: Supabase sends a confirmation link back to the Site URL, which
+  // is `/` — and `/` is the static landing page, so the code arrived on a page
+  // with no router to hand it to and the student saw a marketing page instead
+  // of their account. A rewrite cannot fix it (rewrites run after the
+  // filesystem check, and index.html exists), so these are redirects, and this
+  // is the only place a broken one would show up.
+  for (const param of ["code=abc123", "token_hash=abc123&type=signup", "error=access_denied"]) {
+    test(`/?${param} is redirected into the app`, async ({ request }) => {
+      const response = await request.get(`/?${param}`, { maxRedirects: 0 });
+
+      expect(response.status()).toBe(307);
+      const location = response.headers()["location"] ?? "";
+      expect(location).toContain("/today");
+      // The parameters have to survive the hop or there is nothing to redeem.
+      expect(location).toContain(param.split("=")[0]);
+    });
+  }
+
   test("real files are still served directly, not rewritten", async ({
     request,
   }) => {

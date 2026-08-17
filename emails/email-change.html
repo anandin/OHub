@@ -1,0 +1,105 @@
+<!--
+  Confirming a new address on an existing account. Same reasoning as
+  emails/confirm-signup.html.
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f5f1e8;margin:0;padding:24px 12px;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background-color:#fbf8f1;border:1px solid #e8e0cf;border-radius:14px;">
+        <tr>
+          <td style="padding:32px 32px 8px 32px;">
+            <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:22px;line-height:28px;color:#1a1612;font-weight:normal;">oHub</p>
+            <p style="margin:4px 0 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:14px;letter-spacing:1px;text-transform:uppercase;color:#6f6449;">Ontario university applications</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:24px 32px 0 32px;">
+            <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:32px;color:#1a1612;font-weight:normal;">
+              Confirm your new address.
+            </h1>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:16px 32px 0 32px;">
+            <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#5c4a2f;">
+              You asked to move your oHub account to
+              <strong style="color:#1a1612;font-weight:600;">{{ .Email }}</strong>.
+              Confirm it here and this becomes the address you sign in with.
+              Nothing else about your account changes — same list, same marks,
+              same drafts.
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:24px 32px 0 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td align="center" bgcolor="#1a1612" style="border-radius:10px;">
+                  <a href="{{ .SiteURL }}/today?token_hash={{ .TokenHash }}&type=email_change"
+                     style="display:block;padding:15px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:20px;font-weight:600;color:#f5f1e8;text-decoration:none;border-radius:10px;">
+                    Confirm this address
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- The host in plain text. A student who has been told never to trust
+             a link in an email can check this against the address bar, which
+             is the only advice that actually protects them. -->
+        <tr>
+          <td style="padding:12px 32px 0 32px;">
+            <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:19px;color:#6f6449;">
+              That button goes to <strong style="color:#5c4a2f;font-weight:600;">{{ .SiteURL }}</strong> — check it matches
+              before you tap. The link works for 24 hours, and once only.
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:24px 32px 0 32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr><td style="border-top:1px solid #e8e0cf;font-size:0;line-height:0;">&nbsp;</td></tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:16px 32px 0 32px;">
+            <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#5c4a2f;">
+              <strong style="color:#1a1612;font-weight:600;">What oHub does with this address:</strong>
+              signs you in, and nothing else. No newsletter, no marketing, and it
+              is never given to a university or anyone else. Your marks live in a
+              Canadian data centre and only your account can read them.
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:16px 32px 32px 32px;">
+            <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#6f6449;">
+              If you did not ask to change your email address, ignore this and
+              tell us at anand.inbasekaran@gmail.com — the change does not happen
+              until this link is opened.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
+        <tr>
+          <td style="padding:16px 32px 0 32px;" align="center">
+            <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#6f6449;">
+              oHub — built for Ontario applicants.
+              <a href="{{ .SiteURL }}/privacy.html" style="color:#9a3412;text-decoration:underline;">What we store, and why</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

@@ -81,4 +81,5 @@ export const makeAuthFormStyles = (c: Palette) =>
     },
     sentTitle: { ...type.heading, color: c.successText },
     sentBody: { ...type.bodySmall, color: c.successText },
+    sentFootnote: { ...type.bodySmall, color: c.successText, opacity: 0.85 },
   });
